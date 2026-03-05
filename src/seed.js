@@ -1,29 +1,43 @@
-import bcrypt from "bcryptjs";
-import { q } from "./db.js";
+import pg from "pg";
+
+const { Pool } = pg;
 
 async function main() {
-  const username = "admin";
-  const password = "Admin1234!";
-  const hash = await bcrypt.hash(password, 10);
+  const databaseUrl = process.env.DATABASE_URL;
 
-  const existing = await q(`SELECT id FROM users WHERE username=$1`, [username]);
-  if (existing.rows[0]) {
-    console.log("Admin ya existe:", username);
-    process.exit(0);
+  if (!databaseUrl) {
+    console.error("❌ DATABASE_URL no está definida en variables de entorno.");
+    process.exit(1);
   }
 
-  const u = await q(
-    `INSERT INTO users(username, password_hash, role) VALUES ($1,$2,'ADMIN') RETURNING id`,
-    [username, hash]
-  );
-  console.log("Admin creado");
-  console.log("usuario:", username);
-  console.log("contraseña:", password);
-  console.log("id:", u.rows[0].id);
-  process.exit(0);
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    ssl: databaseUrl.includes("localhost") ? false : { rejectUnauthorized: false },
+  });
+
+  try {
+    console.log("🔌 Conectando a la base de datos...");
+    const client = await pool.connect();
+
+    console.log("🧱 Creando tabla users si no existe...");
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    client.release();
+    console.log("✅ Listo: tabla users verificada/creada.");
+  } catch (err) {
+    console.error("❌ Error creando tablas:", err);
+    process.exit(1);
+  } finally {
+    await pool.end();
+  }
 }
 
-main().catch(e => {
-  console.error(e);
-  process.exit(1);
-});
+main();
