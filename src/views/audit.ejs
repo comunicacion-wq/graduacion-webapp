@@ -1,0 +1,20 @@
+<h3>Auditoría</h3>
+
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle">
+  <thead>
+    <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr>
+  </thead>
+  <tbody>
+    <% rows.forEach(r => { %>
+      <tr>
+        <td><%= r.created_at_fmt %></td>
+        <td><%= r.actor_username || '' %></td>
+        <td><%= r.action %></td>
+        <td><%= r.entity %> #<%= r.entity_id || '' %></td>
+        <td><pre class="mb-0 small"><%= JSON.stringify(r.details || {}, null, 2) %></pre></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>

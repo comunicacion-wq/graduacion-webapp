@@ -1,0 +1,75 @@
+<div class="d-flex justify-content-between align-items-start mb-2">
+  <div>
+    <h3 class="mb-0"><%= student.full_name %></h3>
+    <div class="text-muted"><%= student.phone_e164 %></div>
+    <div class="text-muted small"><%= student.campus_name %> | <%= student.shift_name %> | <%= student.period_name %> / <%= student.grad_year %></div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="/finance/collect?student_id=<%= student.id %>">Registrar abono</a>
+    <a class="btn btn-outline-primary" href="/students/<%= student.id %>/edit">Editar</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-md-4">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Total paquete</div>
+      <div class="fs-4">$<%= Number(totals.package_cost).toFixed(2) %></div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Descuento</div>
+      <div class="fs-4">$<%= Number(totals.discount_amount).toFixed(2) %></div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Saldo pendiente</div>
+      <div class="fs-4">$<%= Number(totals.balance).toFixed(2) %></div>
+    </div></div>
+  </div>
+</div>
+
+<hr>
+
+<h5>Pagos</h5>
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle">
+  <thead>
+    <tr><th>Fecha</th><th>Monto</th><th>Estatus</th><th>Cajero</th><th></th></tr>
+  </thead>
+  <tbody>
+  <% payments.forEach(p => { %>
+    <tr>
+      <td><%= p.created_at_fmt %></td>
+      <td>$<%= Number(p.amount).toFixed(2) %></td>
+      <td><%= p.status %></td>
+      <td><%= p.created_by_username || '' %></td>
+      <td class="text-end">
+        <% if (user.role==='ADMIN') { %>
+          <% if (p.status==='CONFIRMED') { %>
+            <form method="post" action="/payments/<%= p.id %>/cancel" class="d-inline">
+              <input type="hidden" name="student_id" value="<%= student.id %>">
+              <button class="btn btn-sm btn-outline-danger">Cancelar</button>
+            </form>
+          <% } %>
+        <% } else { %>
+          <% if (p.status==='CONFIRMED') { %>
+            <a class="btn btn-sm btn-outline-warning" href="/requests/new?type=CANCEL_PAYMENT&payment_id=<%= p.id %>&student_id=<%= student.id %>">Solicitar cancelación</a>
+          <% } %>
+        <% } %>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+
+<div class="d-flex gap-2">
+  <% if (user.role==='ADMIN') { %>
+    <form method="post" action="/students/<%= student.id %>/resend-credentials" class="d-inline">
+      <button class="btn btn-outline-secondary">Reenviar credenciales</button>
+    </form>
+  <% } %>
+</div>

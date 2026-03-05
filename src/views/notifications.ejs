@@ -1,0 +1,28 @@
+<h3>Notificaciones</h3>
+<p class="text-muted">En este MVP, mostramos solicitudes pendientes y últimos eventos.</p>
+
+<h5>Solicitudes pendientes</h5>
+<ul class="list-group mb-3">
+  <% pending.forEach(p => { %>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong>#<%= p.id %></strong> <%= p.request_type %> — <%= p.student_name || '' %>
+        <div class="text-muted small"><%= p.campus_name || '' %> | <%= p.requested_by_username %> | <%= p.created_at_fmt %></div>
+      </div>
+      <a class="btn btn-sm btn-outline-primary" href="/requests/<%= p.id %>">Ver</a>
+    </li>
+  <% }) %>
+  <% if (!pending.length) { %>
+    <li class="list-group-item text-muted">Sin pendientes.</li>
+  <% } %>
+</ul>
+
+<h5>Actividad reciente</h5>
+<ul class="list-group">
+  <% recent.forEach(a => { %>
+    <li class="list-group-item">
+      <strong><%= a.action %></strong> — <%= a.entity %> #<%= a.entity_id || '' %>
+      <div class="text-muted small"><%= a.created_at_fmt %> | <%= a.actor_username || '' %></div>
+    </li>
+  <% }) %>
+</ul>

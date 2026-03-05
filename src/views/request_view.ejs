@@ -1,0 +1,31 @@
+<h3>Solicitud #<%= r.id %></h3>
+<div class="text-muted mb-2">Estatus: <strong><%= r.status %></strong></div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div><strong>Solicitó:</strong> <%= r.requested_by_username %></div>
+    <div><strong>Campus:</strong> <%= r.campus_name || '' %></div>
+    <div><strong>Alumno:</strong> <%= r.student_name || '' %></div>
+    <div><strong>Tipo:</strong> <%= r.request_type %></div>
+    <div><strong>Motivo:</strong> <%= r.reason %></div>
+    <hr>
+    <pre class="mb-0"><%= JSON.stringify(r.payload, null, 2) %></pre>
+  </div>
+</div>
+
+<% if (user.role==='ADMIN' && r.status==='PENDING') { %>
+  <form method="post" action="/requests/<%= r.id %>/decide" class="d-flex gap-2">
+    <input type="hidden" name="decision" value="APPROVE">
+    <button class="btn btn-success">Aprobar</button>
+  </form>
+  <form method="post" action="/requests/<%= r.id %>/decide" class="d-flex gap-2 mt-2">
+    <input type="hidden" name="decision" value="REJECT">
+    <input class="form-control" name="decision_note" placeholder="Motivo de rechazo (opcional)">
+    <button class="btn btn-secondary">Rechazar</button>
+  </form>
+<% } %>
+
+<% if (r.status!=='PENDING') { %>
+  <div class="text-muted">Decidió: <%= r.decided_by_username || '' %> — <%= r.decided_at_fmt || '' %></div>
+  <% if (r.decision_note) { %><div>Nota: <%= r.decision_note %></div><% } %>
+<% } %>

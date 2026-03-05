@@ -1,0 +1,38 @@
+<h3>Nueva solicitud</h3>
+
+<form method="post" action="/requests/new" class="row g-3">
+  <div class="col-12 col-md-6">
+    <label class="form-label">Alumno</label>
+    <select class="form-select" name="student_id" required>
+      <% students.forEach(s => { %>
+        <option value="<%= s.id %>" <%= String(pref.student_id)===String(s.id) ? 'selected':'' %>><%= s.full_name %> — <%= s.campus_name || '' %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <label class="form-label">Tipo</label>
+    <select class="form-select" name="request_type" required>
+      <option value="CANCEL_PAYMENT" <%= pref.type==='CANCEL_PAYMENT'?'selected':'' %>>Cancelar pago</option>
+      <option value="CORRECT_PAYMENT" <%= pref.type==='CORRECT_PAYMENT'?'selected':'' %>>Corregir pago</option>
+      <option value="CHANGE_PACKAGE" <%= pref.type==='CHANGE_PACKAGE'?'selected':'' %>>Cambiar paquete</option>
+      <option value="APPLY_DISCOUNT" <%= pref.type==='APPLY_DISCOUNT'?'selected':'' %>>Aplicar descuento</option>
+    </select>
+  </div>
+
+  <div class="col-12">
+    <label class="form-label">Detalles (JSON simple)</label>
+    <textarea class="form-control" name="payload" rows="5"><%= pref.payload || '{}' %></textarea>
+    <div class="form-text">Ejemplo cancelar: {"payment_id":123}. Corregir: {"payment_id":123,"new_amount":350}.</div>
+  </div>
+
+  <div class="col-12">
+    <label class="form-label">Motivo</label>
+    <input class="form-control" name="reason" required>
+  </div>
+
+  <div class="col-12 d-flex gap-2">
+    <button class="btn btn-primary">Enviar solicitud</button>
+    <a class="btn btn-outline-secondary" href="/requests">Cancelar</a>
+  </div>
+</form>

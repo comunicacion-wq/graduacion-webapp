@@ -1,0 +1,80 @@
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h3 class="mb-0">Alumnos</h3>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/students/import">Extraer archivo (Excel)</a>
+    <a class="btn btn-primary" href="/students/new">+ Nuevo alumno</a>
+  </div>
+</div>
+
+<form class="row g-2 mb-3" method="get" action="/students">
+  <div class="col-12 col-md-3">
+    <select class="form-select" name="campus_id">
+      <option value="">Campus (Todos)</option>
+      <% campuses.forEach(c => { %>
+        <option value="<%= c.id %>" <%= String(filters.campus_id)===String(c.id) ? 'selected':'' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-2">
+    <select class="form-select" name="shift_id">
+      <option value="">Turno (Todos)</option>
+      <% shifts.forEach(s => { %>
+        <option value="<%= s.id %>" <%= String(filters.shift_id)===String(s.id) ? 'selected':'' %>><%= s.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-2">
+    <select class="form-select" name="period_id">
+      <option value="">Periodo (Todos)</option>
+      <% periods.forEach(p => { %>
+        <option value="<%= p.id %>" <%= String(filters.period_id)===String(p.id) ? 'selected':'' %>><%= p.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-2">
+    <select class="form-select" name="year_id">
+      <option value="">Año (Todos)</option>
+      <% years.forEach(y => { %>
+        <option value="<%= y.id %>" <%= String(filters.year_id)===String(y.id) ? 'selected':'' %>><%= y.year %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-3">
+    <input class="form-control" name="q" placeholder="Buscar (nombre/teléfono)" value="<%= filters.q || '' %>">
+  </div>
+  <div class="col-12 d-flex justify-content-end">
+    <button class="btn btn-secondary">Filtrar</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Campus</th>
+      <th>Turno</th>
+      <th>Periodo/Año</th>
+      <th>Paquete</th>
+      <th>Saldo</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% students.forEach(s => { %>
+      <tr>
+        <td><%= s.full_name %><div class="text-muted small"><%= s.phone_e164 %></div></td>
+        <td><%= s.campus_name || '' %></td>
+        <td><%= s.shift_name || '' %></td>
+        <td><%= (s.period_name||'') %> / <%= (s.grad_year||'') %></td>
+        <td><%= s.package_name || '' %></td>
+        <td>$<%= Number(s.balance || 0).toFixed(2) %></td>
+        <td class="text-end">
+          <a class="btn btn-sm btn-outline-primary" href="/students/<%= s.id %>">Ver</a>
+          <a class="btn btn-sm btn-primary" href="/students/<%= s.id %>/edit">Editar</a>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>

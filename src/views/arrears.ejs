@@ -1,0 +1,81 @@
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h3 class="mb-0">Adeudos / Cobranza</h3>
+  <% if (user.role==='ADMIN') { %>
+    <form method="post" action="/arrears/send" class="d-inline">
+      <input type="hidden" name="apply_filters" value="1">
+      <button class="btn btn-primary">Enviar cobranza (filtrados)</button>
+    </form>
+  <% } %>
+</div>
+
+<form class="row g-2 mb-3" method="get" action="/arrears">
+  <div class="col-12 col-md-3">
+    <select class="form-select" name="campus_id">
+      <option value="">Campus (Todos)</option>
+      <% campuses.forEach(c => { %>
+        <option value="<%= c.id %>" <%= String(filters.campus_id)===String(c.id) ? 'selected':'' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-2">
+    <select class="form-select" name="shift_id">
+      <option value="">Turno (Todos)</option>
+      <% shifts.forEach(s => { %>
+        <option value="<%= s.id %>" <%= String(filters.shift_id)===String(s.id) ? 'selected':'' %>><%= s.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-2">
+    <select class="form-select" name="period_id">
+      <option value="">Periodo (Todos)</option>
+      <% periods.forEach(p => { %>
+        <option value="<%= p.id %>" <%= String(filters.period_id)===String(p.id) ? 'selected':'' %>><%= p.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-2">
+    <select class="form-select" name="year_id">
+      <option value="">Año (Todos)</option>
+      <% years.forEach(y => { %>
+        <option value="<%= y.id %>" <%= String(filters.year_id)===String(y.id) ? 'selected':'' %>><%= y.year %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-3 d-flex align-items-end">
+    <button class="btn btn-secondary w-100">Filtrar</button>
+  </div>
+</form>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-3"><div class="card"><div class="card-body">
+    <div class="text-muted small">Total alumnos</div><div class="fs-4"><%= metrics.total_students %></div>
+  </div></div></div>
+  <div class="col-12 col-md-3"><div class="card"><div class="card-body">
+    <div class="text-muted small">Pagados</div><div class="fs-4"><%= metrics.paid %></div>
+  </div></div></div>
+  <div class="col-12 col-md-3"><div class="card"><div class="card-body">
+    <div class="text-muted small">Con adeudo</div><div class="fs-4"><%= metrics.arrears %></div>
+  </div></div></div>
+  <div class="col-12 col-md-3"><div class="card"><div class="card-body">
+    <div class="text-muted small">Saldo total</div><div class="fs-4">$<%= Number(metrics.total_balance).toFixed(2) %></div>
+  </div></div></div>
+</div>
+
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle">
+  <thead>
+    <tr><th>Alumno</th><th>Campus</th><th>Turno</th><th>Periodo/Año</th><th>Saldo</th></tr>
+  </thead>
+  <tbody>
+  <% rows.forEach(r => { %>
+    <tr>
+      <td><a href="/students/<%= r.id %>"><%= r.full_name %></a><div class="text-muted small"><%= r.phone_e164 %></div></td>
+      <td><%= r.campus_name %></td>
+      <td><%= r.shift_name %></td>
+      <td><%= r.period_name %> / <%= r.grad_year %></td>
+      <td>$<%= Number(r.balance).toFixed(2) %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>

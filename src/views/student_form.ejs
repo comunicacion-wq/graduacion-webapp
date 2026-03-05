@@ -1,0 +1,107 @@
+<h3><%= mode==='new' ? 'Nuevo alumno' : 'Editar alumno' %></h3>
+
+<form method="post" action="<%= action %>" class="row g-3">
+  <div class="col-12 col-md-6">
+    <label class="form-label">Nombre completo</label>
+    <input class="form-control" name="full_name" required value="<%= student.full_name || '' %>">
+  </div>
+
+  <div class="col-12 col-md-6">
+    <label class="form-label">Teléfono (WhatsApp, E.164)</label>
+    <input class="form-control" name="phone_e164" required placeholder="+521XXXXXXXXXX" value="<%= student.phone_e164 || '' %>">
+  </div>
+
+  <div class="col-12 col-md-3">
+    <label class="form-label">Campus</label>
+    <select class="form-select" name="campus_id" required>
+      <% campuses.forEach(c => { %>
+        <option value="<%= c.id %>" <%= String(student.campus_id)===String(c.id) ? 'selected':'' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="col-12 col-md-3">
+    <label class="form-label">Turno</label>
+    <select class="form-select" name="shift_id" required>
+      <% shifts.forEach(s => { %>
+        <option value="<%= s.id %>" <%= String(student.shift_id)===String(s.id) ? 'selected':'' %>><%= s.name %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="col-12 col-md-3">
+    <label class="form-label">Periodo</label>
+    <select class="form-select" name="period_id" required>
+      <% periods.forEach(p => { %>
+        <option value="<%= p.id %>" <%= String(student.period_id)===String(p.id) ? 'selected':'' %>><%= p.name %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="col-12 col-md-3">
+    <label class="form-label">Año</label>
+    <select class="form-select" name="year_id" required>
+      <% years.forEach(y => { %>
+        <option value="<%= y.id %>" <%= String(student.year_id)===String(y.id) ? 'selected':'' %>><%= y.year %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <label class="form-label">Carrera</label>
+    <select class="form-select" name="career_id">
+      <option value="">(Sin carrera)</option>
+      <% careers.forEach(ca => { %>
+        <option value="<%= ca.id %>" <%= String(student.career_id)===String(ca.id) ? 'selected':'' %>><%= ca.name %></option>
+      <% }) %>
+    </select>
+    <div class="form-text">Edita carreras en Ajustes.</div>
+  </div>
+
+  <div class="col-6 col-md-2">
+    <label class="form-label">Grado</label>
+    <input class="form-control" name="grade" value="<%= student.grade || '' %>">
+  </div>
+
+  <div class="col-6 col-md-2">
+    <label class="form-label">Grupo</label>
+    <input class="form-control" name="group" value="<%= student.group || '' %>">
+  </div>
+
+  <div class="col-12 col-md-4">
+    <label class="form-label">Paquete</label>
+    <select class="form-select" name="package_id" required>
+      <% packages.forEach(p => { %>
+        <option value="<%= p.id %>" <%= String(student.package_id)===String(p.id) ? 'selected':'' %>><%= p.name %> - $<%= Number(p.cost).toFixed(2) %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="col-12">
+    <hr>
+    <h5>Descuento (en pesos)</h5>
+  </div>
+
+  <div class="col-12 col-md-3">
+    <label class="form-label">Monto descuento ($)</label>
+    <input class="form-control" name="discount_amount" value="<%= student.discount_amount ?? 0 %>">
+  </div>
+
+  <div class="col-12 col-md-9">
+    <label class="form-label">Motivo (opcional)</label>
+    <input class="form-control" name="discount_reason" value="<%= student.discount_reason || '' %>">
+  </div>
+
+  <div class="col-12 d-flex gap-2">
+    <button class="btn btn-primary">Guardar</button>
+    <a class="btn btn-outline-secondary" href="/students">Cancelar</a>
+  </div>
+
+  <% if (mode==='new') { %>
+    <div class="col-12">
+      <div class="alert alert-info">
+        Al guardar, el sistema crea usuario del alumno y envía WhatsApp con credenciales (si está activo).
+      </div>
+    </div>
+  <% } %>
+</form>

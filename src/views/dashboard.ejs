@@ -1,0 +1,66 @@
+<h3>Dashboard</h3>
+<form class="row g-2 mb-3" method="get" action="/">
+  <div class="col-12 col-md-3">
+    <label class="form-label">Año</label>
+    <select class="form-select" name="year_id">
+      <option value="">Todos</option>
+      <% years.forEach(y => { %>
+        <option value="<%= y.id %>" <%= String(filters.year_id)===String(y.id) ? 'selected':'' %>><%= y.year %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-3">
+    <label class="form-label">Periodo</label>
+    <select class="form-select" name="period_id">
+      <option value="">Todos</option>
+      <% periods.forEach(p => { %>
+        <option value="<%= p.id %>" <%= String(filters.period_id)===String(p.id) ? 'selected':'' %>><%= p.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-3">
+    <label class="form-label">Campus</label>
+    <select class="form-select" name="campus_id">
+      <option value="">Todos</option>
+      <% campuses.forEach(c => { %>
+        <option value="<%= c.id %>" <%= String(filters.campus_id)===String(c.id) ? 'selected':'' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-3 d-flex align-items-end">
+    <button class="btn btn-secondary w-100">Filtrar</button>
+  </div>
+</form>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Total alumnos</div>
+      <div class="fs-3"><%= metrics.total_students %></div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Pagados</div>
+      <div class="fs-3"><%= metrics.paid %></div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Con adeudo</div>
+      <div class="fs-3"><%= metrics.arrears %></div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Saldo total por cobrar</div>
+      <div class="fs-3">$<%= Number(metrics.total_balance).toFixed(2) %></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="d-flex gap-2">
+  <a class="btn btn-primary" href="/finance/collect">Registrar abono</a>
+  <a class="btn btn-outline-primary" href="/students/new">+ Nuevo alumno</a>
+  <a class="btn btn-outline-secondary" href="/arrears">Enviar cobranza</a>
+</div>
