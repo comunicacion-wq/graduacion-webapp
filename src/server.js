@@ -972,7 +972,52 @@ app.post("/settings/careers/new", requireAuth, requireRole("ADMIN"), async (req,
   flash(req,"success","Carrera agregada correctamente.");
   res.redirect("/settings/careers");
 });
+// Campuses settings
+app.get("/settings/campuses", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const r = await q(`SELECT * FROM campuses ORDER BY active DESC, name ASC`);
 
+  const body = await new Promise((resolve, reject) => {
+    res.render("settings_campuses", {
+      campuses: r.rows
+    }, (err, html) => err ? reject(err) : resolve(html));
+  });
+
+  render(req,res,"layout", { title:"Ajustes - Campus", active:"settings", body });
+});
+
+app.post("/settings/campuses/new", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const { name } = req.body;
+
+  if (!name || !name.trim()) {
+    flash(req,"danger","Debes escribir el nombre del campus.");
+    return res.redirect("/settings/campuses");
+  }
+
+  await q(
+    `INSERT INTO campuses(name, active) VALUES ($1, true)
+     ON CONFLICT (name) DO NOTHING`,
+    [name.trim()]
+  );
+
+  await audit(req, "CREATE_CAMPUS", "CAMPUS", null, { name: name.trim() });
+  flash(req,"success","Campus agregado correctamente.");
+  res.redirect("/settings/campuses");
+});
+
+app.post("/settings/campuses/:id/toggle", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const id = Number(req.params.id);
+
+  await q(
+    `UPDATE campuses
+     SET active = NOT active
+     WHERE id = $1`,
+    [id]
+  );
+
+  await audit(req, "TOGGLE_CAMPUS", "CAMPUS", id, {});
+  flash(req,"success","Estatus de campus actualizado.");
+  res.redirect("/settings/campuses");
+});
 app.post("/settings/careers/:id/toggle", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const id = Number(req.params.id);
 
