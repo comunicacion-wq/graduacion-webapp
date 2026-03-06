@@ -1078,6 +1078,52 @@ app.post("/settings/shifts/:id/toggle", requireAuth, requireRole("ADMIN"), async
   flash(req,"success","Estatus de turno actualizado.");
   res.redirect("/settings/shifts");
 });
+// Periods settings
+app.get("/settings/periods", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const r = await q(`SELECT * FROM graduation_periods ORDER BY active DESC, id ASC`);
+
+  const body = await new Promise((resolve, reject) => {
+    res.render("settings_periods", {
+      periods: r.rows
+    }, (err, html) => err ? reject(err) : resolve(html));
+  });
+
+  render(req,res,"layout", { title:"Ajustes - Periodos", active:"settings", body });
+});
+
+app.post("/settings/periods/new", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const { name } = req.body;
+
+  if (!name || !name.trim()) {
+    flash(req,"danger","Debes escribir el nombre del periodo.");
+    return res.redirect("/settings/periods");
+  }
+
+  await q(
+    `INSERT INTO graduation_periods(name, active) VALUES ($1, true)
+     ON CONFLICT (name) DO NOTHING`,
+    [name.trim()]
+  );
+
+  await audit(req, "CREATE_PERIOD", "PERIOD", null, { name: name.trim() });
+  flash(req,"success","Periodo agregado correctamente.");
+  res.redirect("/settings/periods");
+});
+
+app.post("/settings/periods/:id/toggle", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const id = Number(req.params.id);
+
+  await q(
+    `UPDATE graduation_periods
+     SET active = NOT active
+     WHERE id = $1`,
+    [id]
+  );
+
+  await audit(req, "TOGGLE_PERIOD", "PERIOD", id, {});
+  flash(req,"success","Estatus de periodo actualizado.");
+  res.redirect("/settings/periods");
+});
 // Reports placeholder
 app.get("/reports", requireAuth, async (req,res) => {
   const body = "<h3>Reportes</h3><p class='text-muted'>En este MVP, usa Dashboard/Adeudos para métricas por filtros. Próximo paso: reportes detallados + exportación.</p>";
