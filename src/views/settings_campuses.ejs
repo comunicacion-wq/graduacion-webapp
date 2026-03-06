@@ -1,0 +1,63 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Campus</h3>
+  <a href="/settings" class="btn btn-secondary btn-sm">Volver</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="POST" action="/settings/campuses/new">
+      <div class="row">
+        <div class="col-md-8">
+          <input type="text" name="name" class="form-control" placeholder="Nombre del campus" required>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100">Agregar campus</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Estatus</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      <% campuses.forEach(campus => { %>
+
+      <tr>
+        <td><%= campus.id %></td>
+        <td><%= campus.name %></td>
+
+        <td>
+        <% if(campus.active){ %>
+        <span class="badge bg-success">Activo</span>
+        <% } else { %>
+        <span class="badge bg-secondary">Inactivo</span>
+        <% } %>
+        </td>
+
+        <td>
+        <form method="POST" action="/settings/campuses/<%= campus.id %>/toggle">
+        <button class="btn btn-sm btn-outline-primary">
+        <%= campus.active ? "Desactivar" : "Activar" %>
+        </button>
+        </form>
+        </td>
+
+      </tr>
+
+      <% }) %>
+
+      </tbody>
+    </table>
+  </div>
+</div>
