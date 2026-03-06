@@ -1178,6 +1178,83 @@ app.post("/settings/users/:id/toggle", requireAuth, requireRole("ADMIN"), async 
   flash(req,"success","Estatus de usuario actualizado.");
   res.redirect("/settings/users");
 });
+app.get("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const id = Number(req.params.id);
+
+  const r = await q(
+    `SELECT id, username, role, active
+     FROM users
+     WHERE id = $1`,
+    [id]
+  );
+
+  const userEdit = r.rows[0];
+  if (!userEdit) {
+    flash(req,"danger","Usuario no encontrado.");
+    return res.redirect("/settings/users");
+  }
+
+  const body = await new Promise((resolve, reject) => {
+    res.render("settings_users_edit", {
+      userEdit
+    }, (err, html) => err ? reject(err) : resolve(html));
+  });
+
+  render(req,res,"layout", { title:"Editar usuario", active:"settings", body });
+});
+
+app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const id = Number(req.params.id);
+  const { username, password, role, active } = req.body;
+
+  if (!username || !username.trim() || !role || !role.trim()) {
+    flash(req,"danger","Usuario y rol son obligatorios.");
+    return res.redirect(`/settings/users/${id}/edit`);
+  }
+
+  if (password && password.trim()) {
+    const hash = await bcrypt.hash(password.trim(), 10);
+
+    await q(
+      `UPDATE users
+       SET username = $1,
+           password_hash = $2,
+           role = $3,
+           active = $4
+       WHERE id = $5`,
+      [
+        username.trim(),
+        hash,
+        role.trim(),
+        active === "true",
+        id
+      ]
+    );
+  } else {
+    await q(
+      `UPDATE users
+       SET username = $1,
+           role = $2,
+           active = $3
+       WHERE id = $4`,
+      [
+        username.trim(),
+        role.trim(),
+        active === "true",
+        id
+      ]
+    );
+  }
+
+  await audit(req, "UPDATE_USER", "USER", id, {
+    username: username.trim(),
+    role: role.trim(),
+    active: active === "true"
+  });
+
+  flash(req,"success","Usuario actualizado correctamente.");
+  res.redirect("/settings/users");
+});
 
 // Reports placeholder
 app.get("/reports", requireAuth, async (req,res) => {
