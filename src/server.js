@@ -1275,6 +1275,79 @@ app.post("/cashbox/open", requireAuth, requireRole("ADMIN"), async (req,res) => 
   flash(req,"success","Ingresos reabiertos.");
   res.redirect("/");
 });
+// =========================
+// Portal del estudiante
+// =========================
 
+app.get("/portal/login", (req,res) => {
+  res.render("portal_login", { error: null });
+});
+
+app.post("/portal/login", async (req,res) => {
+  const { username, password } = req.body;
+
+  const r = await q(
+    `SELECT * FROM users WHERE username=$1 AND active=true AND role='STUDENT'`,
+    [username]
+  );
+
+  const u = r.rows[0];
+  if (!u) return res.render("portal_login", { error: "Usuario o contraseña inválidos" });
+
+  const ok = await bcrypt.compare(password, u.password_hash);
+  if (!ok) return res.render("portal_login", { error: "Usuario o contraseña inválidos" });
+
+  const sa = await q(
+    `SELECT * FROM student_accounts WHERE user_id=$1`,
+    [u.id]
+  );
+
+  const link = sa.rows[0];
+  if (!link) return res.render("portal_login", { error: "Esta cuenta no está vinculada a un alumno" });
+
+  req.session.studentUser = {
+    id: u.id,
+    username: u.username,
+    student_id: link.student_id
+  };
+
+  res.redirect("/portal");
+});
+
+function requireStudentPortal(req, res, next) {
+  if (!req.session.studentUser) return res.redirect("/portal/login");
+  next();
+}
+
+app.get("/portal/logout", requireStudentPortal, (req,res) => {
+  req.session.studentUser = null;
+  res.redirect("/portal/login");
+});
+
+app.get("/portal", requireStudentPortal, async (req,res) => {
+  const studentId = req.session.studentUser.student_id;
+
+  const info = await getStudentTotals(studentId);
+  if (!info) return res.status(404).send("Alumno no encontrado");
+
+  const pay = await q(
+    `SELECT id, amount, method, status, note, created_at
+     FROM payments
+     WHERE student_id=$1
+     ORDER BY created_at DESC`,
+    [studentId]
+  );
+
+  const payments = pay.rows.map(p => ({
+    ...p,
+    created_at_fmt: dayjs(p.created_at).format("DD/MM/YYYY HH:mm")
+  }));
+
+  res.render("portal_dashboard", {
+    student: info.student,
+    totals: info.totals,
+    payments
+  });
+});
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
