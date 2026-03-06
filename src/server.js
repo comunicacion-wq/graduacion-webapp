@@ -1125,6 +1125,60 @@ app.post("/settings/periods/:id/toggle", requireAuth, requireRole("ADMIN"), asyn
   res.redirect("/settings/periods");
 }); 
 
+// Users settings
+app.get("/settings/users", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const r = await q(`
+    SELECT id, username, role, active, created_at
+    FROM users
+    ORDER BY active DESC, id ASC
+  `);
+
+  const body = await new Promise((resolve, reject) => {
+    res.render("settings_users", {
+      users: r.rows
+    }, (err, html) => err ? reject(err) : resolve(html));
+  });
+
+  render(req,res,"layout", { title:"Ajustes - Usuarios", active:"settings", body });
+});
+
+app.post("/settings/users/new", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const { username, password, role } = req.body;
+
+  if (!username || !username.trim() || !password || !password.trim() || !role || !role.trim()) {
+    flash(req,"danger","Debes llenar usuario, contraseña y rol.");
+    return res.redirect("/settings/users");
+  }
+
+  const hash = await bcrypt.hash(password.trim(), 10);
+
+  await q(
+    `INSERT INTO users(username, password_hash, role, active)
+     VALUES ($1, $2, $3, true)
+     ON CONFLICT (username) DO NOTHING`,
+    [username.trim(), hash, role.trim()]
+  );
+
+  await audit(req, "CREATE_USER", "USER", null, { username: username.trim(), role: role.trim() });
+  flash(req,"success","Usuario agregado correctamente.");
+  res.redirect("/settings/users");
+});
+
+app.post("/settings/users/:id/toggle", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const id = Number(req.params.id);
+
+  await q(
+    `UPDATE users
+     SET active = NOT active
+     WHERE id = $1`,
+    [id]
+  );
+
+  await audit(req, "TOGGLE_USER", "USER", id, {});
+  flash(req,"success","Estatus de usuario actualizado.");
+  res.redirect("/settings/users");
+});
+
 // Reports placeholder
 app.get("/reports", requireAuth, async (req,res) => {
   const body = "<h3>Reportes</h3><p class='text-muted'>En este MVP, usa Dashboard/Adeudos para métricas por filtros. Próximo paso: reportes detallados + exportación.</p>";
