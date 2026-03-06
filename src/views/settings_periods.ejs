@@ -1,0 +1,58 @@
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="POST" action="/settings/periods/new">
+      <div class="row">
+        <div class="col-md-8">
+          <input type="text" name="name" class="form-control" placeholder="Nombre del periodo" required>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100">Agregar periodo</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Estatus</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      <% periods.forEach(period => { %>
+
+      <tr>
+        <td><%= period.id %></td>
+        <td><%= period.name %></td>
+
+        <td>
+        <% if(period.active){ %>
+        <span class="badge bg-success">Activo</span>
+        <% } else { %>
+        <span class="badge bg-secondary">Inactivo</span>
+        <% } %>
+        </td>
+
+        <td>
+        <form method="POST" action="/settings/periods/<%= period.id %>/toggle">
+        <button class="btn btn-sm btn-outline-primary">
+        <%= period.active ? "Desactivar" : "Activar" %>
+        </button>
+        </form>
+        </td>
+
+      </tr>
+
+      <% }) %>
+
+      </tbody>
+    </table>
+  </div>
+</div>
