@@ -1123,7 +1123,8 @@ app.post("/settings/periods/:id/toggle", requireAuth, requireRole("ADMIN"), asyn
   await audit(req, "TOGGLE_PERIOD", "PERIOD", id, {});
   flash(req,"success","Estatus de periodo actualizado.");
   res.redirect("/settings/periods");
-});
+}); 
+
 // Reports placeholder
 app.get("/reports", requireAuth, async (req,res) => {
   const body = "<h3>Reportes</h3><p class='text-muted'>En este MVP, usa Dashboard/Adeudos para métricas por filtros. Próximo paso: reportes detallados + exportación.</p>";
