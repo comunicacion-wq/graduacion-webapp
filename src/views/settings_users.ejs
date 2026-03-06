@@ -58,13 +58,19 @@
         <% } %>
         </td>
 
-        <td>
-        <form method="POST" action="/settings/users/<%= user.id %>/toggle">
-        <button class="btn btn-sm btn-outline-primary">
+       <td>
+  <div class="d-flex gap-2">
+    <a href="/settings/users/<%= user.id %>/edit" class="btn btn-sm btn-outline-secondary">
+      Editar
+    </a>
+
+    <form method="POST" action="/settings/users/<%= user.id %>/toggle">
+      <button class="btn btn-sm btn-outline-primary">
         <%= user.active ? "Desactivar" : "Activar" %>
-        </button>
-        </form>
-        </td>
+      </button>
+    </form>
+  </div>
+</td>
 
       </tr>
 
