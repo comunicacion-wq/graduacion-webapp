@@ -1,0 +1,63 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Turnos</h3>
+  <a href="/settings" class="btn btn-secondary btn-sm">Volver</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="POST" action="/settings/shifts/new">
+      <div class="row">
+        <div class="col-md-8">
+          <input type="text" name="name" class="form-control" placeholder="Nombre del turno" required>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100">Agregar turno</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Estatus</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      <% shifts.forEach(shift => { %>
+
+      <tr>
+        <td><%= shift.id %></td>
+        <td><%= shift.name %></td>
+
+        <td>
+        <% if(shift.active){ %>
+        <span class="badge bg-success">Activo</span>
+        <% } else { %>
+        <span class="badge bg-secondary">Inactivo</span>
+        <% } %>
+        </td>
+
+        <td>
+        <form method="POST" action="/settings/shifts/<%= shift.id %>/toggle">
+        <button class="btn btn-sm btn-outline-primary">
+        <%= shift.active ? "Desactivar" : "Activar" %>
+        </button>
+        </form>
+        </td>
+
+      </tr>
+
+      <% }) %>
+
+      </tbody>
+    </table>
+  </div>
+</div>
