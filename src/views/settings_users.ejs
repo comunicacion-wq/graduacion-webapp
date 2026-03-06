@@ -1,0 +1,76 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Usuarios</h3>
+  <a href="/settings" class="btn btn-secondary btn-sm">Volver</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="POST" action="/settings/users/new">
+      <div class="row g-2">
+        <div class="col-md-4">
+          <input type="text" name="username" class="form-control" placeholder="Usuario" required>
+        </div>
+        <div class="col-md-3">
+          <input type="text" name="password" class="form-control" placeholder="Contraseña" required>
+        </div>
+        <div class="col-md-3">
+          <select name="role" class="form-control" required>
+            <option value="">Selecciona rol</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="CAJERO">CAJERO</option>
+            <option value="STUDENT">STUDENT</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100">Agregar usuario</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Usuario</th>
+          <th>Rol</th>
+          <th>Estatus</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      <% users.forEach(user => { %>
+
+      <tr>
+        <td><%= user.id %></td>
+        <td><%= user.username %></td>
+        <td><%= user.role %></td>
+
+        <td>
+        <% if(user.active){ %>
+        <span class="badge bg-success">Activo</span>
+        <% } else { %>
+        <span class="badge bg-secondary">Inactivo</span>
+        <% } %>
+        </td>
+
+        <td>
+        <form method="POST" action="/settings/users/<%= user.id %>/toggle">
+        <button class="btn btn-sm btn-outline-primary">
+        <%= user.active ? "Desactivar" : "Activar" %>
+        </button>
+        </form>
+        </td>
+
+      </tr>
+
+      <% }) %>
+
+      </tbody>
+    </table>
+  </div>
+</div>
