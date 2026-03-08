@@ -1203,7 +1203,7 @@ app.get("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (re
   const id = Number(req.params.id);
 
   const r = await q(
-    `SELECT id, username, role, active
+    `SELECT id, username, role, active, permissions
      FROM users
      WHERE id = $1`,
     [id]
