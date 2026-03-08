@@ -289,7 +289,6 @@ while (true) {
 }
 
 const temp = "itccteama";
-const hash = await bcrypt.hash(temp, 10);
   const hash = await bcrypt.hash(temp, 10);
 
   // create user if not exists
