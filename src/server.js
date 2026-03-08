@@ -1210,6 +1210,14 @@ app.get("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (re
   );
 
   const userEdit = r.rows[0];
+  const campusResult = await q(`SELECT id, name, active FROM campuses ORDER BY name ASC`);
+
+const assignedCampusResult = await q(
+  `SELECT campus_id FROM user_campuses WHERE user_id = $1`,
+  [id]
+);
+  
+const assignedCampusIds = assignedCampusResult.rows.map(x => x.campus_id);
   if (!userEdit) {
     flash(req,"danger","Usuario no encontrado.");
     return res.redirect("/settings/users");
