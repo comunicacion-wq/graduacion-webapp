@@ -143,3 +143,41 @@
     </div>
   <% } %>
 </form>
+<script>
+  function generarUsuarioPortal() {
+    const fullNameInput = document.querySelector('input[name="full_name"]');
+    const usernamePreview = document.getElementById("portal_username_preview");
+    const usernameHidden = document.getElementById("portal_username");
+    const passwordPreview = document.getElementById("portal_password_preview");
+    const passwordHidden = document.getElementById("portal_password");
+
+    if (!fullNameInput || !usernamePreview || !usernameHidden) return;
+
+    const fullName = (fullNameInput.value || "").trim().toLowerCase();
+    const parts = fullName.split(/\s+/).filter(Boolean);
+
+    const nombre = parts[0] || "";
+    const apellido = parts[1] || "";
+
+    let usernameBase = (nombre + apellido.substring(0, 2))
+      .replace(/[^a-z0-9]/g, "");
+
+    if (!usernameBase) {
+      usernameBase = "alumno";
+    }
+
+    usernamePreview.value = usernameBase;
+    usernameHidden.value = usernameBase;
+
+    passwordPreview.value = "itccteama";
+    passwordHidden.value = "itccteama";
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const fullNameInput = document.querySelector('input[name="full_name"]');
+    if (fullNameInput) {
+      fullNameInput.addEventListener("input", generarUsuarioPortal);
+      generarUsuarioPortal();
+    }
+  });
+</script>
