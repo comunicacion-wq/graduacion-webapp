@@ -266,8 +266,30 @@ function randomPassword(len=10) {
 async function createStudentAccountAndSend(req, studentId) {
   // create username=phone, random temp password
   const { student, totals } = (await getStudentTotals(studentId));
-  const username = student.phone_e164;
-  const temp = randomPassword(10);
+const parts = (student.full_name || "").toLowerCase().trim().split(/\s+/);
+const nombre = parts[0] || "";
+const apellido = parts[1] || "";
+
+let baseUsername = (nombre + apellido.substring(0, 2))
+  .replace(/[^a-z0-9]/g, "")
+  .trim();
+
+if (!baseUsername) {
+  baseUsername = `alumno${studentId}`;
+}
+
+let username = baseUsername;
+let counter = 1;
+
+while (true) {
+  const exists = await q(`SELECT id FROM users WHERE username=$1`, [username]);
+  if (!exists.rows[0]) break;
+  username = `${baseUsername}${counter}`;
+  counter++;
+}
+
+const temp = "itccteama";
+const hash = await bcrypt.hash(temp, 10);
   const hash = await bcrypt.hash(temp, 10);
 
   // create user if not exists
