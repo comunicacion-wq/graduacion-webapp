@@ -1225,8 +1225,10 @@ const assignedCampusIds = assignedCampusResult.rows.map(x => x.campus_id);
 
   const body = await new Promise((resolve, reject) => {
     res.render("settings_users_edit", {
-      userEdit
-    }, (err, html) => err ? reject(err) : resolve(html));
+  userEdit,
+  campuses: campusResult.rows,
+  assignedCampusIds
+}, (err, html) => err ? reject(err) : resolve(html));
   });
 
   render(req,res,"layout", { title:"Editar usuario", active:"settings", body });
