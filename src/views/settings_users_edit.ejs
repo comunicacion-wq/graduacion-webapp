@@ -32,7 +32,31 @@
           <option value="false" <%= !userEdit.active ? "selected" : "" %>>Inactivo</option>
         </select>
       </div>
+<div class="mb-3">
+  <label class="form-label">Campus autorizados</label>
 
+  <div class="border rounded p-3">
+    <% campuses.forEach(campus => { %>
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="campus_ids"
+          value="<%= campus.id %>"
+          id="campus_<%= campus.id %>"
+          <%= assignedCampusIds.includes(campus.id) ? "checked" : "" %>
+        >
+        <label class="form-check-label" for="campus_<%= campus.id %>">
+          <%= campus.name %>
+        </label>
+      </div>
+    <% }) %>
+  </div>
+
+  <div class="form-text">
+    Selecciona los campus que este usuario puede consultar y operar.
+  </div>
+</div>
       <button type="submit" class="btn btn-primary">Guardar cambios</button>
     </form>
   </div>
