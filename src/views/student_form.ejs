@@ -93,6 +93,44 @@
   </div>
 
   <div class="col-12 d-flex gap-2">
+<hr class="my-4">
+
+<h5>Acceso automático al portal</h5>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label">Usuario generado</label>
+    <input
+      type="text"
+      id="portal_username_preview"
+      class="form-control"
+      readonly>
+    <input
+      type="hidden"
+      name="portal_username"
+      id="portal_username">
+  </div>
+
+  <div class="col-md-6">
+    <label class="form-label">Contraseña generada</label>
+    <input
+      type="text"
+      id="portal_password_preview"
+      class="form-control"
+      readonly
+      value="itccteama">
+    <input
+      type="hidden"
+      name="portal_password"
+      id="portal_password"
+      value="itccteama">
+  </div>
+</div>
+
+<p class="text-muted mt-2">
+  El usuario se genera automáticamente con el nombre y 2 letras del apellido.
+  Si ya existe uno igual, el sistema agregará un número al final al guardar.
+</p>
     <button class="btn btn-primary">Guardar</button>
     <a class="btn btn-outline-secondary" href="/students">Cancelar</a>
   </div>
