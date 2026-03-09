@@ -237,6 +237,7 @@ app.get("/students", requireAuth, async (req,res) => {
 });
 
 app.get("/students/export", requireAuth, async (req,res) => {
+ const cats = await catalogs();
   const body = `
     <div class="card">
       <div class="card-body">
