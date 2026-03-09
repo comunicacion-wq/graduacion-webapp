@@ -235,7 +235,48 @@ app.get("/students", requireAuth, async (req,res) => {
   });
   render(req,res,"layout", { title:"Alumnos", active:"students", body });
 });
+app.get("/students/export", requireAuth, async (req,res) => {
 
+  const body = `
+  <h3>Generar reporte de alumnos</h3>
+
+  <p>Selecciona las columnas que quieres descargar:</p>
+
+  <form>
+
+  <label><input type="checkbox" checked> Nombre completo</label><br>
+  <label><input type="checkbox"> Teléfono</label><br>
+  <label><input type="checkbox"> Campus</label><br>
+  <label><input type="checkbox"> Turno</label><br>
+  <label><input type="checkbox"> Periodo</label><br>
+  <label><input type="checkbox"> Año</label><br>
+  <label><input type="checkbox"> Carrera</label><br>
+  <label><input type="checkbox"> Grado</label><br>
+  <label><input type="checkbox"> Grupo</label><br>
+  <label><input type="checkbox"> Paquete</label><br>
+
+  <br>
+
+  <h5>Formato de descarga</h5>
+
+  <label><input type="radio" name="format" checked> Excel</label>
+  <label><input type="radio" name="format"> PDF</label>
+  <label><input type="radio" name="format"> Imagen</label>
+
+  <br><br>
+
+  <button class="btn btn-primary">Generar archivo</button>
+
+  </form>
+  `;
+
+  render(req,res,"layout",{
+    title:"Exportar alumnos",
+    active:"students",
+    body
+  });
+
+});
 app.get("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const cats = await catalogs();
   const student = {
