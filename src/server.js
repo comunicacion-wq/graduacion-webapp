@@ -235,44 +235,84 @@ app.get("/students", requireAuth, async (req,res) => {
   });
   render(req,res,"layout", { title:"Alumnos", active:"students", body });
 });
+
 app.get("/students/export", requireAuth, async (req,res) => {
-
   const body = `
-  <h3>Generar reporte de alumnos</h3>
+    <div class="card">
+      <div class="card-body">
+        <h3>Generar reporte de alumnos</h3>
+        <p>Selecciona las columnas que quieres descargar:</p>
 
-  <p>Selecciona las columnas que quieres descargar:</p>
+        <form method="GET" action="/students">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" checked>
+            <label class="form-check-label">Nombre completo</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Teléfono</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Campus</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Turno</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Periodo</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Año</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Carrera</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Grado</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Grupo</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox">
+            <label class="form-check-label">Paquete</label>
+          </div>
 
-  <form>
+          <hr>
 
-  <label><input type="checkbox" checked> Nombre completo</label><br>
-  <label><input type="checkbox"> Teléfono</label><br>
-  <label><input type="checkbox"> Campus</label><br>
-  <label><input type="checkbox"> Turno</label><br>
-  <label><input type="checkbox"> Periodo</label><br>
-  <label><input type="checkbox"> Año</label><br>
-  <label><input type="checkbox"> Carrera</label><br>
-  <label><input type="checkbox"> Grado</label><br>
-  <label><input type="checkbox"> Grupo</label><br>
-  <label><input type="checkbox"> Paquete</label><br>
+          <h5>Formato de descarga</h5>
 
-  <br>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="format" checked>
+            <label class="form-check-label">Excel</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="format">
+            <label class="form-check-label">PDF</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="format">
+            <label class="form-check-label">Imagen</label>
+          </div>
 
-  <h5>Formato de descarga</h5>
+          <br>
 
-  <label><input type="radio" name="format" checked> Excel</label>
-  <label><input type="radio" name="format"> PDF</label>
-  <label><input type="radio" name="format"> Imagen</label>
-
-  <br><br>
-
-  <button class="btn btn-primary">Generar archivo</button>
-
-  </form>
+          <button class="btn btn-primary" type="submit">Generar archivo</button>
+        </form>
+      </div>
+    </div>
   `;
 
-  render(req,res,"layout",{
-    title:"Exportar alumnos",
-    active:"students",
+  render(req, res, "layout", {
+    title: "Exportar alumnos",
+    active: "students",
     body
   });
 
