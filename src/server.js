@@ -1236,7 +1236,41 @@ const assignedCampusIds = assignedCampusResult.rows.map(x => x.campus_id);
 
 app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const id = Number(req.params.id);
-  const { username, password, role, active } = req.body;
+ const {
+  username,
+  password,
+  role,
+  active,
+  campus_ids,
+  view_students,
+  create_students,
+  view_arrears,
+  create_payments,
+  send_collection,
+  cancel_payments,
+  view_reports,
+  manage_users,
+  view_settings,
+  view_audit
+} = req.body;
+  const permissions = {
+  view_students: !!view_students,
+  create_students: !!create_students,
+  view_arrears: !!view_arrears,
+  create_payments: !!create_payments,
+  send_collection: !!send_collection,
+  cancel_payments: !!cancel_payments,
+  view_reports: !!view_reports,
+  manage_users: !!manage_users,
+  view_settings: !!view_settings,
+  view_audit: !!view_audit
+};
+
+const selectedCampusIds = Array.isArray(campus_ids)
+  ? campus_ids.map(x => Number(x))
+  : campus_ids
+    ? [Number(campus_ids)]
+    : [];
 
   if (!username || !username.trim() || !role || !role.trim()) {
     flash(req,"danger","Usuario y rol son obligatorios.");
@@ -1247,12 +1281,22 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
     const hash = await bcrypt.hash(password.trim(), 10);
 
     await q(
-      `UPDATE users
-       SET username = $1,
-           password_hash = $2,
-           role = $3,
-           active = $4
-       WHERE id = $5`,
+  `UPDATE users
+   SET username = $1,
+       password_hash = $2,
+       role = $3,
+       active = $4,
+       permissions = $5
+   WHERE id = $6`,
+  [
+    username.trim(),
+    hash,
+    role.trim(),
+    active === "true",
+    permissions,
+    id
+  ]
+);
       [
         username.trim(),
         hash,
@@ -1262,12 +1306,30 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
       ]
     );
   } else {
-    await q(
-      `UPDATE users
-       SET username = $1,
-           role = $2,
-           active = $3
-       WHERE id = $4`,
+await q(
+  `UPDATE users
+   SET username = $1,
+       role = $2,
+       active = $3,
+       permissions = $4
+   WHERE id = $5`,
+  [
+    username.trim(),
+    role.trim(),
+    active === "true",
+    permissions,
+    id
+  ]
+);
+    await q(`DELETE FROM user_campuses WHERE user_id = $1`, [id]);
+
+for (const campusId of selectedCampusIds) {
+  await q(
+    `INSERT INTO user_campuses(user_id, campus_id)
+     VALUES ($1, $2)`,
+    [id, campusId]
+  );
+}
       [
         username.trim(),
         role.trim(),
@@ -1277,10 +1339,12 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
     );
   }
 
-  await audit(req, "UPDATE_USER", "USER", id, {
-    username: username.trim(),
-    role: role.trim(),
-    active: active === "true"
+await audit(req, "UPDATE_USER", "USER", id, {
+  username: username.trim(),
+  role: role.trim(),
+  active: active === "true",
+  permissions,
+  campus_ids: selectedCampusIds
   });
 
   flash(req,"success","Usuario actualizado correctamente.");
