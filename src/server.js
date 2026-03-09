@@ -475,7 +475,7 @@ app.get("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (r
     // quick search
     const r = await q(
       `
-      SELECT s.id, s.full_name, s.phone_e164,
+      SELECT s.id, s.full_name, s.phone_e164, s.campus_id,
         c.name as campus_name, sh.name as shift_name, gp.name as period_name, gy.year as grad_year
       FROM students s
       LEFT JOIN campuses c ON c.id=s.campus_id
