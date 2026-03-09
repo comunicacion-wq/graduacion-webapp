@@ -55,6 +55,65 @@
 
   <div class="form-text">
     Selecciona los campus que este usuario puede consultar y operar.
+<div class="form-check">
+      <input class="form-check-input" type="checkbox" name="create_students" id="create_students"
+        <%= userEdit.permissions?.create_students ? "checked" : "" %>>
+      <label class="form-check-label" for="create_students">Registrar alumnos</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="view_arrears" id="view_arrears"
+        <%= userEdit.permissions?.view_arrears ? "checked" : "" %>>
+      <label class="form-check-label" for="view_arrears">Ver adeudos</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="create_payments" id="create_payments"
+        <%= userEdit.permissions?.create_payments ? "checked" : "" %>>
+      <label class="form-check-label" for="create_payments">Registrar pagos</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="send_collection" id="send_collection"
+        <%= userEdit.permissions?.send_collection ? "checked" : "" %>>
+      <label class="form-check-label" for="send_collection">Enviar cobranza</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="cancel_payments" id="cancel_payments"
+        <%= userEdit.permissions?.cancel_payments ? "checked" : "" %>>
+      <label class="form-check-label" for="cancel_payments">Cancelar pagos</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="view_reports" id="view_reports"
+        <%= userEdit.permissions?.view_reports ? "checked" : "" %>>
+      <label class="form-check-label" for="view_reports">Ver reportes</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="manage_users" id="manage_users"
+        <%= userEdit.permissions?.manage_users ? "checked" : "" %>>
+      <label class="form-check-label" for="manage_users">Administrar usuarios</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="view_settings" id="view_settings"
+        <%= userEdit.permissions?.view_settings ? "checked" : "" %>>
+      <label class="form-check-label" for="view_settings">Ver ajustes</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="view_audit" id="view_audit"
+        <%= userEdit.permissions?.view_audit ? "checked" : "" %>>
+      <label class="form-check-label" for="view_audit">Ver auditoría</label>
+    </div>
+  </div>
+
+  <div class="form-text">
+    Marca únicamente las acciones que este usuario tiene autorizadas.
+  </div>
+</div>
   </div>
 </div>
       <button type="submit" class="btn btn-primary">Guardar cambios</button>
