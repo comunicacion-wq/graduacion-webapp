@@ -243,6 +243,27 @@ app.get("/students/export", requireAuth, async (req,res) => {
       <div class="card-body">
         <h3>Generar reporte de alumnos</h3>
         <p>Selecciona las columnas que quieres descargar:</p>
+        <br>
+
+<div class="row mb-3">
+
+<div class="col-md-4">
+<label>Periodo</label>
+<select class="form-control">
+<option>Todos</option>
+${cats.periods.map(p => `<option>${p.name}</option>`).join("")}
+</select>
+</div>
+
+<div class="col-md-4">
+<label>Año</label>
+<select class="form-control">
+<option>Todos</option>
+${cats.years.map(y => `<option>${y.year}</option>`).join("")}
+</select>
+</div>
+
+</div>
 
         <form method="GET" action="/students">
           <div class="form-check">
