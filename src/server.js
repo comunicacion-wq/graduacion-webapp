@@ -1235,7 +1235,6 @@ const assignedCampusIds = assignedCampusResult.rows.map(x => x.campus_id);
 });
 
 app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (req,res) => {
-
   const id = Number(req.params.id);
 
   const {
@@ -1257,7 +1256,7 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
   } = req.body;
 
   if (!username || !username.trim() || !role || !role.trim()) {
-    flash(req,"danger","Usuario y rol son obligatorios.");
+    flash(req, "danger", "Usuario y rol son obligatorios.");
     return res.redirect(`/settings/users/${id}/edit`);
   }
 
@@ -1281,7 +1280,6 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
       : [];
 
   if (password && password.trim()) {
-
     const hash = await bcrypt.hash(password.trim(), 10);
 
     await q(
@@ -1301,9 +1299,7 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
         id
       ]
     );
-
   } else {
-
     await q(
       `UPDATE users
        SET username = $1,
@@ -1319,7 +1315,6 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
         id
       ]
     );
-
   }
 
   await q(`DELETE FROM user_campuses WHERE user_id = $1`, [id]);
@@ -1340,15 +1335,9 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
     campus_ids: selectedCampusIds
   });
 
-  flash(req,"success","Usuario actualizado correctamente.");
-
+  flash(req, "success", "Usuario actualizado correctamente.");
   res.redirect("/settings/users");
-
-});
-
-  flash(req,"success","Usuario actualizado correctamente.");
-  res.redirect("/settings/users");
-});
+  });
 
 // Reports placeholder
 app.get("/reports", requireAuth, async (req,res) => {
