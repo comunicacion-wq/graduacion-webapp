@@ -1,4 +1,4 @@
-import express from "express";
+                            import express from "express";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -321,14 +321,8 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
             <input class="form-check-input" type="checkbox">
             <label class="form-check-label">Teléfono</label>
           </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox">
-            <label class="form-check-label">Campus</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox">
-            <label class="form-check-label">Turno</label>
-          </div>
+        
+          
           <div class="form-check">
             <input class="form-check-input" type="checkbox">
             
