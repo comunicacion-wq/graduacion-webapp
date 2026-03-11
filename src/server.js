@@ -244,15 +244,62 @@ app.get("/students/export", requireAuth, async (req,res) => {
         <h3>Generar reporte de alumnos</h3>
         <p>Selecciona las columnas que quieres descargar:</p>
         <br>
+        <div class="row mb-3">
+
+  <div class="col-md-4">
+    <label>Campus</label>
+    <select class="form-control" name="campus_id">
+      <option value="">Todos</option>
+      ${cats.campuses.map(c => `<option value="${c.id}">${c.name}</option>`).join("")}
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label>Turno</label>
+    <select class="form-control" name="shift_id">
+      <option value="">Todos</option>
+      ${cats.shifts.map(s => `<option value="${s.id}">${s.name}</option>`).join("")}
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label>Periodo</label>
+    <select class="form-control" name="period_id">
+      <option value="">Todos</option>
+      ${cats.periods.map(p => `<option value="${p.id}">${p.name}</option>`).join("")}
+    </select>
+  </div>
+
+</div>
 
 <div class="row mb-3">
 
-<div class="col-md-4">
-<label>Periodo</label>
-<select class="form-control">
-<option>Todos</option>
-${cats.periods.map(p => `<option>${p.name}</option>`).join("")}
-</select>
+  <div class="col-md-4">
+    <label>Año</label>
+    <select class="form-control" name="year_id">
+      <option value="">Todos</option>
+      ${cats.years.map(y => `<option value="${y.id}">${y.year}</option>`).join("")}
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label>Carrera</label>
+    <select class="form-control" name="career_id">
+      <option value="">Todas</option>
+      ${cats.careers.map(c => `<option value="${c.id}">${c.name}</option>`).join("")}
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <label>Grado</label>
+    <input class="form-control" name="grade" placeholder="Ej. 1, 2, 3">
+  </div>
+
+  <div class="col-md-2">
+    <label>Grupo</label>
+    <input class="form-control" name="group" placeholder="Ej. A, B, C">
+  </div>
+
 </div>
 
 <div class="col-md-4">
