@@ -323,12 +323,6 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
           </div>
         
           
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox">
-            
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox">
        
       
           </div>
