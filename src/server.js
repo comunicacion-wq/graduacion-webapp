@@ -405,21 +405,22 @@ app.get("/students/export/download", requireAuth, async (req, res) => {
 `, params);
 
 let csv = "Nombre,Telefono,Campus,Turno,Periodo,Anio,Carrera,Grado,Grupo,Paquete,Abonado,Saldo pendiente\n";
-    students.rows.forEach((s) => {
-const row = [
-  s.full_name || "",
-  s.phone_e164 || "",
-  s.campus || "",
-  s.turno || "",
-  s.periodo || "",
-  s.anio || "",
-  s.carrera || "",
-  s.grade || "",
-  s.grupo || "",
-  s.paquete || "",
-  s.abonado || 0,
-  s.saldo_pendiente || 0
-];
+  students.rows.forEach((s) => {
+  csv += [
+    s.full_name || "",
+    s.phone_e164 || "",
+    s.campus || "",
+    s.turno || "",
+    s.periodo || "",
+    s.anio || "",
+    s.carrera || "",
+    s.grade || "",
+    s.grupo || "",
+    s.paquete || "",
+    s.abonado || 0,
+    s.saldo_pendiente || 0
+  ].join(",") + "\n";
+});
 
 csv += row.map(value => "${String(value).replace(/"/g, '""')}").join(",") + "\n";
     });
