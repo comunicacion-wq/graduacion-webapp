@@ -322,8 +322,6 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
             <input class="form-check-input" type="checkbox">
             <label class="form-check-label">Teléfono</label>
           </div>
-        
-          
        
       
           </div>
@@ -361,8 +359,6 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
     title: "Exportar alumnos",
     active: "students",
     body
-  });
-
 });
 });
 
