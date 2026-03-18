@@ -374,14 +374,11 @@ app.get("/students/export/download", requireAuth, async (req, res) => {
 
     let csv = "Nombre,Telefono\n";
 
-    students.rows.forEach(s => {
+    students.rows.forEach((s) => {
       csv += `"${s.full_name || ""}","${s.phone_e164 || ""}"\n`;
     });
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
-
-  res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
 
     return res.send(csv);
