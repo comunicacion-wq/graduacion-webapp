@@ -364,6 +364,31 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
 
 app.get("/students/export/download", requireAuth, async (req, res) => {
   try {
+    const students = await q(`
+      SELECT
+        full_name,
+        phone_e164
+      FROM students
+      ORDER BY full_name ASC
+    `);
+
+    let csv = "Nombre,Telefono\n";
+
+    students.rows.forEach(s => {
+      csv += `"${s.full_name || ""}","${s.phone_e164 || ""}"\n`;
+    });
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
+
+    res.send(csv);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error al generar archivo");
+  }
+});
+  try {
     const students = await db.query("SELECT * FROM students");
 
     let csv = "Nombre,Telefono\n";
