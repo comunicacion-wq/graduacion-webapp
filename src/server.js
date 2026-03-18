@@ -381,11 +381,14 @@ app.get("/students/export/download", requireAuth, async (req, res) => {
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
 
-    res.send(csv);
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
+
+    return res.send(csv);
 
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error al generar archivo");
+    return res.status(500).send("Error al generar archivo");
   }
 });
   try {
