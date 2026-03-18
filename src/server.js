@@ -380,31 +380,10 @@ app.get("/students/export/download", requireAuth, async (req, res) => {
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
-
     return res.send(csv);
-
   } catch (err) {
     console.error(err);
     return res.status(500).send("Error al generar archivo");
-  }
-});
-  try {
-    const students = await db.query("SELECT * FROM students");
-
-    let csv = "Nombre,Telefono\n";
-
-    students.rows.forEach(s => {
-      csv += `${s.name || ""},${s.phone || ""}\n`;
-    });
-
-    res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
-
-    res.send(csv);
-
-  } catch (err) {
-    console.error(err);
-    res.send("Error al generar archivo");
   }
 });
 app.get("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
