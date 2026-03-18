@@ -364,68 +364,47 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
 
 app.get("/students/export/download", requireAuth, async (req, res) => {
   try {
-   const students = await q(`
-  SELECT
-    s.full_name,
-    s.phone_e164,
-    c.name AS campus,
-    sh.name AS turno,
-    gp.name AS periodo,
-    gy.year AS anio,
-    ca.name AS carrera,
-    s.grade,
-    s."group" AS grupo,
-    p.name AS paquete,
-    COALESCE(p.total_amount, 0) AS total_paquete,
-    COALESCE(SUM(CASE WHEN pay.status = 'CONFIRMED' THEN pay.amount ELSE 0 END), 0) AS abonado,
-    COALESCE(p.total_amount, 0) - COALESCE(SUM(CASE WHEN pay.status = 'CONFIRMED' THEN pay.amount ELSE 0 END), 0) AS saldo_pendiente
-  FROM students s
-  LEFT JOIN campuses c ON c.id = s.campus_id
-  LEFT JOIN shifts sh ON sh.id = s.shift_id
-  LEFT JOIN graduation_periods gp ON gp.id = s.period_id
-  LEFT JOIN graduation_years gy ON gy.id = s.year_id
-  LEFT JOIN careers ca ON ca.id = s.career_id
-  LEFT JOIN packages p ON p.id = s.package_id
-  LEFT JOIN payments pay ON pay.student_id = s.id
-  ${whereSql}
-  GROUP BY
-    s.id,
-    s.full_name,
-    s.phone_e164,
-    c.name,
-    sh.name,
-    gp.name,
-    gy.year,
-    ca.name,
-    s.grade,
-    s."group",
-    p.name,
-    p.total_amount
-  ORDER BY s.full_name ASC
-`, params);
+    const students = await q(`
+      SELECT 
+        s.full_name,
+        s.phone_e164,
+        c.name AS campus,
+        sh.name AS turno,
+        gp.name AS periodo,
+        gy.year AS anio,
+        ca.name AS carrera,
+        s.grade,
+        s."group" AS grupo,
+        p.name AS paquete
+      FROM students s
+      LEFT JOIN campuses c ON c.id = s.campus_id
+      LEFT JOIN shifts sh ON sh.id = s.shift_id
+      LEFT JOIN graduation_periods gp ON gp.id = s.period_id
+      LEFT JOIN graduation_years gy ON gy.id = s.year_id
+      LEFT JOIN careers ca ON ca.id = s.career_id
+      LEFT JOIN packages p ON p.id = s.package_id
+      ORDER BY s.full_name ASC
+    `);
 
-let csv = "Nombre,Telefono,Campus,Turno,Periodo,Anio,Carrera,Grado,Grupo,Paquete,Abonado,Saldo pendiente\n";
-  students.rows.forEach((s) => {
-  csv += [
-    s.full_name || "",
-    s.phone_e164 || "",
-    s.campus || "",
-    s.turno || "",
-    s.periodo || "",
-    s.anio || "",
-    s.carrera || "",
-    s.grade || "",
-    s.grupo || "",
-    s.paquete || "",
-    s.abonado || 0,
-    s.saldo_pendiente || 0
-  ].join(",") + "\n";
-});
+    let csv = "Nombre,Telefono,Campus,Turno,Periodo,Anio,Carrera,Grado,Grupo,Paquete\n";
 
-csv += row.map(value => "${String(value).replace(/"/g, '""')}").join(",") + "\n";
+    students.rows.forEach((s) => {
+      csv += [
+        s.full_name || "",
+        s.phone_e164 || "",
+        s.campus || "",
+        s.turno || "",
+        s.periodo || "",
+        s.anio || "",
+        s.carrera || "",
+        s.grade || "",
+        s.grupo || "",
+        s.paquete || ""
+      ].join(",") + "\n";
     });
+
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", "attachment; filename=alumnos_filtrados.csv");
+    res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
     return res.send(csv);
 
   } catch (err) {
