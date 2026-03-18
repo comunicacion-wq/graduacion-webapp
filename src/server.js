@@ -244,6 +244,7 @@ app.get("/students/export", requireAuth, async (req,res) => {
         <h3>Generar reporte de alumnos</h3>
         <p>Selecciona las columnas que quieres descargar:</p>
         <br>
+        <form method="GET" action="/students/export/download">
         <div class="row mb-3">
 
   <div class="col-md-4">
@@ -362,6 +363,28 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
     body
   });
 
+});
+});
+
+app.get("/students/export/download", requireAuth, async (req, res) => {
+  try {
+    const students = await db.query("SELECT * FROM students");
+
+    let csv = "Nombre,Telefono\n";
+
+    students.rows.forEach(s => {
+      csv += `${s.name || ""},${s.phone || ""}\n`;
+    });
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=alumnos.csv");
+
+    res.send(csv);
+
+  } catch (err) {
+    console.error(err);
+    res.send("Error al generar archivo");
+  }
 });
 app.get("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const cats = await catalogs();
