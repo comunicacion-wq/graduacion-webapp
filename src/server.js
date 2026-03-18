@@ -406,8 +406,8 @@ app.get("/students/export/download", requireAuth, async (req, res) => {
 
 let csv = "Nombre,Telefono,Campus,Turno,Periodo,Anio,Carrera,Grado,Grupo,Paquete,Abonado,Saldo pendiente\n";
     students.rows.forEach((s) => {
-  csv += "${s.full_name || ""}","${s.phone_e164 || ""}","${s.campus || ""}","${s.turno || ""}","${s.periodo || ""}","${s.anio || ""}","${s.carrera || ""}","${s.grade || ""}","${s.grupo || ""}","${s.paquete || ""}","${s.abonado || 0}","${s.saldo_pendiente || 0}"\n;
-});
+csv += "${s.full_name || ""}","${s.phone_e164 || ""}","${s.campus || ""}","${s.turno || ""}","${s.periodo || ""}","${s.anio || ""}","${s.carrera || ""}","${s.grade || ""}","${s.grupo || ""}","${s.paquete || ""}","${s.abonado || 0}","${s.saldo_pendiente || 0}"\n;
+    });
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=alumnos_filtrados.csv");
     return res.send(csv);
