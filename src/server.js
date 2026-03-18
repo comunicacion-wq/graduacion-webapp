@@ -364,79 +364,45 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
 
 app.get("/students/export/download", requireAuth, async (req, res) => {
   try {
-    const {
-      campus_id = "",
-      shift_id = "",
-      period_id = "",
-      year_id = "",
-      career_id = "",
-      grade = "",
-      group = ""
-    } = req.query;
-
-    let query = `
-      SELECT
-        s.full_name,
-        s.phone_e164,
-        c.name AS campus,
-        sh.name AS turno,
-        gp.name AS periodo,
-        gy.year AS anio,
-        ca.name AS carrera,
-        s.grade,
-        s."group" AS grupo,
-        p.name AS paquete
-      FROM students s
-      LEFT JOIN campuses c ON c.id = s.campus_id
-      LEFT JOIN shifts sh ON sh.id = s.shift_id
-      LEFT JOIN graduation_periods gp ON gp.id = s.period_id
-      LEFT JOIN graduation_years gy ON gy.id = s.year_id
-      LEFT JOIN careers ca ON ca.id = s.career_id
-      LEFT JOIN packages p ON p.id = s.package_id
-      WHERE 1=1
-    `;
-
-    const params = [];
-    let i = 1;
-
-    if (campus_id) {
-      query += ` AND s.campus_id = $${i++}`;
-      params.push(campus_id);
-    }
-
-    if (shift_id) {
-      query += ` AND s.shift_id = $${i++}`;
-      params.push(shift_id);
-    }
-
-    if (period_id) {
-      query += ` AND s.period_id = $${i++}`;
-      params.push(period_id);
-    }
-
-    if (year_id) {
-      query += ` AND s.year_id = $${i++}`;
-      params.push(year_id);
-    }
-
-    if (career_id) {
-      query += ` AND s.career_id = $${i++}`;
-      params.push(career_id);
-    }
-
-    if (grade) {
-      query += ` AND s.grade = $${i++}`;
-      params.push(grade);
-    }
-
-    if (group) {
-      query += ` AND s."group" = $${i++}`;
-      params.push(group);
-    }
-
-    query += ` ORDER BY s.full_name ASC`;
-
-    const students = await q(query, params);
+   const students = await q(`
+  SELECT
+    s.full_name,
+    s.phone_e164,
+    c.name AS campus,
+    sh.name AS turno,
+    gp.name AS periodo,
+    gy.year AS anio,
+    ca.name AS carrera,
+    s.grade,
+    s."group" AS grupo,
+    p.name AS paquete,
+    COALESCE(p.total_amount, 0) AS total_paquete,
+    COALESCE(SUM(CASE WHEN pay.status = 'CONFIRMED' THEN pay.amount ELSE 0 END), 0) AS abonado,
+    COALESCE(p.total_amount, 0) - COALESCE(SUM(CASE WHEN pay.status = 'CONFIRMED' THEN pay.amount ELSE 0 END), 0) AS saldo_pendiente
+  FROM students s
+  LEFT JOIN campuses c ON c.id = s.campus_id
+  LEFT JOIN shifts sh ON sh.id = s.shift_id
+  LEFT JOIN graduation_periods gp ON gp.id = s.period_id
+  LEFT JOIN graduation_years gy ON gy.id = s.year_id
+  LEFT JOIN careers ca ON ca.id = s.career_id
+  LEFT JOIN packages p ON p.id = s.package_id
+  LEFT JOIN payments pay ON pay.student_id = s.id
+  ${whereSql}
+  GROUP BY
+    s.id,
+    s.full_name,
+    s.phone_e164,
+    c.name,
+    sh.name,
+    gp.name,
+    gy.year,
+    ca.name,
+    s.grade,
+    s."group",
+    p.name,
+    p.total_amount
+  ORDER BY s.full_name ASC
+`, params);
 
     let csv = "Nombre,Telefono,Campus,Turno,Periodo,Anio,Carrera,Grado,Grupo,Paquete\n";
 
