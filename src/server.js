@@ -364,13 +364,32 @@ ${cats.years.map(y => `<option>${y.year}</option>`).join("")}
 
 app.get("/students/export/download", requireAuth, async (req, res) => {
   try {
-    const students = await q(`
-      SELECT
-        full_name,
-        phone_e164
-      FROM students
-      ORDER BY full_name ASC
-    `);
+    const { campus_id, shift_id } = req.query;
+
+let query = `
+  SELECT
+    full_name,
+    phone_e164
+  FROM students
+  WHERE 1=1
+`;
+
+let params = [];
+let i = 1;
+
+if (campus_id) {
+  query += ` AND campus_id = $${i++}`;
+  params.push(campus_id);
+}
+
+if (shift_id) {
+  query += ` AND shift_id = $${i++}`;
+  params.push(shift_id);
+}
+
+query += ` ORDER BY full_name ASC`;
+
+const students = await q(query, params);
 
     let csv = "Nombre,Telefono\n";
 
