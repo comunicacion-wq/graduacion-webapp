@@ -1803,7 +1803,7 @@ const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</opti
   });
 });
 
-[6:26 p.m., 19/3/2026] Andrés Silva: <div class="row g-3">
+ <div class="row g-3">
   <div class="col-12">
     <label class="form-label">Comprobante</label>
     <input type="file" name="comprobante" class="form-control" accept="image/*,.pdf">
