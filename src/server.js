@@ -1694,6 +1694,7 @@ app.get("/expenses", requireAuth, async (req, res) => {
       <td>${g.notes || ""}</td>
     </tr>
   `).join("");
+  const tableRows = rows || '<tr><td colspan="8" class="text-center text-muted">No hay gastos registrados</td></tr>';
 
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1720,9 +1721,9 @@ app.get("/expenses", requireAuth, async (req, res) => {
                 <th>Observaciones</th>
               </tr>
             </thead>
-            <tbody>
-              ${rows || <tr><td colspan="8" class="text-center text-muted">No hay gastos registrados</td></tr>}
-            </tbody>
+           <tbody>
+  ${tableRows}
+</tbody>
           </table>
         </div>
       </div>
