@@ -34,6 +34,7 @@
         <a class="list-group-item list-group-item-action <%= active==='students'?'active':'' %>" href="/students">Control escolar</a>
         <a class="list-group-item list-group-item-action <%= active==='payments'?'active':'' %>" href="/finance/payments">Finanzas</a>
         <a class="list-group-item list-group-item-action <%= active==='arrears'?'active':'' %>" href="/arrears">Adeudos / Cobranza</a>
+<a class="list-group-item list-group-item-action <%= active==='expenses' ? 'active' : '' %>" href="/expenses">Gastos</a>
 
 <% if (user && (user.role === "ADMIN" || user.permissions?.view_reports)) { %>
 <a class="list-group-item list-group-item-action <%= active==='reports'?'active':'' %>" href="/reports">Reportes</a>
