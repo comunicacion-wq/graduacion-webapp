@@ -1535,6 +1535,30 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
 
 // Reports placeholder
 app.get("/reports", requireAuth, async (req,res) => {
+  app.get("/expenses", requireAuth, async (req, res) => {
+  const body = `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Gastos</h3>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="/expenses/contacts/new">Nuevo proveedor</a>
+        <a class="btn btn-outline-secondary" href="/expenses/export">Extraer reporte</a>
+        <a class="btn btn-primary" href="/expenses/new">Nuevo gasto</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <p class="text-muted mb-0">Aquí podrás registrar gastos, proveedores y extraer reportes.</p>
+      </div>
+    </div>
+  `;
+
+  render(req, res, "layout", {
+    title: "Gastos",
+    active: "expenses",
+    body
+  });
+});
   const body = "<h3>Reportes</h3><p class='text-muted'>En este MVP, usa Dashboard/Adeudos para métricas por filtros. Próximo paso: reportes detallados + exportación.</p>";
   render(req,res,"layout", { title:"Reportes", active:"reports", body });
 });
