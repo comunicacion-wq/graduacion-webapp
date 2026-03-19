@@ -1665,11 +1665,40 @@ app.get("/reports", requireAuth, async (req,res) => {
   render(req,res,"layout", { title:"Reportes", active:"reports", body });
 });
 app.get("/expenses", requireAuth, async (req, res) => {
+  const expenses = await q(`
+    SELECT
+      e.id,
+      e.expense_date,
+      e.concept,
+      e.amount,
+      e.notes,
+      c.full_name AS contact_name,
+      p.name AS period_name,
+      y.year AS year_name
+    FROM expenses e
+    LEFT JOIN expense_contacts c ON c.id = e.contact_id
+    LEFT JOIN graduation_periods p ON p.id = e.period_id
+    LEFT JOIN graduation_years y ON y.id = e.year_id
+    ORDER BY e.id DESC
+  `);
+
+  const rows = expenses.rows.map(g => `
+    <tr>
+      <td>${g.id}</td>
+      <td>${g.expense_date || ""}</td>
+      <td>${g.contact_name || ""}</td>
+      <td>${g.concept || ""}</td>
+      <td>${g.period_name || ""}</td>
+      <td>${g.year_name || ""}</td>
+      <td>$${g.amount || 0}</td>
+      <td>${g.notes || ""}</td>
+    </tr>
+  `).join("");
+
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0">Gastos</h3>
       <div class="d-flex gap-2">
-        <a class="btn btn-outline-secondary" href="/expenses/contacts/new">Nuevo proveedor</a>
         <a class="btn btn-outline-secondary" href="/expenses/export">Extraer reporte</a>
         <a class="btn btn-primary" href="/expenses/new">Nuevo gasto</a>
       </div>
@@ -1677,7 +1706,25 @@ app.get("/expenses", requireAuth, async (req, res) => {
 
     <div class="card">
       <div class="card-body">
-        <p class="text-muted mb-0">Aquí podrás registrar gastos, proveedores y extraer reportes.</p>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Proveedor / Persona</th>
+                <th>Concepto</th>
+                <th>Periodo</th>
+                <th>Año</th>
+                <th>Monto</th>
+                <th>Observaciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || <tr><td colspan="8" class="text-center text-muted">No hay gastos registrados</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
@@ -1688,6 +1735,7 @@ app.get("/expenses", requireAuth, async (req, res) => {
     body
   });
 });
+
 app.get("/expenses/new", requireAuth, async (req, res) => {
 const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC`);
   const periods = await q(`SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC`);
