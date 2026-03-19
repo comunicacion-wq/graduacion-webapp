@@ -1828,8 +1828,7 @@ const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</opti
       <option value="">Selecciona</option>
       ${yearOptions}
     </select>
-  …
-[6:33 p.m., 19/3/2026] Andrés Silva: app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req, res) => {
+ app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req, res) => {
   const { expense_date, period_id, year_id, contact_id, concept, amount, notes } = req.body;
   const evidence_path = req.file ? req.file.filename : null;
 
