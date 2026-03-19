@@ -16,7 +16,6 @@ import { generateLiquidationPDF } from "./pdf.js";
 const upload = multer({ dest: "uploads/" });
 dotenv.config();
 const app = express();
-const upload = multer({ dest: "uploads/" });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
