@@ -1688,6 +1688,97 @@ app.get("/expenses", requireAuth, async (req, res) => {
     body
   });
 });
+app.get("/expenses/new", requireAuth, async (req, res) => {
+  const contacts = await q(SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC);
+  const periods = await q(SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC);
+  const years = await q(SELECT id, year FROM graduation_years WHERE active = true ORDER BY id ASC);
+
+  const contactOptions = contacts.rows.map(c => <option value="${c.id}">${c.full_name}</option>).join("");
+  const periodOptions = periods.rows.map(p => <option value="${p.id}">${p.name}</option>).join("");
+  const yearOptions = years.rows.map(y => <option value="${y.id}">${y.year}</option>).join("");
+
+  const body = `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Nuevo gasto</h3>
+      <a class="btn btn-outline-secondary" href="/expenses">Volver</a>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="POST" action="/expenses/new">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Fecha</label>
+              <input type="date" class="form-control" name="expense_date" required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Periodo</label>
+              <select class="form-select" name="period_id" required>
+                <option value="">Selecciona</option>
+                ${periodOptions}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Año</label>
+              <select class="form-select" name="year_id" required>
+                <option value="">Selecciona</option>
+                ${yearOptions}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Proveedor / Persona</label>
+              <select class="form-select" name="contact_id" required>
+                <option value="">Selecciona</option>
+                ${contactOptions}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Monto</label>
+              <input type="number" step="0.01" class="form-control" name="amount" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Concepto</label>
+              <input class="form-control" name="concept" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Observaciones</label>
+              <textarea class="form-control" name="notes" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Guardar gasto</button>
+            <a class="btn btn-outline-secondary" href="/expenses">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  render(req, res, "layout", {
+    title: "Nuevo gasto",
+    active: "expenses",
+    body
+  });
+});
+
+app.post("/expenses/new", requireAuth, async (req, res) => {
+  const { expense_date, period_id, year_id, contact_id, concept, amount, notes } = req.body;
+
+  await q(
+    `INSERT INTO expenses (expense_date, period_id, year_id, contact_id, concept, amount, notes, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [expense_date, period_id, year_id, contact_id, concept, amount, notes || "", req.session.user.id]
+  );
+
+  res.redirect("/expenses");
+});
 app.get("/setup-expenses", requireAuth, async (req, res) => {
   try {
     await q(`
