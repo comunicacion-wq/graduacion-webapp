@@ -1328,14 +1328,17 @@ app.get("/settings/expense-contacts", requireAuth, requireRole("ADMIN"), async (
 const contacts = await q(`SELECT * FROM expense_contacts ORDER BY id DESC`);
 
   const rows = contacts.rows.map(c => `
-    <tr>
-      <td>${c.id}</td>
-      <td>${c.full_name}</td>
-      <td>${c.phone || ""}</td>
-      <td>${c.notes || ""}</td>
-    </tr>
-  `).join("");
-
+  <tr>
+    <td>${c.id}</td>
+    <td>${c.full_name}</td>
+    <td>${c.phone || ""}</td>
+    <td>${c.notes || ""}</td>
+    <td>
+      <a class="btn btn-sm btn-outline-primary" href="/settings/expense-contacts/${c.id}/edit">Editar</a>
+    </td>
+  </tr>
+`).join("");
+  
   const body = `
     <h3>Proveedores</h3>
 
@@ -1345,13 +1348,14 @@ const contacts = await q(`SELECT * FROM expense_contacts ORDER BY id DESC`);
 
     <table class="table">
       <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Teléfono</th>
-          <th>Notas</th>
-        </tr>
-      </thead>
+      <tr>
+    <th>ID</th>
+    <th>Nombre</th>
+    <th>Teléfono</th>
+    <th>Notas</th>
+    <th>Acciones</th>
+  </tr>
+</thead>
       <tbody>
         ${rows}
       </tbody>
