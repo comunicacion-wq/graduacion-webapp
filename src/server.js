@@ -1370,10 +1370,10 @@ const contacts = await q(`SELECT * FROM expense_contacts ORDER BY id DESC`);
 });
 app.get("/settings/expense-contacts/:id/edit", requireAuth, requireRole("ADMIN"), async (req, res) => {
   const { id } = req.params;
-
+  
   const result = await q(
-    SELECT * FROM expense_contacts WHERE id = $1,
-    [id]
+  `SELECT * FROM expense_contacts WHERE id = $1`,
+  [id]
   );
 
   if (!result.rows.length) {
