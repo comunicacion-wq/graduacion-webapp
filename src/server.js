@@ -1563,7 +1563,70 @@ app.get("/expenses", requireAuth, async (req, res) => {
     body
   });
 });
+app.get("/expenses/contacts/new", requireAuth, async (req, res) => {
+  const body = `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Nuevo proveedor</h3>
+      <a class="btn btn-outline-secondary" href="/expenses">Volver</a>
+    </div>
 
+    <div class="card">
+      <div class="card-body">
+        <form method="POST" action="/expenses/contacts/new">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Nombre completo</label>
+              <input class="form-control" name="full_name" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Teléfono</label>
+              <input class="form-control" name="phone">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Tipo</label>
+              <select class="form-select" name="contact_type">
+                <option value="PROVEEDOR">Proveedor</option>
+                <option value="APOYO">Apoyo</option>
+                <option value="COLABORADOR">Colaborador</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Observaciones</label>
+              <textarea class="form-control" name="notes" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Guardar proveedor</button>
+            <a class="btn btn-outline-secondary" href="/expenses">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  render(req, res, "layout", {
+    title: "Nuevo proveedor",
+    active: "expenses",
+    body
+  });
+});
+
+app.post("/expenses/contacts/new", requireAuth, async (req, res) => {
+  const { full_name, phone, contact_type, notes } = req.body;
+
+  await q(
+    `INSERT INTO expense_contacts (full_name, phone, contact_type, notes)
+     VALUES ($1, $2, $3, $4)`,
+    [full_name, phone || "", contact_type || "PROVEEDOR", notes || ""]
+  );
+
+  res.redirect("/expenses");
+});
 // Cashbox endpoints (admin)
 app.post("/cashbox/close", requireAuth, requireRole("ADMIN"), async (req,res) => {
   await q(`UPDATE cashbox_state SET is_open=false, updated_by=$1, updated_at=NOW() WHERE id=1`, [req.session.user.id]);
