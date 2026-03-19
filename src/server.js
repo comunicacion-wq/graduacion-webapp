@@ -1693,9 +1693,9 @@ const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY fu
   const periods = await q(`SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC`);
   const years = await q(`SELECT id, year FROM graduation_years WHERE active = true ORDER BY id ASC`);
 
-  const contactOptions = contacts.rows.map(c => <option value="${c.id}">${c.full_name}</option>).join("");
-  const periodOptions = periods.rows.map(p => <option value="${p.id}">${p.name}</option>).join("");
-  const yearOptions = years.rows.map(y => <option value="${y.id}">${y.year}</option>).join("");
+const contactOptions = contacts.rows.map(c => <option value="${c.id}">${c.full_name}</option>).join("");
+const periodOptions = periods.rows.map(p => <option value="${p.id}">${p.name}</option>).join("");
+const yearOptions = years.rows.map(y => <option value="${y.id}">${y.year}</option>).join("");
 
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
