@@ -1324,6 +1324,46 @@ app.post("/settings/periods/new", requireAuth, requireRole("ADMIN"), async (req,
   flash(req,"success","Periodo agregado correctamente.");
   res.redirect("/settings/periods");
 });
+app.get("/settings/expense-contacts", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  const contacts = await q(SELECT * FROM expense_contacts ORDER BY id DESC);
+
+  const rows = contacts.rows.map(c => `
+    <tr>
+      <td>${c.id}</td>
+      <td>${c.full_name}</td>
+      <td>${c.phone || ""}</td>
+      <td>${c.notes || ""}</td>
+    </tr>
+  `).join("");
+
+  const body = `
+    <h3>Proveedores</h3>
+
+    <a class="btn btn-primary mb-3" href="/expenses/contacts/new">
+      Nuevo proveedor
+    </a>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Teléfono</th>
+          <th>Notas</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  `;
+
+  render(req, res, "layout", {
+    title: "Proveedores",
+    active: "settings",
+    body
+  });
+});
 
 app.post("/settings/periods/:id/toggle", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const id = Number(req.params.id);
