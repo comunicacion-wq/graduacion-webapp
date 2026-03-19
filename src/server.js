@@ -1760,14 +1760,10 @@ const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</opti
   <input type="file" name="comprobante" class="form-control" accept="image/*">
 </div>
 
-            <div class="col-md-4">
-              <label class="form-label">Periodo</label>
-              <select class="form-select" name="period_id" required>
-                <option value="">Selecciona</option>
-                ${periodOptions}
-              </select>
-            </div>
-
+           <div class="col-md-4">
+  <label class="form-label">Fecha</label>
+  <input type="date" class="form-control" name="expense_date" required>
+</div>
             <div class="col-md-4">
               <label class="form-label">Año</label>
               <select class="form-select" name="year_id" required>
