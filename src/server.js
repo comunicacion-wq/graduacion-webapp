@@ -1563,6 +1563,42 @@ app.get("/expenses", requireAuth, async (req, res) => {
     body
   });
 });
+app.get("/setup-expenses", requireAuth, async (req, res) => {
+  try {
+    await q(`
+      CREATE TABLE IF NOT EXISTS expense_contacts (
+        id SERIAL PRIMARY KEY,
+        full_name VARCHAR(150) NOT NULL,
+        phone VARCHAR(30),
+        contact_type VARCHAR(50) DEFAULT 'PROVEEDOR',
+        notes TEXT,
+        active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await q(`
+      CREATE TABLE IF NOT EXISTS expenses (
+        id SERIAL PRIMARY KEY,
+        expense_date DATE NOT NULL,
+        period_id INTEGER REFERENCES graduation_periods(id),
+        year_id INTEGER REFERENCES graduation_years(id),
+        contact_id INTEGER REFERENCES expense_contacts(id),
+        concept TEXT NOT NULL,
+        amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+        notes TEXT,
+        evidence_path TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    res.send("Tablas de gastos creadas correctamente");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error al crear tablas de gastos");
+  }
+});
 app.get("/expenses/contacts/new", requireAuth, async (req, res) => {
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
