@@ -1325,7 +1325,7 @@ app.post("/settings/periods/new", requireAuth, requireRole("ADMIN"), async (req,
   res.redirect("/settings/periods");
 });
 app.get("/settings/expense-contacts", requireAuth, requireRole("ADMIN"), async (req, res) => {
-  const contacts = await q(SELECT * FROM expense_contacts ORDER BY id DESC);
+const contacts = await q(`SELECT * FROM expense_contacts ORDER BY id DESC`);
 
   const rows = contacts.rows.map(c => `
     <tr>
