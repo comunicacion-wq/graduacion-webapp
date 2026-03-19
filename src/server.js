@@ -1803,7 +1803,33 @@ const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</opti
   });
 });
 
-app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req, res) => {
+[6:26 p.m., 19/3/2026] Andrés Silva: <div class="row g-3">
+  <div class="col-12">
+    <label class="form-label">Comprobante</label>
+    <input type="file" name="comprobante" class="form-control" accept="image/*,.pdf">
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label">Fecha</label>
+    <input type="date" class="form-control" name="expense_date" required>
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label">Periodo</label>
+    <select class="form-select" name="period_id" required>
+      <option value="">Selecciona</option>
+      ${periodOptions}
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label">Año</label>
+    <select class="form-select" name="year_id" required>
+      <option value="">Selecciona</option>
+      ${yearOptions}
+    </select>
+  …
+[6:33 p.m., 19/3/2026] Andrés Silva: app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req, res) => {
   const { expense_date, period_id, year_id, contact_id, concept, amount, notes } = req.body;
   const evidence_path = req.file ? req.file.filename : null;
 
