@@ -1754,12 +1754,12 @@ const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</opti
 
     <div class="card">
       <div class="card-body">
-        <form method="POST" action="/expenses/new">
+        <form method="POST" action="/expenses/new" enctype="multipart/form-data">
           <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Fecha</label>
-              <input type="date" class="form-control" name="expense_date" required>
-            </div>
+           <div class="mb-3">
+  <label>Comprobante</label>
+  <input type="file" name="comprobante" class="form-control" accept="image/*">
+</div>
 
             <div class="col-md-4">
               <label class="form-label">Periodo</label>
