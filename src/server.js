@@ -376,9 +376,9 @@ app.get("/students/export/download", requireAuth, async (req, res) => {
     s.grade,
     s."group" AS grupo,
     p.name AS paquete,
-    COALESCE(p.total_amount, 0) AS total_paquete,
-    COALESCE(SUM(CASE WHEN pay.status = 'CONFIRMED' THEN pay.amount ELSE 0 END), 0) AS abonado,
-    COALESCE(p.total_amount, 0) - COALESCE(SUM(CASE WHEN pay.status = 'CONFIRMED' THEN pay.amount ELSE 0 END), 0) AS saldo_pendiente
+COALESCE(p.cost, 0) AS total_paquete,
+COALESCE(SUM(CASE WHEN pay.status = 'CONFIRMED' THEN pay.amount ELSE 0 END), 0) AS abonado,
+COALESCE(p.cost, 0) - COALESCE(SUM(CASE WHEN pay.status = 'CONFIRMED' THEN pay.amount ELSE 0 END), 0) AS saldo_pendiente
   FROM students s
   LEFT JOIN campuses c ON c.id = s.campus_id
   LEFT JOIN shifts sh ON sh.id = s.shift_id
@@ -399,7 +399,7 @@ app.get("/students/export/download", requireAuth, async (req, res) => {
     s.grade,
     s."group",
     p.name,
-    p.total_amount
+    p.cost
   ORDER BY s.full_name ASC
 `);
 
