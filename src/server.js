@@ -1535,7 +1535,11 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
 
 // Reports placeholder
 app.get("/reports", requireAuth, async (req,res) => {
-  app.get("/expenses", requireAuth, async (req, res) => {
+
+  const body = "<h3>Reportes</h3><p class='text-muted'>En este MVP, usa Dashboard/Adeudos para métricas por filtros. Próximo paso: reportes detallados + exportación.</p>";
+  render(req,res,"layout", { title:"Reportes", active:"reports", body });
+});
+app.get("/expenses", requireAuth, async (req, res) => {
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0">Gastos</h3>
@@ -1558,9 +1562,6 @@ app.get("/reports", requireAuth, async (req,res) => {
     active: "expenses",
     body
   });
-});
-  const body = "<h3>Reportes</h3><p class='text-muted'>En este MVP, usa Dashboard/Adeudos para métricas por filtros. Próximo paso: reportes detallados + exportación.</p>";
-  render(req,res,"layout", { title:"Reportes", active:"reports", body });
 });
 
 // Cashbox endpoints (admin)
