@@ -1687,7 +1687,7 @@ app.get("/expenses", requireAuth, async (req, res) => {
       <td>${g.expense_date || ""}</td>
       <td>${g.contact_name || ""}</td>
       <td>${g.concept || ""}</td>
-      <td>${g.period_name || ""}</td>
+     <td>${g.period_name || ""}</td>
       <td>${g.year_name || ""}</td>
       <td>$${g.amount || 0}</td>
       <td>${g.notes || ""}</td>
