@@ -667,6 +667,35 @@ app.post("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async
   res.redirect(`/students/${studentId}`);
 });
 
+app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  const studentId = Number(req.params.id);
+
+  const existing = await q(`SELECT * FROM students WHERE id=$
+1`, [studentId]);
+  if (!existing.rows[0]) {
+    flash(req, "danger", "Alumno no encontrado.");
+    return res.redirect("/students");
+  }
+
+  await q(`DELETE FROM student_accounts WHERE student_id=$
+1`, [studentId]);
+  await q(`DELETE FROM payments WHERE student_id=$
+1`, [studentId]);
+  await q(`DELETE FROM message_log WHERE student_id=$
+1`, [studentId]);
+  await q(`DELETE FROM change_requests WHERE student_id=$
+1`, [studentId]);
+  await q(`DELETE FROM students WHERE id=$
+1`, [studentId]);
+
+  await audit(req, "DELETE_STUDENT", "STUDENT", studentId, {
+    full_name: existing.rows[0].full_name
+  });
+
+  flash(req, "success", "Alumno eliminado correctamente.");
+  res.redirect("/students");
+});
+
 app.post("/students/:id/resend-credentials", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const studentId = Number(req.params.id);
   await createStudentAccountAndSend(req, studentId);
