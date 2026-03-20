@@ -1950,11 +1950,12 @@ app.get("/expenses/:id", requireAuth, async (req, res) => {
         <label class="form-label fw-bold">Comprobante</label>
         <div class="border rounded p-3">
           <p>
-            <a href="/uploads/${g.evidence_path}" target="_blank" class="btn btn-outline-primary btn-sm">
-              Abrir comprobante
-            </a>
-          </p>
-          <img src="/uploads/${g.evidence_path}" alt="Comprobante" class="img-fluid rounded border" style="max-width: 500px;">
+  <a href="${g.evidence_path}" target="_blank" class="btn btn-outline-primary btn-sm">
+    Abrir comprobante
+  </a>
+</p>
+
+<img src="${g.evidence_path}" alt="Comprobante" class="img-fluid rounded border">
         </div>
       </div>
     `
