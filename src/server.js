@@ -1737,9 +1737,9 @@ app.get("/expenses", requireAuth, async (req, res) => {
 });
 
 app.get("/expenses/new", requireAuth, async (req, res) => {
-  const contacts = await q(SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC);
-  const periods = await q(SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC);
-  const years = await q(SELECT id, year FROM graduation_years WHERE active = true ORDER BY id ASC);
+const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC`);
+  const periods = await q(`SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC`);
+  const years = await q(`SELECT id, year FROM graduation_years WHERE active = true ORDER BY id ASC`);
 
   const contactOptions = contacts.rows.map(c => <option value="${c.id}">${c.full_name}</option>).join("");
   const periodOptions = periods.rows.map(p => <option value="${p.id}">${p.name}</option>).join("");
