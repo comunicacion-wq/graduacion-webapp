@@ -26,6 +26,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(session({
   secret: process.env.SESSION_SECRET || "dev_secret",
   resave: false,
@@ -1685,8 +1686,8 @@ app.get("/expenses", requireAuth, async (req, res) => {
   <tr>
     <td>${g.id}</td>
     <td>${g.expense_date || ""}</td>
-    <td>${g.contact_name || ""}</td>
-    <td>${g.concept || ""}</td>
+    <td><a href="/expenses/${g.id}">${g.contact_name || ""}</a></td>
+  <td><a href="/expenses/${g.id}">${g.concept || ""}</a></td>
     <td>${g.period_name || ""}</td>
     <td>${g.year_name || ""}</td>
     <td>$${g.amount || 0}</td>
@@ -1736,6 +1737,112 @@ app.get("/expenses", requireAuth, async (req, res) => {
 
   render(req, res, "layout", {
     title: "Gastos",
+    active: "expenses",
+    body
+  });
+});
+
+app.get("/expenses/:id", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+
+  const result = await q(
+    `SELECT
+      e.*,
+      c.full_name AS contact_name,
+      p.name AS period_name,
+      y.year AS year_name
+     FROM expenses e
+     LEFT JOIN expense_contacts c ON c.id = e.contact_id
+     LEFT JOIN graduation_periods p ON p.id = e.period_id
+     LEFT JOIN graduation_years y ON y.id = e.year_id
+     WHERE e.id = $1`,
+    [id]
+  );
+
+  if (!result.rows.length) {
+    return res.status(404).send("Gasto no encontrado");
+  }
+
+  const g = result.rows[0];
+
+  const evidenceHtml = g.evidence_path
+    ? `
+      <div class="mt-3">
+        <label class="form-label fw-bold">Comprobante</label>
+        <div class="border rounded p-3">
+          <p>
+            <a href="/uploads/${g.evidence_path}" target="_blank" class="btn btn-outline-primary btn-sm">
+              Abrir comprobante
+            </a>
+          </p>
+          <img src="/uploads/${g.evidence_path}" alt="Comprobante" class="img-fluid rounded border" style="max-width: 500px;">
+        </div>
+      </div>
+    `
+    : `
+      <div class="mt-3">
+        <label class="form-label fw-bold">Comprobante</label>
+        <p class="text-muted">Este gasto no tiene archivo adjunto.</p>
+      </div>
+    `;
+
+  const body = `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Detalle de gasto</h3>
+      <a class="btn btn-outline-secondary" href="/expenses">Volver</a>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label fw-bold">ID</label>
+            <div>${g.id}</div>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Fecha</label>
+            <div>${g.expense_date || ""}</div>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Periodo</label>
+            <div>${g.period_name || ""}</div>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Año</label>
+            <div>${g.year_name || ""}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Proveedor / Persona</label>
+            <div>${g.contact_name || ""}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Monto</label>
+            <div>$${g.amount || 0}</div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold">Concepto</label>
+            <div>${g.concept || ""}</div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold">Observaciones</label>
+            <div>${g.notes || ""}</div>
+          </div>
+        </div>
+
+        ${evidenceHtml}
+      </div>
+    </div>
+  `;
+
+  render(req, res, "layout", {
+    title: "Detalle de gasto",
     active: "expenses",
     body
   });
