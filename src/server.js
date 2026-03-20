@@ -1742,8 +1742,6 @@ app.get("/expenses", requireAuth, async (req, res) => {
   });
 });
 
-
-
 app.get("/expenses/new", requireAuth, async (req, res) => {
 const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC`);
   const periods = await q(`SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC`);
@@ -1824,6 +1822,76 @@ const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY fu
 
   render(req, res, "layout", {
     title: "Nuevo gasto",
+    active: "expenses",
+    body
+  });
+});
+
+app.get("/expenses/export", requireAuth, async (req, res) => {
+  const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC`);
+  const periods = await q(`SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC`);
+  const years = await q(`SELECT id, year FROM graduation_years ORDER BY id ASC`);
+
+  const contactOptions = contacts.rows.map(c => `<option value="${c.id}">${c.full_name}</option>`).join("");
+  const periodOptions = periods.rows.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+  const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</option>`).join("");
+
+  const body = `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Extraer reporte de gastos</h3>
+      <a class="btn btn-outline-secondary" href="/expenses">Volver</a>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="GET" action="/expenses/export/download">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Proveedor / Persona</label>
+              <select class="form-select" name="contact_id">
+                <option value="">Todos</option>
+                ${contactOptions}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Periodo</label>
+              <select class="form-select" name="period_id">
+                <option value="">Todos</option>
+                ${periodOptions}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Año</label>
+              <select class="form-select" name="year_id">
+                <option value="">Todos</option>
+                ${yearOptions}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Fecha inicial</label>
+              <input type="date" class="form-control" name="date_from">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Fecha final</label>
+              <input type="date" class="form-control" name="date_to">
+            </div>
+          </div>
+
+          <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Descargar CSV</button>
+            <a class="btn btn-outline-secondary" href="/expenses">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  render(req, res, "layout", {
+    title: "Extraer reporte de gastos",
     active: "expenses",
     body
   });
@@ -1980,75 +2048,6 @@ FROM expenses WHERE id = $1`, [id]);
   res.redirect("/expenses");
 });
 
-app.get("/expenses/export", requireAuth, async (req, res) => {
-  const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC`);
-  const periods = await q(`SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC`);
-  const years = await q(`SELECT id, year FROM graduation_years ORDER BY id ASC`);
-
-  const contactOptions = contacts.rows.map(c => `<option value="${c.id}">${c.full_name}</option>`).join("");
-  const periodOptions = periods.rows.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
-  const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</option>`).join("");
-
-  const body = `
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="mb-0">Extraer reporte de gastos</h3>
-      <a class="btn btn-outline-secondary" href="/expenses">Volver</a>
-    </div>
-
-    <div class="card">
-      <div class="card-body">
-        <form method="GET" action="/expenses/export/download">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Proveedor / Persona</label>
-              <select class="form-select" name="contact_id">
-                <option value="">Todos</option>
-                ${contactOptions}
-              </select>
-            </div>
-
-            <div class="col-md-4">
-              <label class="form-label">Periodo</label>
-              <select class="form-select" name="period_id">
-                <option value="">Todos</option>
-                ${periodOptions}
-              </select>
-            </div>
-
-            <div class="col-md-4">
-              <label class="form-label">Año</label>
-              <select class="form-select" name="year_id">
-                <option value="">Todos</option>
-                ${yearOptions}
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Fecha inicial</label>
-              <input type="date" class="form-control" name="date_from">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Fecha final</label>
-              <input type="date" class="form-control" name="date_to">
-            </div>
-          </div>
-
-          <div class="mt-3 d-flex gap-2">
-            <button class="btn btn-primary" type="submit">Descargar CSV</button>
-            <a class="btn btn-outline-secondary" href="/expenses">Cancelar</a>
-          </div>
-        </form>
-      </div>
-    </div>
-  `;
-
-  render(req, res, "layout", {
-    title: "Extraer reporte de gastos",
-    active: "expenses",
-    body
-  });
-});
 
 app.get("/expenses/export/download", requireAuth, async (req, res) => {
   const { contact_id, period_id, year_id, date_from, date_to } = req.query;
