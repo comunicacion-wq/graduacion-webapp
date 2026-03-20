@@ -1829,34 +1829,36 @@ const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</opti
       ${yearOptions}
     </select>
     
- app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req, res) => {
+app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req, res) => {
   const { expense_date, period_id, year_id, contact_id, concept, amount, notes } = req.body;
   const evidence_path = req.file ? req.file.filename : null;
- await q(
-  `INSERT INTO expenses (
-    expense_date,
-    period_id,
-    year_id,
-    contact_id,
-    concept,
-    amount,
-    notes,
-    evidence_path,
-    created_by
-  )
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-  [
-    expense_date,
-    period_id,
-    year_id,
-    contact_id,
-    concept,
-    amount,
-    notes,
-    evidence_path,
-    req.session.user.id
-  ]
-);
+
+  await q(
+    `INSERT INTO expenses (
+      expense_date,
+      period_id,
+      year_id,
+      contact_id,
+      concept,
+      amount,
+      notes,
+      evidence_path,
+      created_by
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [
+      expense_date,
+      period_id,
+      year_id,
+      contact_id,
+      concept,
+      amount,
+      notes || "",
+      evidence_path,
+      req.session.user.id
+    ]
+  );
+
   res.redirect("/expenses");
 });
 
