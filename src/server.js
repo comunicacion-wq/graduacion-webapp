@@ -1681,19 +1681,24 @@ app.get("/expenses", requireAuth, async (req, res) => {
     ORDER BY e.id DESC
   `);
 
-  const rows = expenses.rows.map(g => `
-    <tr>
-      <td>${g.id}</td>
-      <td>${g.expense_date || ""}</td>
-      <td>${g.contact_name || ""}</td>
-      <td>${g.concept || ""}</td>
-     <td>${g.period_name || ""}</td>
-      <td>${g.year_name || ""}</td>
-      <td>$${g.amount || 0}</td>
-      <td>${g.notes || ""}</td>
-    </tr>
-  `).join("");
-  const tableRows = rows || '<tr><td colspan="8" class="text-center text-muted">No hay gastos registrados</td></tr>';
+ const rows = expenses.rows.map(g => `
+  <tr>
+    <td>${g.id}</td>
+    <td>${g.expense_date || ""}</td>
+    <td>${g.contact_name || ""}</td>
+    <td>${g.concept || ""}</td>
+    <td>${g.period_name || ""}</td>
+    <td>${g.year_name || ""}</td>
+    <td>$${g.amount || 0}</td>
+    <td>${g.notes || ""}</td>
+    <td>
+      <form method="POST" action="/expenses/${g.id}/delete" onsubmit="return confirm('¿Eliminar este gasto?')">
+        <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+      </form>
+    </td>
+  </tr>
+`).join("");
+ const tableRows = rows || '<tr><td colspan="9" class="text-center text-muted">No hay gastos registrados</td></tr>';
 
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1851,6 +1856,15 @@ const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY fu
     ]
   );
 
+  res.redirect("/expenses");
+});
+app.post("/expenses/:id/delete", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+
+  await q(`DELETE 
+FROM expenses WHERE id = $1`, [id]);
+
+  flash(req, "success", "Gasto eliminado correctamente.");
   res.redirect("/expenses");
 });
 app.get("/setup-expenses", requireAuth, async (req, res) => {
