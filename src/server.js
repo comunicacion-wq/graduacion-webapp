@@ -1979,6 +1979,149 @@ FROM expenses WHERE id = $1`, [id]);
   flash(req, "success", "Gasto eliminado correctamente.");
   res.redirect("/expenses");
 });
+
+app.get("/expenses/export", requireAuth, async (req, res) => {
+  const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC`);
+  const periods = await q(`SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC`);
+  const years = await q(`SELECT id, year FROM graduation_years ORDER BY id ASC`);
+
+  const contactOptions = contacts.rows.map(c => `<option value="${c.id}">${c.full_name}</option>`).join("");
+  const periodOptions = periods.rows.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+  const yearOptions = years.rows.map(y => `<option value="${y.id}">${y.year}</option>`).join("");
+
+  const body = `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Extraer reporte de gastos</h3>
+      <a class="btn btn-outline-secondary" href="/expenses">Volver</a>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="GET" action="/expenses/export/download">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Proveedor / Persona</label>
+              <select class="form-select" name="contact_id">
+                <option value="">Todos</option>
+                ${contactOptions}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Periodo</label>
+              <select class="form-select" name="period_id">
+                <option value="">Todos</option>
+                ${periodOptions}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Año</label>
+              <select class="form-select" name="year_id">
+                <option value="">Todos</option>
+                ${yearOptions}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Fecha inicial</label>
+              <input type="date" class="form-control" name="date_from">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Fecha final</label>
+              <input type="date" class="form-control" name="date_to">
+            </div>
+          </div>
+
+          <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Descargar CSV</button>
+            <a class="btn btn-outline-secondary" href="/expenses">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  render(req, res, "layout", {
+    title: "Extraer reporte de gastos",
+    active: "expenses",
+    body
+  });
+});
+
+app.get("/expenses/export/download", requireAuth, async (req, res) => {
+  const { contact_id, period_id, year_id, date_from, date_to } = req.query;
+
+  const conditions = [];
+  const params = [];
+  let i = 1;
+
+  if (contact_id) {
+    conditions.push(`e.contact_id = $${i++}`);
+    params.push(Number(contact_id));
+  }
+
+  if (period_id) {
+    conditions.push(`e.period_id = $${i++}`);
+    params.push(Number(period_id));
+  }
+
+  if (year_id) {
+    conditions.push(`e.year_id = $${i++}`);
+    params.push(Number(year_id));
+  }
+
+  if (date_from) {
+    conditions.push(`e.expense_date >= $${i++}`);
+    params.push(date_from);
+  }
+
+  if (date_to) {
+    conditions.push(`e.expense_date <= $${i++}`);
+    params.push(date_to);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const result = await q(
+    `SELECT
+      e.id,
+      e.expense_date,
+      c.full_name AS contact_name,
+      p.name AS period_name,
+      y.year AS year_name,
+      e.concept,
+      e.amount,
+      e.notes
+     FROM expenses e
+     LEFT JOIN expense_contacts c ON c.id = e.contact_id
+     LEFT JOIN graduation_periods p ON p.id = e.period_id
+     LEFT JOIN graduation_years y ON y.id = e.year_id
+     ${where}
+     ORDER BY e.id DESC`,
+    params
+  );
+
+  let csv = "ID,Fecha,Proveedor o Persona,Periodo,Año,Concepto,Monto,Observaciones\n";
+
+  result.rows.forEach(g => {
+    csv += [
+      g.id ?? "",
+      g.expense_date ? dayjs(g.expense_date).format("DD/MM/YYYY") : "",
+      `"${(g.contact_name || "").replace(/"/g, '""')}"`,
+      `"${(g.period_name || "").replace(/"/g, '""')}"`,
+      g.year_name ?? "",
+      `"${(g.concept || "").replace(/"/g, '""')}"`,
+      g.amount ?? 0,
+      `"${(g.notes || "").replace(/"/g, '""')}"`
+    ].join(",") + "\n";
+  });
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", "attachment; filename=reporte_gastos.csv");
+  return res.send(csv);
+});
 app.get("/setup-expenses", requireAuth, async (req, res) => {
   try {
     await q(`
