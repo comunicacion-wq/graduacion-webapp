@@ -1,4 +1,4 @@
-                            import express from "express";
+import express from "express";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -18,10 +18,27 @@ import { getStudentTotals } from "./totals.js";
 import { generateLiquidationPDF } from "./pdf.js";
 
 dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "comprobantes",
+    allowed_formats: ["jpg", "png", "jpeg", "pdf"]
+  }
+});
+
+const upload = multer({ storage });
+
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const _dirname = path.dirname(_filename);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -2011,7 +2028,7 @@ app.get("/expenses/:id", requireAuth, async (req, res) => {
 });
   app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req, res) => {
   const { expense_date, period_id, year_id, contact_id, concept, amount, notes } = req.body;
-  const evidence_path = req.file ? req.file.filename : null;
+ const evidence_path = req.file ? req.file.path : null;
 
   await q(
     `INSERT INTO expenses (
