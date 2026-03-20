@@ -1833,6 +1833,10 @@ app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req,
   const { expense_date, period_id, year_id, contact_id, concept, amount, notes } = req.body;
   const evidence_path = req.file ? req.file.filename : null;
 
+  app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req, res) => {
+  const { expense_date, period_id, year_id, contact_id, concept, amount, notes } = req.body;
+  const evidence_path = req.file ? req.file.filename : null;
+
   await q(
     `INSERT INTO expenses (
       expense_date,
@@ -1861,7 +1865,6 @@ app.post("/expenses/new", requireAuth, upload.single("comprobante"), async (req,
 
   res.redirect("/expenses");
 });
-
 app.get("/setup-expenses", requireAuth, async (req, res) => {
   try {
     await q(`
