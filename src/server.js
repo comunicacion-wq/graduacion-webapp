@@ -622,12 +622,23 @@ app.post("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async
     flash(req, "danger", "Alumno no encontrado.");
     return res.redirect("/students");
   }
+app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  const studentId = Number(req.params.id);
 
-  await q(`DELETE FROM student_accounts WHERE student_id=$1`, [studentId]);
-  await q(`DELETE FROM payments WHERE student_id=$1`, [studentId]);
-  await q(`DELETE FROM message_log WHERE student_id=$1`, [studentId]);
-  await q(`DELETE FROM change_requests WHERE student_id=$1`, [studentId]);
-  await q(`DELETE FROM students WHERE id=$1`, [studentId]);
+  const existing = await q(`SELECT * FROM students WHERE id=$
+1`, [studentId]);
+  if (!existing.rows[0]) {
+    flash(req, "danger", "Alumno no encontrado.");
+    return res.redirect("/students");
+  }
+
+  // SOLO eliminar alumno (versión segura)
+  await q(`DELETE FROM students WHERE id=$
+1`, [studentId]);
+
+  flash(req, "success", "Alumno eliminado correctamente.");
+  res.redirect("/students");
+});
 
   await audit(req, "DELETE_STUDENT", "STUDENT", studentId, { full_name: existing.rows[0].full_name });
 
