@@ -8,12 +8,15 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+
 import { q } from "./db.js";
 import { requireAuth, requireRole } from "./security.js";
 import { sendWhatsApp } from "./whatsapp.js";
 import { getStudentTotals } from "./totals.js";
 import { generateLiquidationPDF } from "./pdf.js";
-const upload = multer({ dest: "uploads/" });
+
 dotenv.config();
 const app = express();
 
