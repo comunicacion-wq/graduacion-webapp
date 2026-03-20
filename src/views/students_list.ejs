@@ -72,6 +72,9 @@
         <td class="text-end">
           <a class="btn btn-sm btn-outline-primary" href="/students/<%= s.id %>">Ver</a>
           <a class="btn btn-sm btn-primary" href="/students/<%= s.id %>/edit">Editar</a>
+<form method="POST" action="/students/<%= s.id %>/delete" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este alumno?');">
+  <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+</form>
         </td>
       </tr>
     <% }) %>
