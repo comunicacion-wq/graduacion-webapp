@@ -614,29 +614,77 @@ app.get("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async 
 });
 
 app.post("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
-  app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, res) => {
   const studentId = Number(req.params.id);
-
+  const b = req.body;
   const existing = await q(`SELECT * FROM students WHERE id=$1`, [studentId]);
+
   if (!existing.rows[0]) {
     flash(req, "danger", "Alumno no encontrado.");
     return res.redirect("/students");
   }
+
+  if (req.session.user.role === "CAJERO" && !(req.session.user.campuses||[]).includes(existing.rows[0].campus_id)) {
+    return res.status(403).send("No autorizado");
+  }
+
+  await q(
+    `UPDATE students
+     SET full_name=$1,
+         phone_e164=$2,
+         campus_id=$3,
+         shift_id=$4,
+         period_id=$5,
+         year_id=$6,
+         career_id=$7,
+         grade=$8,
+         "group"=$9,
+         package_id=$10,
+         discount_amount=$11,
+         discount_reason=$12
+     WHERE id=$13`,
+    [
+      b.full_name,
+      b.phone_e164,
+      Number(b.campus_id),
+      Number(b.shift_id),
+      Number(b.period_id),
+      Number(b.year_id),
+      b.career_id ? Number(b.career_id) : null,
+      b.grade || "",
+      b.group || "",
+      Number(b.package_id),
+      Number(b.discount_amount || 0),
+      b.discount_reason || "",
+      studentId
+    ]
+  );
+
+  await audit(req, "UPDATE_STUDENT", "STUDENT", studentId, {
+    before: existing.rows[0],
+    after: b
+  });
+
+  flash(req, "success", "Alumno actualizado.");
+  res.redirect(`/students/${studentId}`);
+});
+
 app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, res) => {
   const studentId = Number(req.params.id);
 
-  const existing = await q(`SELECT * FROM students WHERE id = $1`, [studentId]);
+  const existing = await q(`SELECT * FROM students WHERE id = $
+1`, [studentId]);
   if (!existing.rows[0]) {
     flash(req, "danger", "Alumno no encontrado.");
     return res.redirect("/students");
   }
 
-  await q(`DELETE FROM students WHERE id = $1`, [studentId]);
+  await q(`DELETE FROM students WHERE id = $
+1`, [studentId]);
 
   flash(req, "success", "Alumno eliminado correctamente.");
   res.redirect("/students");
 });
-    
+
 app.post("/students/:id/resend-credentials", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const studentId = Number(req.params.id);
   await createStudentAccountAndSend(req, studentId);
