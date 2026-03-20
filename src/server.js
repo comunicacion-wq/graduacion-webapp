@@ -1685,7 +1685,7 @@ app.get("/expenses", requireAuth, async (req, res) => {
  const rows = expenses.rows.map(g => `
   <tr>
     <td>${g.id}</td>
-    <td>${g.expense_date || ""}</td>
+    <td>${g.expense_date ? dayjs(g.expense_date).format("DD/MM/YYYY") : ""}</td>
     <td><a href="/expenses/${g.id}">${g.contact_name || ""}</a></td>
   <td><a href="/expenses/${g.id}">${g.concept || ""}</a></td>
     <td>${g.period_name || ""}</td>
@@ -1893,7 +1893,7 @@ app.get("/expenses/:id", requireAuth, async (req, res) => {
 
           <div class="col-md-3">
             <label class="form-label fw-bold">Fecha</label>
-            <div>${g.expense_date || ""}</div>
+            <div>${g.expense_date ? dayjs(g.expense_date).format("DD/MM/YYYY") : ""}</div>
           </div>
 
           <div class="col-md-3">
