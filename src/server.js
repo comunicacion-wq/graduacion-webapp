@@ -255,6 +255,19 @@ app.get("/students", requireAuth, async (req,res) => {
   });
   render(req,res,"layout", { title:"Alumnos", active:"students", body });
 });
+app.get("/test-whatsapp", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+    await sendWhatsApp({
+      toE164: "+5218995010005",
+      body: "Prueba de WhatsApp desde graduacion-webapp. Si te llegó este mensaje, la conexión quedó correcta."
+    });
+
+    res.send("WhatsApp enviado correctamente.");
+  } catch (err) {
+    console.error("Error en prueba WhatsApp:", err);
+    res.status(500).send("Error enviando WhatsApp.");
+  }
+});
 
 app.get("/students/export", requireAuth, async (req,res) => {
  const cats = await catalogs();
