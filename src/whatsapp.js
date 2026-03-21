@@ -14,7 +14,7 @@ export async function sendWhatsApp({ toE164, body, mediaUrl=null }) {
     return { simulated: true, status: "SIMULATED" };
   }
   const msg = await client.messages.create({
-    from: `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`,
+from: process.env.TWILIO_WHATSAPP_FROM,
     to: `whatsapp:${toE164}`,
     body,
     ...(mediaUrl ? { mediaUrl: [mediaUrl] } : {})
