@@ -677,6 +677,7 @@ app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, 
     return res.redirect("/students");
   }
 
+  await q(`DELETE FROM change_requests WHERE student_id = $1`, [studentId]);
   await q(`DELETE FROM students WHERE id = $1`, [studentId]);
 
   flash(req, "success", "Alumno eliminado correctamente.");
