@@ -671,15 +671,13 @@ app.post("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async
 app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, res) => {
   const studentId = Number(req.params.id);
 
-  const existing = await q(`SELECT * FROM students WHERE id = $
-1`, [studentId]);
+  const existing = await q(`SELECT * FROM students WHERE id = $1`, [studentId]);
   if (!existing.rows[0]) {
     flash(req, "danger", "Alumno no encontrado.");
     return res.redirect("/students");
   }
 
-  await q(`DELETE FROM students WHERE id = $
-1`, [studentId]);
+  await q(`DELETE FROM students WHERE id = $1`, [studentId]);
 
   flash(req, "success", "Alumno eliminado correctamente.");
   res.redirect("/students");
