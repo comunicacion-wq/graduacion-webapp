@@ -821,8 +821,8 @@ app.post("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (
   );
   const updated = await getStudentTotals(studentId);
 const student = updated.student;
-const totalPaid = Number(updated.paid || 0).toFixed(2);
-const remaining = Number(updated.remaining || 0).toFixed(2);
+const totalPaid = Number(updated.totals?.total_paid || 0).toFixed(2);
+const remaining = Number(updated.totals?.balance || 0).toFixed(2);
 const paidNow = Number(amount || 0).toFixed(2);
 
 const phone = (student.phone_e164 || "").replace("+", "").trim();
