@@ -554,10 +554,11 @@ try {
 } catch (err) {
   console.error("Error enviando WhatsApp:", err.message);
 }
-  await q(
-    `INSERT INTO message_log(student_id,to_phone_e164,type,body,media_url,status) VALUES ($1,$2,$3,$4,$5,$6)`,
-    [studentId, student.phone_e164, "CREDENCIALES", body, null, wa.status || (wa.simulated ? "SIMULATED":"SENT")]
-  );
+await q(
+  `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) 
+VALUES ($1,$2,$3,$4,$5)`,
+  [studentId, student.phone_e164, "CREDENCIALES", body, "MANUAL"]
+);
   await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e164 });
 }
 
@@ -1027,10 +1028,9 @@ app.post("/arrears/send", requireAuth, requireRole("ADMIN"), async (req,res) => 
       "{PAQUETE}": s.package_name,
       "{INSTRUCCIONES_PAGO}": instructions
     });
-    const wa = await sendWhatsApp({ toE164: s.phone_e164, body });
     await q(
       `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
-      [s.id, s.phone_e164, "ADEUDO", body, wa.status || (wa.simulated ? "SIMULATED":"SENT")]
+      [s.id, s.phone_e164, "ADEUDO", body, "MANUAL"]
     );
     sent++;
   }
@@ -1183,7 +1183,6 @@ async function executeApprovedRequest(req, r) {
       "${ABONADO}": info.totals.total_paid.toFixed(2),
       "${SALDO}": Math.max(0, info.totals.balance).toFixed(2)
     });
-    const wa = await sendWhatsApp({ toE164: info.student.phone_e164, body });
     await q(
       `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
       [r.student_id, info.student.phone_e164, "CORRECCION", body, wa.status || (wa.simulated ? "SIMULATED":"SENT")]
