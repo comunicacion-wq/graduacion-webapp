@@ -530,7 +530,6 @@ const temp = "itccteama";
   }
   await q(`INSERT INTO student_accounts(student_id, user_id) VALUES ($1,$2)
            ON CONFLICT (student_id) DO UPDATE SET user_id=EXCLUDED.user_id`, [studentId, userId]);
-
  
 const link = `${process.env.APP_BASE_URL || ""}/portal/login`;
 
