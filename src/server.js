@@ -558,13 +558,14 @@ await q(
   [studentId, student.phone_e164, "CREDENCIALES", body, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
 );
 
+await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e164 });
+
 if (whatsappLink) {
   return res.redirect(whatsappLink);
 }
 
 flash(req, "success", "Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
-  
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const b = req.body;
   // Cajero restricted campus assignment
@@ -841,8 +842,7 @@ if (whatsappLink) {
 }
 
 flash(req, "success", "Abono registrado correctamente.");
-return res.redirect(`/students/$
-{studentId}`);
+return res.redirect(`/students/${studentId}`);
  
 await q(
   `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
