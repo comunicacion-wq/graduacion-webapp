@@ -540,7 +540,20 @@ const temp = "itccteama";
     "{LINK_PORTAL}": link ? `Entra aquí: ${link}` : ""
   });
 
-  const wa = await sendWhatsApp({ toE164: student.phone_e164, body });
+  const phone = (student.phone_e164 || "").trim();
+
+try {
+  if (phone && phone !== "0" && phone.startsWith("+")) {
+    await sendWhatsApp({
+      toE164: phone,
+      body: "Mensaje..."
+    });
+  } else {
+    console.log("WhatsApp no enviado: teléfono inválido:", phone);
+  }
+} catch (err) {
+  console.error("Error enviando WhatsApp:", err.message);
+}
   await q(
     `INSERT INTO message_log(student_id,to_phone_e164,type,body,media_url,status) VALUES ($1,$2,$3,$4,$5,$6)`,
     [studentId, student.phone_e164, "CREDENCIALES", body, null, wa.status || (wa.simulated ? "SIMULATED":"SENT")]
