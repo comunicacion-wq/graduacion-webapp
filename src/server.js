@@ -531,37 +531,39 @@ const temp = "itccteama";
   await q(`INSERT INTO student_accounts(student_id, user_id) VALUES ($1,$2)
            ON CONFLICT (student_id) DO UPDATE SET user_id=EXCLUDED.user_id`, [studentId, userId]);
 
-  const t = await getTemplate("CREDENCIALES");
-  const link = `${process.env.APP_BASE_URL || ""}/portal/login`;
-  const body = applyVars(t.body, {
-    "{NOMBRE}": student.full_name,
-    "{USUARIO}": username,
-    "{CONTRASENA}": temp,
-    "{LINK_PORTAL}": link ? `Entra aquí: ${link}` : ""
-  });
+ 
+const phone = (student.phone_e164 || "").replace("+", "").trim();
 
-  const phone = (student.phone_e164 || "").trim();
+const body = `Hola ${student.full_name}
 
-try {
-  if (phone && phone !== "0" && phone.startsWith("+")) {
-    await sendWhatsApp({
-      toE164: phone,
-      body: "Mensaje..."
-    });
-  } else {
-    console.log("WhatsApp no enviado: teléfono inválido:", phone);
-  }
-} catch (err) {
-  console.error("Error enviando WhatsApp:", err.message);
-}
+Tu cuenta fue creada correctamente.
+
+Portal:
+${link}
+
+Usuario: ${username}
+Contraseña: ${temp}
+
+Te recomendamos cambiar tu contraseña al ingresar.`;
+
+const encodedMessage = encodeURIComponent(body);
+
+const whatsappLink = phone
+  ? `https://wa.me/${phone}?text=${encodedMessage}`
+  : null;
+
 await q(
-  `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) 
-VALUES ($1,$2,$3,$4,$5)`,
-  [studentId, student.phone_e164, "CREDENCIALES", body, "MANUAL"]
+  `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
+  [studentId, student.phone_e164, "CREDENCIALES", body, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
 );
-  await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e164 });
+
+if (whatsappLink) {
+  return res.redirect(whatsappLink);
 }
 
+flash(req, "success", "Alumno creado correctamente.");
+return res.redirect(`/students/${studentId}`);
+  
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const b = req.body;
   // Cajero restricted campus assignment
