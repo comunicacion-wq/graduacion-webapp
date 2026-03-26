@@ -559,10 +559,7 @@ await q(
 );
 
 await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e164 });
-
-if (whatsappLink) {
-  return res.redirect(whatsappLink);
-}
+  return { whatsappLink };
 
 flash(req, "success", "Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
@@ -597,14 +594,19 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
       b.discount_reason || ""
     ]
   );
+  
+    // auto send credentials (as requested)
   const studentId = ins.rows[0].id;
   await audit(req, "CREATE_STUDENT", "STUDENT", studentId, { full_name: b.full_name });
+  
+ const result = await createStudentAccountAndSend(req, studentId);
+  
+if (result?.whatsappLink) {
+ return res.redirect(result.whatsappLink);
+}
 
-  // auto send credentials (as requested)
-  await createStudentAccountAndSend(req, studentId);
-  flash(req,"success","Alumno creado y credenciales enviadas por WhatsApp (o simulado).");
-  res.redirect(`/students/${studentId}`);
-});
+flash(req,"success","Alumno creado correctamente.");
+return res.redirect(`/students/${studentId}`);
 
 app.get("/students/:id", requireAuth, async (req,res) => {
   const studentId = Number(req.params.id);
