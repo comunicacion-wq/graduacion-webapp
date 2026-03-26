@@ -854,11 +854,17 @@ const whatsappLink = phone
     "${ABONADO}": after.totals.total_paid.toFixed(2),
     "${SALDO}": Math.max(0, after.totals.balance).toFixed(2)
   });
-  const wa = await sendWhatsApp({ toE164: after.student.phone_e164, body: waBody });
-  await q(
-    `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
-    [studentId, after.student.phone_e164, "ABONO", waBody, wa.status || (wa.simulated ? "SIMULATED":"SENT")]
-  );
+await q(
+  `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
+  [studentId, after.student.phone_e164, "ABONO", waBody, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
+);
+
+if (whatsappLink) {
+  return res.redirect(whatsappLink);
+}
+
+flash(req, "success", "Abono registrado correctamente, pero el alumno no tiene teléfono válido para WhatsApp.");
+return res.redirect(`/students/${studentId}`);
 
   // Liquidation: if balance <= 0, send PDF
   if (after.totals.balance <= 0) {
