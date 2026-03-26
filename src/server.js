@@ -594,20 +594,6 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
       b.discount_reason || ""
     ]
   );
-  const phone = (b.phone_e164 || "").trim();
-
-try {
-  if (phone && phone !== "0" && phone.startsWith("+")) {
-    await sendWhatsApp({
-      toE164: phone,
-      body: `Hola ${b.full_name}. Tu registro en el sistema de graduación fue realizado correctamente.`
-    });
-  } else {
-    console.log("WhatsApp no enviado: teléfono inválido:", phone);
-  }
-} catch (err) {
-  console.error("Error enviando WhatsApp al registrar alumno:", err.message);
-}
   const studentId = ins.rows[0].id;
   await audit(req, "CREATE_STUDENT", "STUDENT", studentId, { full_name: b.full_name });
 
