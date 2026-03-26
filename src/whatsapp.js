@@ -20,7 +20,7 @@ export async function sendWhatsApp({ toE164, body, mediaUrl = null }) {
 
   const payload = {
     from: process.env.TWILIO_WHATSAPP_FROM,
-    to: whatsapp:${toE164},
+    to: `whatsapp:${toE164}`,
     body
   };
 
