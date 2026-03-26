@@ -841,20 +841,20 @@ const whatsappLink = phone
   ? `https://wa.me/${phone}?text=${encodedMessage}`
   : null;
   await audit(req, "CREATE_PAYMENT", "PAYMENT", null, { student_id: studentId, amount: Number(amount) });
+  await q(
+  `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) 
+VALUES ($1,$2,$3,$4,$5)`,
+  [studentId, student.phone_e164, "ABONO", message, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
+);
 
-  // Recompute totals for message
-  const after = await getStudentTotals(studentId);
-  const t = await getTemplate("ABONO");
-  const now = dayjs();
-  const waBody = applyVars(t.body, {
-    "{NOMBRE}": after.student.full_name,
-    "${MONTO_ABONO}": Number(amount).toFixed(2),
-    "{FECHA_PAGO}": now.format("DD/MM/YYYY"),
-    "{HORA_PAGO}": now.format("HH:mm"),
-    "${TOTAL}": after.totals.total_due.toFixed(2),
-    "${ABONADO}": after.totals.total_paid.toFixed(2),
-    "${SALDO}": Math.max(0, after.totals.balance).toFixed(2)
-  });
+if (whatsappLink) {
+  return res.redirect(whatsappLink);
+}
+
+flash(req, "success", "Abono registrado correctamente.");
+return res.redirect(`/students/$
+{studentId}`);
+ 
 await q(
   `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
   [studentId, after.student.phone_e164, "ABONO", waBody, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
