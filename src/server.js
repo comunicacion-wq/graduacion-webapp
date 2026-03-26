@@ -566,6 +566,8 @@ if (whatsappLink) {
 
 flash(req, "success", "Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
+}
+
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const b = req.body;
   // Cajero restricted campus assignment
