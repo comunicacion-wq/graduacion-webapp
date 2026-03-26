@@ -818,6 +818,27 @@ app.post("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (
     `INSERT INTO payments(student_id, amount, method, note, created_by) VALUES ($1,$2,$3,$4,$5)`,
     [studentId, Number(amount), method || "Efectivo", note || "", req.session.user.id]
   );
+  const updated = await getStudentTotals(studentId);
+const student = updated.student;
+const totalPaid = Number(updated.paid || 0).toFixed(2);
+const remaining = Number(updated.remaining || 0).toFixed(2);
+const paidNow = Number(amount || 0).toFixed(2);
+
+const phone = (student.phone_e164 || "").replace("+", "").trim();
+
+const message = `Hola ${student.full_name} 👋
+
+Registramos tu abono de $${paidNow} 💵
+
+Total abonado: $${totalPaid}
+Saldo pendiente: $${remaining}
+
+Gracias por tu pago 🙌`;
+
+const encodedMessage = encodeURIComponent(message);
+const whatsappLink = phone
+  ? `https://wa.me/${phone}?text=${encodedMessage}`
+  : null;
   await audit(req, "CREATE_PAYMENT", "PAYMENT", null, { student_id: studentId, amount: Number(amount) });
 
   // Recompute totals for message
