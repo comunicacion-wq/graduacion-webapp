@@ -532,6 +532,8 @@ const temp = "itccteama";
            ON CONFLICT (student_id) DO UPDATE SET user_id=EXCLUDED.user_id`, [studentId, userId]);
 
  
+const link = `${process.env.APP_BASE_URL || ""}/portal/login`;
+
 const phone = (student.phone_e164 || "").replace("+", "").trim();
 
 const body = `Hola ${student.full_name}
