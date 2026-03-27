@@ -552,7 +552,6 @@ const encodedMessage = encodeURIComponent(body);
 const whatsappLink = phone
   ? `https://wa.me/${phone}?text=${encodedMessage}`
   : null;
-
 await q(
   `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
   [studentId, student.phone_e164, "CREDENCIALES", body, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
