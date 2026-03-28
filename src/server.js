@@ -597,9 +597,7 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
   
  const result = await createStudentAccountAndSend(req, studentId);
   
-if (result?.whatsappLink) {
-  return res.redirect(result.whatsappLink);
-}
+if (result?.whatsappLink) 
 
 flash(req,"success","Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
