@@ -559,9 +559,6 @@ await q(
 
 await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e164 });
   return { whatsappLink };
-
-flash(req, "success", "Alumno creado correctamente.");
-return res.redirect(`/students/${studentId}`);
 }
 
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
