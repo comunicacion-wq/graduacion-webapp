@@ -853,29 +853,6 @@ Gracias por tu pago 🙌`;
   return res.redirect(`/students/${studentId}`);
 });
 
-  // Liquidation: if balance <= 0, send PDF
-  if (after.totals.balance <= 0) {
-    const tpl = await getTemplate("LIQUIDACION");
-    const msg = applyVars(tpl.body, { "{NOMBRE}": after.student.full_name });
-    // Generate PDF locally
-    const outDir = path.join(process.cwd(), "generated_pdfs");
-    const pdf = await generateLiquidationPDF({ student: after.student, totals: after.totals, outDir });
-    // In this MVP, we cannot provide a public mediaUrl automatically in local. We'll send message without media unless hosted.
-    let mediaUrl = null;
-    // If APP_BASE_URL is public and we serve /pdf/:file, you can use it:
-    mediaUrl = `${process.env.APP_BASE_URL || ""}/pdf/${encodeURIComponent(pdf.fileName)}`;
-    const wa2 = await sendWhatsApp({ toE164: after.student.phone_e164, body: msg, mediaUrl });
-    await q(
-      `INSERT INTO message_log(student_id,to_phone_e164,type,body,media_url,status) VALUES ($1,$2,$3,$4,$5,$6)`,
-      [studentId, after.student.phone_e164, "LIQUIDACION", msg, mediaUrl, wa2.status || (wa2.simulated ? "SIMULATED":"SENT")]
-    );
-    await audit(req, "SEND_LIQUIDATION", "STUDENT", studentId, { pdf: pdf.fileName });
-  }
-
-  flash(req,"success","Abono registrado. Mensaje WhatsApp enviado (o simulado).");
-  res.redirect(`/students/${studentId}`);
-});
-
 // Serve generated PDFs (for mediaUrl). In production, host publicly.
 app.get("/pdf/:name", requireAuth, async (req,res) => {
   const fileName = req.params.name;
