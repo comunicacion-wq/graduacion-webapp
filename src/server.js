@@ -601,9 +601,9 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
 if (result?.whatsappLink) {
   return res.redirect(result.whatsappLink);
 }
-
 flash(req,"success","Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
+});
 
 app.get("/students/:id", requireAuth, async (req,res) => {
   const studentId = Number(req.params.id);
@@ -1033,7 +1033,8 @@ app.get("/requests", requireAuth, async (req,res) => {
   const body = await new Promise((resolve, reject) => {
     res.render("requests_list", { requests, user }, (err, html) => err ? reject(err) : resolve(html));
   });
-  render(req,res,"layout", { title:"Solicitudes", active:"requests", body });
+render(req,res,"layout", { title:"Solicitudes", active:"requests", body });
+});
 
 app.get("/requests/new", requireAuth, requireRole("CAJERO"), async (req,res) => {
   // list students in cajero campuses
