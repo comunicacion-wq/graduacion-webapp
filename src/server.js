@@ -1035,7 +1035,6 @@ app.get("/requests", requireAuth, async (req,res) => {
     res.render("requests_list", { requests, user }, (err, html) => err ? reject(err) : resolve(html));
   });
   render(req,res,"layout", { title:"Solicitudes", active:"requests", body });
-});
 
 app.get("/requests/new", requireAuth, requireRole("CAJERO"), async (req,res) => {
   // list students in cajero campuses
