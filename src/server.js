@@ -604,7 +604,6 @@ if (result?.whatsappLink) {
 
 flash(req,"success","Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
-});
 
 app.get("/students/:id", requireAuth, async (req,res) => {
   const studentId = Number(req.params.id);
