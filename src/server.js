@@ -563,7 +563,7 @@ await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e
 
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const b = req.body;
-  // Cajero restricted campus assignment
+
   if (req.session.user.role === "CAJERO") {
     const allowed = (req.session.user.campuses || []).includes(Number(b.campus_id));
     if (!allowed) {
@@ -571,6 +571,7 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
       return res.redirect("/students");
     }
   }
+
   const ins = await q(
     `INSERT INTO students(full_name,phone_e164,campus_id,shift_id,period_id,year_id,career_id,grade,"group",package_id,discount_amount,discount_reason)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
@@ -590,17 +591,20 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
       b.discount_reason || ""
     ]
   );
-  
-    // auto send credentials (as requested)
-  const studentId = ins.rows[0].id;
-  await audit(req, "CREATE_STUDENT", "STUDENT", studentId, { full_name: b.full_name });
-  
- const result = await createStudentAccountAndSend(req, studentId);
-  
-if (result?.whatsappLink) 
 
-flash(req,"success","Alumno creado correctamente.");
-return res.redirect(`/students/${studentId}`);
+  const studentId = ins.rows[0].id;
+
+  await audit(req, "CREATE_STUDENT", "STUDENT", studentId, { full_name: b.full_name });
+
+  const result = await createStudentAccountAndSend(req, studentId);
+
+  if (result?.whatsappLink) {
+    return res.redirect(result.whatsappLink);
+  }
+
+  flash(req,"success","Alumno creado correctamente.");
+  return res.redirect(`/students/${studentId}`);
+});
 
 app.get("/students/:id", requireAuth, async (req,res) => {
   const studentId = Number(req.params.id);
@@ -789,7 +793,7 @@ app.get("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (r
 });
 
 app.post("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
-  if (!(await cashboxIsOpen()) && req.session.user.role!=="ADMIN") {
+  if (!(await cashboxIsOpen()) && req.session.user.role !== "ADMIN") {
     flash(req,"danger","Caja cerrada. No se pueden registrar abonos.");
     return res.redirect("/");
   }
@@ -799,7 +803,8 @@ app.post("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (
 
   const info = await getStudentTotals(studentId);
   if (!info) return res.status(404).send("No encontrado");
-  if (req.session.user.role === "CAJERO" && !(req.session.user.campuses||[]).includes(info.student.campus_id)) {
+
+  if (req.session.user.role === "CAJERO" && !(req.session.user.campuses || []).includes(info.student.campus_id)) {
     return res.status(403).send("No autorizado");
   }
 
@@ -807,15 +812,16 @@ app.post("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (
     `INSERT INTO payments(student_id, amount, method, note, created_by) VALUES ($1,$2,$3,$4,$5)`,
     [studentId, Number(amount), method || "Efectivo", note || "", req.session.user.id]
   );
+
   const updated = await getStudentTotals(studentId);
-const student = updated.student;
-const totalPaid = Number(updated.totals?.total_paid || 0).toFixed(2);
-const remaining = Number(updated.totals?.balance || 0).toFixed(2);
-const paidNow = Number(amount || 0).toFixed(2);
+  const student = updated.student;
+  const totalPaid = Number(updated.totals?.total_paid || 0).toFixed(2);
+  const remaining = Number(updated.totals?.balance || 0).toFixed(2);
+  const paidNow = Number(amount || 0).toFixed(2);
 
-const phone = (student.phone_e164 || "").replace("+", "").trim();
+  const phone = (student.phone_e164 || "").replace("+", "").trim();
 
-const message = `Hola ${student.full_name} 👋
+  const message = `Hola ${student.full_name} 👋
 
 Registramos tu abono de $${paidNow} 💵
 
@@ -824,27 +830,28 @@ Saldo pendiente: $${remaining}
 
 Gracias por tu pago 🙌`;
 
-const encodedMessage = encodeURIComponent(message);
-const whatsappLink = phone
-  ? `https://wa.me/${phone}?text=${encodedMessage}`
-  : null;
-  await audit(req, "CREATE_PAYMENT", "PAYMENT", null, { student_id: studentId, amount: Number(amount) });
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappLink = phone
+    ? `https://wa.me/${phone}?text=${encodedMessage}`
+    : null;
+
+  await audit(req, "CREATE_PAYMENT", "PAYMENT", null, {
+    student_id: studentId,
+    amount: Number(amount)
+  });
+
   await q(
-  `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) 
-VALUES ($1,$2,$3,$4,$5)`,
-  [studentId, student.phone_e164, "ABONO", message, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
-);
+    `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
+    [studentId, student.phone_e164, "ABONO", message, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
+  );
 
-flash(req, "success", "Abono registrado correctamente.");
-return res.redirect(`/students/${studentId}`);
- 
-await q(
-  `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
-  [studentId, after.student.phone_e164, "ABONO", waBody, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
-);
+  if (whatsappLink) {
+    return res.redirect(whatsappLink);
+  }
 
-flash(req, "success", "Abono registrado correctamente, pero el alumno no tiene teléfono válido para WhatsApp.");
-return res.redirect(`/students/${studentId}`);
+  flash(req, "success", "Abono registrado correctamente.");
+  return res.redirect(`/students/${studentId}`);
+});
 
   // Liquidation: if balance <= 0, send PDF
   if (after.totals.balance <= 0) {
@@ -1164,7 +1171,7 @@ async function executeApprovedRequest(req, r) {
     });
     await q(
       `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
-      [r.student_id, info.student.phone_e164, "CORRECCION", body, wa.status || (wa.simulated ? "SIMULATED":"SENT")]
+     [r.student_id, info.student.phone_e164, "CORRECCION", body, "MANUAL"]
     );
   }
 }
