@@ -835,10 +835,6 @@ VALUES ($1,$2,$3,$4,$5)`,
   [studentId, student.phone_e164, "ABONO", message, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
 );
 
-if (whatsappLink) {
-  return res.redirect(whatsappLink);
-}
-
 flash(req, "success", "Abono registrado correctamente.");
 return res.redirect(`/students/${studentId}`);
  
@@ -846,10 +842,6 @@ await q(
   `INSERT INTO message_log(student_id,to_phone_e164,type,body,status) VALUES ($1,$2,$3,$4,$5)`,
   [studentId, after.student.phone_e164, "ABONO", waBody, whatsappLink ? "PENDING_MANUAL" : "NO_PHONE"]
 );
-
-if (whatsappLink) {
-  return res.redirect(whatsappLink);
-}
 
 flash(req, "success", "Abono registrado correctamente, pero el alumno no tiene teléfono válido para WhatsApp.");
 return res.redirect(`/students/${studentId}`);
