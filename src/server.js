@@ -2412,3 +2412,20 @@ app.get("/portal", requireStudentPortal, async (req,res) => {
 });
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
+app.get('/cobranza/preview', async (req, res) => {
+  try {
+    const alumnos = await db.query(`
+      SELECT full_name, balance
+      FROM students
+      WHERE balance > 0
+    `);
+
+    res.render('cobranza_preview', {
+      alumnos: alumnos.rows
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.send("Error al cargar cobranza");
+  }
+});
