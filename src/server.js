@@ -2413,23 +2413,20 @@ app.get("/portal", requireStudentPortal, async (req,res) => {
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
 app.get('/cobranza/preview', async (req, res) => {
+  
   try {
-const result = await db.query(`
-  SELECT 
-    s.id,
-    s.full_name AS nombre,
-    s.phone AS telefono,
-    s.total_amount AS total_paquete,
-    COALESCE(SUM(p.amount), 0) AS abonado,
-    (s.total_amount - COALESCE(SUM(p.amount), 0)) AS saldo_pendiente,
-    MAX(p.created_at) AS ultimo_pago
-  FROM students s
-  LEFT JOIN payments p ON p.student_id = s.id
-  GROUP BY s.id
-  HAVING (s.total_amount - COALESCE(SUM(p.amount), 0)) > 0
-`);
-    
-const alumnos = result.rows.map(a => {
+const filters = {
+  campus_id: req.query.campus_id || "",
+  shift_id: req.query.shift_id || "",
+  period_id: req.query.period_id || "",
+  year_id: req.query.year_id || ""
+};
+
+const { where, params } = studentQueryWhere(filters, req.session.user);
+
+const result = await studentsWithBalance(where, params);
+
+const alumnos = result.map(a => {
   const hoy = new Date();
   const ultimoPago = a.ultimo_pago ? new Date(a.ultimo_pago) : null;
 
