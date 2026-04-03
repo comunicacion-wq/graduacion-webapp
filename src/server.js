@@ -107,11 +107,13 @@ function studentQueryWhere(filters, user) {
   if (filters.shift_id) add("s.shift_id = ?", Number(filters.shift_id));
   if (filters.period_id) add("s.period_id = ?", Number(filters.period_id));
   if (filters.year_id) add("s.year_id = ?", Number(filters.year_id));
-  if (filters.q) {
-    add("(LOWER(s.full_name) LIKE ? OR s.phone_e164 LIKE ?)", `%${filters.q.toLowerCase()}%`);
-    p.push(`%${filters.q}%`); i++;
-  }
-
+  
+if (filters.q) {
+  w.push(`(LOWER(s.full_name) LIKE $${i} OR s.phone_e164 LIKE $${i + 1})`);
+  p.push(`%${filters.q.toLowerCase()}%`);
+  p.push(`%${filters.q}%`);
+  i += 2;
+}
   // Restrict cajero to campuses assigned
   if (user.role === "CAJERO") {
     const ids = user.campuses || [];
