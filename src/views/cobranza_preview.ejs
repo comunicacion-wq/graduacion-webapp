@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vista previa de cobranza</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f1f5f9;
+    }
+
+    .nivel-suave {
+      color: #0f766e;
+      font-weight: bold;
+    }
+
+    .nivel-medio {
+      color: #b45309;
+      font-weight: bold;
+    }
+
+    .nivel-urgente {
+      color: #b91c1c;
+      font-weight: bold;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .btn-whatsapp {
+      background: #25D366;
+      color: white;
+    }
+
+    .vacio {
+      margin-top: 20px;
+      padding: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Vista previa de cobranza</h1>
+    <p>Aquí se muestran los alumnos filtrados con adeudo antes de abrir WhatsApp.</p>
+
+    <% if (alumnos && alumnos.length > 0) { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Alumno</th>
+            <th>Teléfono</th>
+            <th>Total</th>
+            <th>Abonado</th>
+            <th>Saldo</th>
+            <th>Días sin abonar</th>
+            <th>Nivel</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% alumnos.forEach(alumno => { %>
+            <tr>
+              <td><%= alumno.nombre %></td>
+              <td><%= alumno.telefono || 'Sin teléfono' %></td>
+              <td>$<%= Number(alumno.total_paquete || 0).toFixed(2) %></td>
+              <td>$<%= Number(alumno.abonado || 0).toFixed(2) %></td>
+              <td>$<%= Number(alumno.saldo_pendiente || 0).toFixed(2) %></td>
+              <td><%= alumno.dias_sin_abonar || 0 %> días</td>
+              <td>
+                <% if (alumno.nivel_cobranza === 'Suave') { %>
+                  <span class="nivel-suave">Suave</span>
+                <% } else if (alumno.nivel_cobranza === 'Medio') { %>
+                  <span class="nivel-medio">Medio</span>
+                <% } else { %>
+                  <span class="nivel-urgente">Urgente</span>
+                <% } %>
+              </td>
+              <td>
+                <a
+                  class="btn btn-whatsapp"
+                  href="https://wa.me/<%= alumno.telefono %>?text=<%= encodeURIComponent(alumno.mensaje_cobranza || '') %>"
+                  target="_blank"
+                >
+                  Enviar cobranza
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <div class="vacio">
+        No hay alumnos con adeudo para mostrar.
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>
