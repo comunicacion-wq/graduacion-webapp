@@ -650,6 +650,7 @@ app.get("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async 
 app.post("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const studentId = Number(req.params.id);
   const b = req.body;
+  const resend = req.body.resend_credentials;
   const existing = await q(`SELECT * FROM students WHERE id=$1`, [studentId]);
 
   if (!existing.rows[0]) {
@@ -698,8 +699,20 @@ app.post("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async
     after: b
   });
 
-  flash(req, "success", "Alumno actualizado.");
-  res.redirect(`/students/${studentId}`);
+if (resend) {
+  const result = await createStudentAccountAndSend(req, studentId);
+
+  flash(req, "success", "Alumno actualizado y tarjeta reenviada.");
+
+  if (result?.whatsappLink) {
+    return res.redirect(result.whatsappLink);
+  }
+
+  return res.redirect(`/students/${studentId}`);
+}
+
+flash(req, "success", "Alumno actualizado.");
+res.redirect(`/students/${studentId}`);
 });
 
 app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, res) => {
