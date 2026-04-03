@@ -2412,7 +2412,7 @@ app.get("/portal", requireStudentPortal, async (req,res) => {
 });
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
-app.get('/cobranza/preview', async (req, res) => {
+app.get('/cobranza/preview', requireAuth, async (req, res) => {
   
   try {
 const filters = {
