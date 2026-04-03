@@ -2414,15 +2414,62 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
 app.get('/cobranza/preview', async (req, res) => {
   try {
-    const alumnos = await db.query(`
-      SELECT full_name, balance
-      FROM students
-      WHERE balance > 0
-    `);
+const result = await db.query(`
+  SELECT 
+    s.id,
+    s.full_name AS nombre,
+    s.phone AS telefono,
+    s.total_amount AS total_paquete,
+    COALESCE(SUM(p.amount), 0) AS abonado,
+    (s.total_amount - COALESCE(SUM(p.amount), 0)) AS saldo_pendiente,
+    MAX(p.created_at) AS ultimo_pago
+  FROM students s
+  LEFT JOIN payments p ON p.student_id = s.id
+  GROUP BY s.id
+  HAVING (s.total_amount - COALESCE(SUM(p.amount), 0)) > 0
+`);
+    
+const alumnos = result.rows.map(a => {
+  const hoy = new Date();
+  const ultimoPago = a.ultimo_pago ? new Date(a.ultimo_pago) : null;
 
-    res.render('cobranza_preview', {
-      alumnos: alumnos.rows
-    });
+  let diasSinAbono = 999;
+
+  if (ultimoPago) {
+    const diff = hoy - ultimoPago;
+    diasSinAbono = Math.floor(diff / (1000 * 60 * 60 * 24));
+  }
+
+  let nivel = 'Suave';
+
+  if (diasSinAbono >= 13) {
+    nivel = 'Urgente';
+  } else if (diasSinAbono >= 7) {
+    nivel = 'Medio';
+  }
+
+  const mensaje = `Hola ${a.nombre} 👋
+
+Te recordamos que actualmente presentas un saldo pendiente de $${Number(a.saldo_pendiente).toFixed(2)} en tu pago de graduación.
+
+Total del paquete: $${Number(a.total_paquete).toFixed(2)}
+Abonado: $${Number(a.abonado).toFixed(2)}
+Saldo pendiente: $${Number(a.saldo_pendiente).toFixed(2)}
+
+Han pasado ${diasSinAbono} días desde tu último abono.
+
+Te pedimos realizar tu pago a la brevedad para evitar contratiempos en tu proceso de graduación.`;
+
+  return {
+    ...a,
+    dias_sin_abonar: diasSinAbono,
+    nivel_cobranza: nivel,
+    mensaje_cobranza: mensaje
+  };
+});
+   res.render('cobranza_preview', {
+  alumnos
+});
 
   } catch (error) {
     console.error(error);
