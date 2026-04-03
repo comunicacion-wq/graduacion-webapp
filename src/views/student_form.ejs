@@ -8,8 +8,16 @@
 
   <div class="col-12 col-md-6">
     <label class="form-label">Teléfono (WhatsApp, E.164)</label>
-    <input class="form-control" name="phone_e164" required placeholder="+521XXXXXXXXXX" value="<%= student.phone_e164 || '' %>">
-  </div>
+   <input class="form-control" name="phone_e164" required placeholder="+521XXXXXXXXXX" value="<%= student.phone_e164 || '' %>">
+
+<div class="form-check mt-2">
+  <input class="form-check-input" type="checkbox" name="resend_credentials" id="resend_credentials" value="1">
+  <label class="form-check-label" for="resend_credentials">
+    Reenviar tarjeta de acceso por WhatsApp
+  </label>
+</div>
+
+</div>
 
   <div class="col-12 col-md-3">
     <label class="form-label">Campus</label>
