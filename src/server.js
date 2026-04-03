@@ -2473,6 +2473,6 @@ Te pedimos realizar tu pago a la brevedad para evitar contratiempos en tu proces
 
   } catch (error) {
     console.error(error);
-    res.send("Error al cargar cobranza");
+    res.send("Error al cargar cobranza: " + error.message);
   }
 });
