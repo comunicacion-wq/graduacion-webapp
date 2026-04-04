@@ -172,7 +172,12 @@ async function audit(req, action, entity, entity_id, details) {
 }
 
 // Auth
-app.get("/login", (req,res) => res.render("login", { error: null }));
+app.get("/login", (req,res) => {
+  res.render("login", {
+    error: null,
+    next: req.query.next || ""
+  });
+});
 app.post("/login", async (req,res) => {
   const { username, password } = req.body;
   const r = await q(`SELECT * FROM users WHERE username=$1 AND active=true`, [username]);
