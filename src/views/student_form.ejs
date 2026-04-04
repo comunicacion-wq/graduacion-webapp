@@ -211,16 +211,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch(`/students/check-duplicate?full_name=${encodeURIComponent(value)}`);
         const data = await res.json();
 
-        if (data.similar.length > 0) {
-          warning.classList.remove("d-none");
+if ((data.exact && data.exact.length > 0) || (data.similar && data.similar.length > 0)) {
+  warning.classList.remove("d-none");
 
-          warning.innerHTML = `
-            ⚠️ Posibles duplicados:<br>
-            ${data.similar.map(s => `• ${s.full_name} (${s.phone_e164 || "sin teléfono"})`).join("<br>")}
-          `;
-        } else {
-          warning.classList.add("d-none");
-        }
+ let html = "⚠️ Posibles duplicados:<br>";
+
+  if (data.exact && data.exact.length > 0) {
+    html += "<strong>Coincidencias exactas:</strong><br>";
+    html += data.exact.map(s => `• ${s.full_name} (${s.phone_e164 || "sin teléfono"})`).join("<br>");
+    html += "<br>";
+  }
+
+  if (data.similar && data.similar.length > 0) {
+    html += "<strong>Coincidencias similares:</strong><br>";
+    html += data.similar.map(s => `• ${s.full_name} (${s.phone_e164 || "sin teléfono"})`).join("<br>");
+  }
+
+  warning.innerHTML = html;
+} else {
+  warning.classList.add("d-none");
+}
       } catch (err) {
         console.error(err);
       }
