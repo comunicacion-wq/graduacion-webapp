@@ -2413,61 +2413,60 @@ app.get("/portal", requireStudentPortal, async (req,res) => {
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
 app.get('/cobranza/preview', requireAuth, async (req, res) => {
-  
+  return res.send('ENTRE A COBRANZA PREVIEW');
+
   try {
-const filters = {
-  campus_id: req.query.campus_id || "",
-  shift_id: req.query.shift_id || "",
-  period_id: req.query.period_id || "",
-  year_id: req.query.year_id || ""
-};
+    const filters = {
+      campus_id: req.query.campus_id || "",
+      shift_id: req.query.shift_id || "",
+      period_id: req.query.period_id || "",
+      year_id: req.query.year_id || ""
+    };
 
-const { where, params } = studentQueryWhere(filters, req.session.user);
+    const { where, params } = studentQueryWhere(filters, req.session.user);
 
-const result = await studentsWithBalance(where, params);
+    const result = await studentsWithBalance(where, params);
 
-const alumnos = result.map(a => {
-  const hoy = new Date();
-  const ultimoPago = a.ultimo_pago ? new Date(a.ultimo_pago) : null;
+    const alumnos = result.map(a => {
+      const hoy = new Date();
+      const ultimoPago = a.ultimo_pago ? new Date(a.ultimo_pago) : null;
 
-  let diasSinAbono = 999;
+      let diasSinAbono = 999;
 
-  if (ultimoPago) {
-    const diff = hoy - ultimoPago;
-    diasSinAbono = Math.floor(diff / (1000 * 60 * 60 * 24));
-  }
+      if (ultimoPago) {
+        const diff = hoy - ultimoPago;
+        diasSinAbono = Math.floor(diff / (1000 * 60 * 60 * 24));
+      }
 
-  let nivel = 'Suave';
+      let nivel = 'Suave';
 
-  if (diasSinAbono >= 13) {
-    nivel = 'Urgente';
-  } else if (diasSinAbono >= 7) {
-    nivel = 'Medio';
-  }
+      if (diasSinAbono >= 13) {
+        nivel = 'Urgente';
+      } else if (diasSinAbono >= 7) {
+        nivel = 'Medio';
+      }
 
-  const mensaje = `Hola ${a.nombre} 👋
+      const mensaje = `Hola ${a.full_name} 👋
 
-Te recordamos que actualmente presentas un saldo pendiente de $${Number(a.saldo_pendiente).toFixed(2)} en tu pago de graduación.
-
-Total del paquete: $${Number(a.total_paquete).toFixed(2)}
-Abonado: $${Number(a.abonado).toFixed(2)}
-Saldo pendiente: $${Number(a.saldo_pendiente).toFixed(2)}
+Te recordamos que actualmente presentas un saldo pendiente de $${Number(a.balance).toFixed(2)} en tu pago de graduación.
 
 Han pasado ${diasSinAbono} días desde tu último abono.
 
 Te pedimos realizar tu pago a la brevedad para evitar contratiempos en tu proceso de graduación.`;
 
-  return {
-    ...a,
-    dias_sin_abonar: diasSinAbono,
-    nivel_cobranza: nivel,
-    mensaje_cobranza: mensaje
-  };
-});
-   res.render('cobranza_preview', {
-  alumnos
-});
+      return {
+        nombre: a.full_name,
+        telefono: a.phone,
+        total_paquete: a.total_amount,
+        abonado: a.paid || 0,
+        saldo_pendiente: a.balance,
+        dias_sin_abonar: diasSinAbono,
+        nivel_cobranza: nivel,
+        mensaje_cobranza: mensaje
+      };
+    });
 
+    res.render('cobranza_preview', { alumnos });
   } catch (error) {
     console.error(error);
     res.send("Error al cargar cobranza: " + error.message);
