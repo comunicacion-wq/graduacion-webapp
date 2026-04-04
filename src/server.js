@@ -2410,9 +2410,7 @@ app.get("/portal", requireStudentPortal, async (req,res) => {
     payments
   });
 });
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
-app.get('/cobranza/preview', requireAuth, async (req, res) => {
+app.get("/cobranza/preview", requireAuth, async (req, res) => {
   try {
     const filters = {
       campus_id: req.query.campus_id || "",
@@ -2423,22 +2421,49 @@ app.get('/cobranza/preview', requireAuth, async (req, res) => {
 
     const { where, params } = studentQueryWhere(filters, req.session.user);
 
-const result = await db.query(`
-  SELECT 
-    s.id,
-    s.full_name AS nombre,
-    s.phone AS telefono,
-    s.total_amount AS total_paquete,
-    COALESCE(SUM(p.amount), 0) AS abonado,
-    (s.total_amount - COALESCE(SUM(p.amount), 0)) AS saldo_pendiente,
-    MAX(p.created_at) AS ultimo_pago
-  FROM students s
-  LEFT JOIN payments p ON p.student_id = s.id
-  GROUP BY s.id
-  HAVING (s.total_amount - COALESCE(SUM(p.amount), 0)) > 0
-`);
+    const conditions = [];
 
-    const alumnos = result.map(a => {
+    if (where) {
+      conditions.push(where.replace(/^WHERE\s+/i, ""));
+    }
+
+    conditions.push(`
+      (GREATEST(0, p.cost - COALESCE(s.discount_amount, 0)) - COALESCE(pay.total_paid, 0)) > 0
+    `);
+
+    const finalWhere = `WHERE ${conditions.join(" AND ")}`;
+
+    const result = await q(
+      `
+      SELECT 
+        s.id,
+        s.full_name AS nombre,
+        s.phone_e164 AS telefono,
+        p.cost AS total_paquete,
+        COALESCE(pay.total_paid, 0) AS abonado,
+        (GREATEST(0, p.cost - COALESCE(s.discount_amount, 0)) - COALESCE(pay.total_paid, 0))::numeric AS saldo_pendiente,
+        last_pay.ultimo_pago
+      FROM students s
+      LEFT JOIN packages p ON p.id = s.package_id
+      LEFT JOIN (
+        SELECT student_id, COALESCE(SUM(amount), 0) AS total_paid
+        FROM payments
+        WHERE status = 'CONFIRMED'
+        GROUP BY student_id
+      ) pay ON pay.student_id = s.id
+      LEFT JOIN (
+        SELECT student_id, MAX(created_at) AS ultimo_pago
+        FROM payments
+        WHERE status = 'CONFIRMED'
+        GROUP BY student_id
+      ) last_pay ON last_pay.student_id = s.id
+      ${finalWhere}
+      ORDER BY saldo_pendiente DESC
+      `,
+      params
+    );
+
+    const alumnos = result.rows.map((a) => {
       const hoy = new Date();
       const ultimoPago = a.ultimo_pago ? new Date(a.ultimo_pago) : null;
 
@@ -2449,37 +2474,43 @@ const result = await db.query(`
         diasSinAbono = Math.floor(diff / (1000 * 60 * 60 * 24));
       }
 
-      let nivel = 'Suave';
+      let nivel = "Suave";
 
       if (diasSinAbono >= 13) {
-        nivel = 'Urgente';
+        nivel = "Urgente";
       } else if (diasSinAbono >= 7) {
-        nivel = 'Medio';
+        nivel = "Medio";
       }
 
-      const mensaje = `Hola ${a.full_name} 👋
+      const mensaje = `Hola ${a.nombre} 👋
 
-Te recordamos que actualmente presentas un saldo pendiente de $${Number(a.balance).toFixed(2)} en tu pago de graduación.
+Te recordamos que actualmente presentas un saldo pendiente de $${Number(a.saldo_pendiente || 0).toFixed(2)} en tu pago de graduación.
+
+Total del paquete: $${Number(a.total_paquete || 0).toFixed(2)}
+Abonado: $${Number(a.abonado || 0).toFixed(2)}
+Saldo pendiente: $${Number(a.saldo_pendiente || 0).toFixed(2)}
 
 Han pasado ${diasSinAbono} días desde tu último abono.
 
 Te pedimos realizar tu pago a la brevedad para evitar contratiempos en tu proceso de graduación.`;
 
       return {
-        nombre: a.full_name,
-        telefono: a.phone,
-        total_paquete: a.total_amount,
-        abonado: a.paid || 0,
-        saldo_pendiente: a.balance,
+        nombre: a.nombre,
+        telefono: a.telefono,
+        total_paquete: a.total_paquete,
+        abonado: a.abonado,
+        saldo_pendiente: a.saldo_pendiente,
         dias_sin_abonar: diasSinAbono,
         nivel_cobranza: nivel,
         mensaje_cobranza: mensaje
       };
     });
 
-    res.render('cobranza_preview', { alumnos });
+    res.render("cobranza_preview", { alumnos });
   } catch (error) {
     console.error(error);
     res.send("Error al cargar cobranza: " + error.message);
   }
 });
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
