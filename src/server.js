@@ -149,7 +149,7 @@ async function computeMetrics(filters, user) {
     `,
     params
   );
-  return rows.rows[0] || { total_students:0, paid:0, arrears:0, total_balance:0 };
+return rows.rows[0] || { total_students:0, paid:0, arrears:0, total_collected:0, total_balance:0 };
 }
 
 async function getTemplate(code) {
