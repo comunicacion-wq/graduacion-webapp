@@ -633,7 +633,25 @@ await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e
 
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const b = req.body;
+const duplicateCheck = await q(
+  `
+  SELECT id, full_name, phone_e164
+  FROM students
+  WHERE phone_e164 = $1
+     OR LOWER(full_name) = LOWER($2)
+  LIMIT 1
+  `,
+  [b.phone_e164, b.full_name]
+);
 
+if (duplicateCheck.rows.length > 0) {
+  flash(
+    req,
+    "danger",
+    `Ya existe un alumno registrado con ese nombre o teléfono: ${duplicateCheck.rows[0].full_name} (${duplicateCheck.rows[0].phone_e164 || "sin teléfono"}).`
+  );
+  return res.redirect("/students/new");
+}
   if (req.session.user.role === "CAJERO") {
     const allowed = (req.session.user.campuses || []).includes(Number(b.campus_id));
     if (!allowed) {
