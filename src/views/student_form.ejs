@@ -4,6 +4,7 @@
   <div class="col-12 col-md-6">
     <label class="form-label">Nombre completo</label>
     <input class="form-control" name="full_name" required value="<%= student.full_name || '' %>">
+<div id="duplicate-warning" class="alert alert-warning mt-2 d-none"></div>
   </div>
 
   <div class="col-12 col-md-6">
@@ -188,4 +189,42 @@
       generarUsuarioPortal();
     }
   });
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.querySelector('input[name="full_name"]');
+  const warning = document.getElementById("duplicate-warning");
+
+  let timeout = null;
+
+  input.addEventListener("input", () => {
+    clearTimeout(timeout);
+
+    const value = input.value.trim();
+
+    if (value.length < 3) {
+      warning.classList.add("d-none");
+      return;
+    }
+
+    timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/students/check-duplicate?full_name=${encodeURIComponent(value)}`);
+        const data = await res.json();
+
+        if (data.similar.length > 0) {
+          warning.classList.remove("d-none");
+
+          warning.innerHTML = `
+            ⚠️ Posibles duplicados:<br>
+            ${data.similar.map(s => `• ${s.full_name} (${s.phone_e164 || "sin teléfono"})`).join("<br>")}
+          `;
+        } else {
+          warning.classList.add("d-none");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 500);
+  });
+});
 </script>
