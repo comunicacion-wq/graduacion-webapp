@@ -1,10 +1,9 @@
 <div class="d-flex justify-content-between align-items-center mb-2">
   <h3 class="mb-0">Adeudos / Cobranza</h3>
   <% if (user.role==='ADMIN') { %>
-    <form method="post" action="/arrears/send" class="d-inline">
-      <input type="hidden" name="apply_filters" value="1">
-      <button class="btn btn-primary">Enviar cobranza (filtrados)</button>
-    </form>
+    <form method="GET" action="/cobranza/preview">
+  <button class="btn btn-primary">Enviar cobranza (filtrados)</button>
+</form>
   <% } %>
 </div>
 
