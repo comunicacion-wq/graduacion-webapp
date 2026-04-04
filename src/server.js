@@ -2423,7 +2423,7 @@ app.get('/cobranza/preview', requireAuth, async (req, res) => {
 
     const { where, params } = studentQueryWhere(filters, req.session.user);
 
-    const result = await pool.query(`
+const result = await db.query(`
   SELECT 
     s.id,
     s.full_name AS nombre,
