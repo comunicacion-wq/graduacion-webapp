@@ -471,6 +471,68 @@ students.rows.forEach((s) => {
     return res.status(500).send("Error al generar archivo");
   }
 });
+app.get("/students/check-duplicate", requireAuth, requireRole("ADMIN","CAJERO"), async (req, res) => {
+  try {
+    const fullName = (req.query.full_name || "").trim();
+    const phone = (req.query.phone_e164 || "").trim();
+
+    if (!fullName && !phone) {
+      return res.json({ exact: [], similar: [] });
+    }
+
+    const exactConditions = [];
+    const exactParams = [];
+    let i = 1;
+
+    if (phone) {
+      exactConditions.push(`phone_e164 = $${i++}`);
+      exactParams.push(phone);
+    }
+
+    if (fullName) {
+      exactConditions.push(`LOWER(full_name) = LOWER($${i++})`);
+      exactParams.push(fullName);
+    }
+
+    let exact = { rows: [] };
+
+    if (exactConditions.length) {
+      exact = await q(
+        `
+        SELECT id, full_name, phone_e164
+        FROM students
+        WHERE ${exactConditions.join(" OR ")}
+        ORDER BY created_at DESC
+        LIMIT 5
+        `,
+        exactParams
+      );
+    }
+
+    let similar = { rows: [] };
+
+    if (fullName) {
+      similar = await q(
+        `
+        SELECT id, full_name, phone_e164
+        FROM students
+        WHERE LOWER(full_name) LIKE LOWER($1)
+        ORDER BY created_at DESC
+        LIMIT 5
+        `,
+        [`%${fullName}%`]
+      );
+    }
+
+    return res.json({
+      exact: exact.rows,
+      similar: similar.rows.filter(s => !exact.rows.some(e => e.id === s.id))
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ exact: [], similar: [], error: "Error revisando duplicados" });
+  }
+});
 app.get("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const cats = await catalogs();
   const student = {
