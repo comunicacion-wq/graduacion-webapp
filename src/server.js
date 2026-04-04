@@ -195,7 +195,7 @@ app.post("/login", async (req,res) => {
 
   req.session.user = { id: u.id, username: u.username, role: u.role, campuses };
   await audit(req, "LOGIN", "USER", u.id, {});
-  res.redirect("/");
+  res.redirect(req.body.next || "/");
 });
 app.get("/logout", requireAuth, async (req,res) => {
   await audit(req, "LOGOUT", "USER", req.session.user.id, {});
