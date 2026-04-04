@@ -2479,7 +2479,6 @@ const result = await q(
   `,
   params
 );
-    );
 
     const alumnos = result.rows.map((a) => {
       const hoy = new Date();
