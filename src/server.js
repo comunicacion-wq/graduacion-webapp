@@ -132,10 +132,11 @@ async function computeMetrics(filters, user) {
   const rows = await q(
     `
     SELECT
-      COUNT(*)::int as total_students,
-      SUM(CASE WHEN (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0)) <= 0 THEN 1 ELSE 0 END)::int as paid,
-      SUM(CASE WHEN (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0)) > 0 THEN 1 ELSE 0 END)::int as arrears,
-      SUM(GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0))::numeric as total_balance
+  COUNT(*)::int as total_students,
+  SUM(CASE WHEN (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0)) <= 0 THEN 1 ELSE 0 END)::int as paid,
+  SUM(CASE WHEN (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0)) > 0 THEN 1 ELSE 0 END)::int as arrears,
+  SUM(COALESCE(pay.total_paid,0))::numeric as total_collected,
+  SUM(GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0))::numeric as total_balance
     FROM students s
     LEFT JOIN packages p ON p.id = s.package_id
     LEFT JOIN (
@@ -2438,34 +2439,46 @@ app.get("/cobranza/preview", requireAuth, async (req, res) => {
 
     const finalWhere = `WHERE ${conditions.join(" AND ")}`;
 
-    const result = await q(
-      `
-      SELECT 
-        s.id,
-        s.full_name AS nombre,
-        s.phone_e164 AS telefono,
-        p.cost AS total_paquete,
-        COALESCE(pay.total_paid, 0) AS abonado,
-        (GREATEST(0, p.cost - COALESCE(s.discount_amount, 0)) - COALESCE(pay.total_paid, 0))::numeric AS saldo_pendiente,
-        last_pay.ultimo_pago
-      FROM students s
-      LEFT JOIN packages p ON p.id = s.package_id
-      LEFT JOIN (
-        SELECT student_id, COALESCE(SUM(amount), 0) AS total_paid
-        FROM payments
-        WHERE status = 'CONFIRMED'
-        GROUP BY student_id
-      ) pay ON pay.student_id = s.id
-      LEFT JOIN (
-        SELECT student_id, MAX(created_at) AS ultimo_pago
-        FROM payments
-        WHERE status = 'CONFIRMED'
-        GROUP BY student_id
-      ) last_pay ON last_pay.student_id = s.id
-      ${finalWhere}
-      ORDER BY saldo_pendiente DESC
-      `,
-      params
+const result = await q(
+  `
+  SELECT 
+    s.id,
+    s.full_name AS nombre,
+    s.phone_e164 AS telefono,
+    p.cost AS total_paquete,
+    COALESCE(pay.total_paid, 0) AS abonado,
+    (GREATEST(0, p.cost - COALESCE(s.discount_amount, 0)) - COALESCE(pay.total_paid, 0))::numeric AS saldo_pendiente,
+    last_pay.ultimo_pago,
+    last_msg.ultima_cobranza_enviada,
+    last_msg.fecha_ultima_cobranza
+  FROM students s
+  LEFT JOIN packages p ON p.id = s.package_id
+  LEFT JOIN (
+    SELECT student_id, COALESCE(SUM(amount), 0) AS total_paid
+    FROM payments
+    WHERE status = 'CONFIRMED'
+    GROUP BY student_id
+  ) pay ON pay.student_id = s.id
+  LEFT JOIN (
+    SELECT student_id, MAX(created_at) AS ultimo_pago
+    FROM payments
+    WHERE status = 'CONFIRMED'
+    GROUP BY student_id
+  ) last_pay ON last_pay.student_id = s.id
+  LEFT JOIN (
+    SELECT 
+      student_id,
+      'Sí' AS ultima_cobranza_enviada,
+      MAX(created_at) AS fecha_ultima_cobranza
+    FROM message_log
+    WHERE type = 'ADEUDO'
+    GROUP BY student_id
+  ) last_msg ON last_msg.student_id = s.id
+  ${finalWhere}
+  ORDER BY saldo_pendiente DESC
+  `,
+  params
+);
     );
 
     const alumnos = result.rows.map((a) => {
