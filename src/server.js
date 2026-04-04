@@ -2423,7 +2423,20 @@ app.get('/cobranza/preview', requireAuth, async (req, res) => {
 
     const { where, params } = studentQueryWhere(filters, req.session.user);
 
-    const result = await studentsWithBalance(where, params);
+    const result = await pool.query(`
+  SELECT 
+    s.id,
+    s.full_name AS nombre,
+    s.phone AS telefono,
+    s.total_amount AS total_paquete,
+    COALESCE(SUM(p.amount), 0) AS abonado,
+    (s.total_amount - COALESCE(SUM(p.amount), 0)) AS saldo_pendiente,
+    MAX(p.created_at) AS ultimo_pago
+  FROM students s
+  LEFT JOIN payments p ON p.student_id = s.id
+  GROUP BY s.id
+  HAVING (s.total_amount - COALESCE(SUM(p.amount), 0)) > 0
+`);
 
     const alumnos = result.map(a => {
       const hoy = new Date();
