@@ -1045,7 +1045,10 @@ if (estadoCondition) {
 
 const r = await q(
   `
-  SELECT s.id, s.full_name, s.phone_e164,
+ SELECT s.id, s.full_name, s.phone_e164,
+  s.grade,
+  s."group" as group_name,
+  p.name as package_name,
     c.name as campus_name, sh.name as shift_name, gp.name as period_name, gy.year as grad_year,
     (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0))::numeric as balance
   FROM students s
