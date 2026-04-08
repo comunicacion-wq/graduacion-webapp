@@ -2503,19 +2503,26 @@ app.get("/cobranza/preview", requireAuth, async (req, res) => {
       shift_id: req.query.shift_id || "",
       period_id: req.query.period_id || "",
       year_id: req.query.year_id || ""
+      estado: req.query.estado || ""
     };
 
     const { where, params } = studentQueryWhere(filters, req.session.user);
 
     const conditions = [];
+if (filters.estado === "adeudo") {
+  conditions.push(`
+    (GREATEST(0, p.cost - COALESCE(s.discount_amount, 0)) - COALESCE(pay.total_paid, 0)) > 0
+  `);
+}
 
+if (filters.estado === "pagado") {
+  conditions.push(`
+    (GREATEST(0, p.cost - COALESCE(s.discount_amount, 0)) - COALESCE(pay.total_paid, 0)) = 0
+  `);
+}
     if (where) {
       conditions.push(where.replace(/^WHERE\s+/i, ""));
     }
-
-    conditions.push(`
-      (GREATEST(0, p.cost - COALESCE(s.discount_amount, 0)) - COALESCE(pay.total_paid, 0)) > 0
-    `);
 
     const finalWhere = `WHERE ${conditions.join(" AND ")}`;
 
