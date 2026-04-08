@@ -45,6 +45,13 @@
       <% }) %>
     </select>
   </div>
+<div class="col-12 col-md-2">
+  <select class="form-select" name="estado">
+    <option value="">Estado (Todos)</option>
+    <option value="pagado" <%= filters.estado === "pagado" ? "selected" : "" %>>Pagados</option>
+    <option value="adeudo" <%= filters.estado === "adeudo" ? "selected" : "" %>>Con adeudo</option>
+  </select>
+</div>
   <div class="col-12 col-md-3 d-flex align-items-end">
     <button class="btn btn-secondary w-100">Filtrar</button>
   </div>
