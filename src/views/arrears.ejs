@@ -96,11 +96,14 @@
   <tbody>
   <% rows.forEach(r => { %>
     <tr>
-      <td><a href="/students/<%= r.id %>"><%= r.full_name %></a><div class="text-muted small"><%= r.phone_e164 %></div></td>
-      <td><%= r.campus_name %></td>
-      <td><%= r.shift_name %></td>
-      <td><%= r.period_name %> / <%= r.grad_year %></td>
-      <td>$<%= Number(r.balance).toFixed(2) %></td>
+<td><a href="/students/<%= r.id %>"><%= r.full_name %></a><div class="text-muted small"><%= r.phone_e164 %></div></td>
+<td><%= r.package_name %></td>
+<td><%= r.grade %></td>
+<td><%= r.group_name %></td>
+<td><%= r.campus_name %></td>
+<td><%= r.shift_name %></td>
+<td><%= r.period_name %> / <%= r.grad_year %></td>
+<td>$<%= Number(r.balance).toFixed(2) %></td>
     </tr>
   <% }) %>
   </tbody>
