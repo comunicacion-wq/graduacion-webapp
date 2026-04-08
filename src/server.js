@@ -1007,39 +1007,64 @@ app.post("/payments/:id/cancel", requireAuth, requireRole("ADMIN"), async (req,r
 
 // Arrears
 app.get("/arrears", requireAuth, async (req,res) => {
-  const filters = {
-    campus_id: req.query.campus_id || "",
-    shift_id: req.query.shift_id || "",
-    period_id: req.query.period_id || "",
-    year_id: req.query.year_id || ""
-  };
-  const cats = await catalogs();
-  const metrics = await computeMetrics(filters, req.session.user);
-  const { where, params } = studentQueryWhere(filters, req.session.user);
+ const filters = {
+  campus_id: req.query.campus_id || "",
+  shift_id: req.query.shift_id || "",
+  period_id: req.query.period_id || "",
+  year_id: req.query.year_id || "",
+  estado: req.query.estado || ""
+};
 
-  const r = await q(
-    `
-    SELECT s.id, s.full_name, s.phone_e164,
-      c.name as campus_name, sh.name as shift_name, gp.name as period_name, gy.year as grad_year,
-      (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0))::numeric as balance
-    FROM students s
-    LEFT JOIN campuses c ON c.id=s.campus_id
-    LEFT JOIN shifts sh ON sh.id=s.shift_id
-    LEFT JOIN graduation_periods gp ON gp.id=s.period_id
-    LEFT JOIN graduation_years gy ON gy.id=s.year_id
-    LEFT JOIN packages p ON p.id=s.package_id
-    LEFT JOIN (
-      SELECT student_id, COALESCE(SUM(amount),0) as total_paid
-      FROM payments WHERE status='CONFIRMED'
-      GROUP BY student_id
-    ) pay ON pay.student_id=s.id
-    ${where}
+const cats = await catalogs();
+const metrics = await computeMetrics(filters, req.session.user);
+const { where, params } = studentQueryWhere(filters, req.session.user);
+
+let estadoCondition = "";
+
+if (filters.estado === "adeudo") {
+  estadoCondition = `
     AND (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0)) > 0
-    ORDER BY balance DESC
-    LIMIT 500
-    `,
-    params
-  );
+  `;
+}
+
+if (filters.estado === "pagado") {
+  estadoCondition = `
+    AND (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0)) = 0
+  `;
+}
+
+let finalWhere = where;
+
+if (estadoCondition) {
+  if (where && where.trim()) {
+    finalWhere = `${where} ${estadoCondition}`;
+  } else {
+    finalWhere = `WHERE ${estadoCondition.replace(/^AND\s+/i, "")}`;
+  }
+}
+
+const r = await q(
+  `
+  SELECT s.id, s.full_name, s.phone_e164,
+    c.name as campus_name, sh.name as shift_name, gp.name as period_name, gy.year as grad_year,
+    (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0))::numeric as balance
+  FROM students s
+  LEFT JOIN campuses c ON c.id=s.campus_id
+  LEFT JOIN shifts sh ON sh.id=s.shift_id
+  LEFT JOIN graduation_periods gp ON gp.id=s.period_id
+  LEFT JOIN graduation_years gy ON gy.id=s.year_id
+  LEFT JOIN packages p ON p.id=s.package_id
+  LEFT JOIN (
+    SELECT student_id, COALESCE(SUM(amount),0) as total_paid
+    FROM payments WHERE status='CONFIRMED'
+    GROUP BY student_id
+  ) pay ON pay.student_id=s.id
+  ${finalWhere}
+  ORDER BY balance DESC
+  LIMIT 500
+  `,
+  params
+);
 
   const body = await new Promise((resolve, reject) => {
     res.render("arrears", { ...cats, filters, rows: r.rows, metrics, user: req.session.user }, (err, html) => err ? reject(err) : resolve(html));
