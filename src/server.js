@@ -2502,7 +2502,7 @@ app.get("/cobranza/preview", requireAuth, async (req, res) => {
       campus_id: req.query.campus_id || "",
       shift_id: req.query.shift_id || "",
       period_id: req.query.period_id || "",
-      year_id: req.query.year_id || ""
+      year_id: req.query.year_id || "",
       estado: req.query.estado || ""
     };
 
