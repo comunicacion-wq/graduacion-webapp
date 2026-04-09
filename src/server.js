@@ -820,9 +820,21 @@ app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, 
   await q(`DELETE FROM change_requests WHERE student_id = $1`, [studentId]);
   await q(`DELETE FROM student_accounts WHERE student_id = $1`, [studentId]);
 
-  if (userId) {
-    await q(`DELETE FROM users WHERE id = $1 AND role = 'STUDENT'`, [userId]);
-  }
+if (userId) {
+  await q(
+    `UPDATE audit_log
+     SET actor_user_id = NULL
+     WHERE actor_user_id = $1`,
+    [userId]
+  );
+
+  await q(
+    `DELETE FROM users
+     WHERE id = $1
+       AND role = 'STUDENT'`,
+    [userId]
+  );
+}
 
   await q(`DELETE FROM students WHERE id = $1`, [studentId]);
 
@@ -870,9 +882,21 @@ app.post("/students/delete-multiple", requireAuth, requireRole("ADMIN"), async (
     await q(`DELETE FROM change_requests WHERE student_id = ANY($1)`, [ids]);
     await q(`DELETE FROM student_accounts WHERE student_id = ANY($1)`, [ids]);
 
-    if (userIds.length) {
-      await q(`DELETE FROM users WHERE id = ANY($1) AND role = 'STUDENT'`, [userIds]);
-    }
+if (userIds.length) {
+  await q(
+    `UPDATE audit_log
+     SET actor_user_id = NULL
+     WHERE actor_user_id = ANY($1)`,
+    [userIds]
+  );
+
+  await q(
+    `DELETE FROM users
+     WHERE id = ANY($1)
+       AND role = 'STUDENT'`,
+    [userIds]
+  );
+}
 
     await q(`DELETE FROM students WHERE id = ANY($1)`, [ids]);
 
@@ -1790,9 +1814,21 @@ app.post("/settings/users/cleanup-students", requireAuth, requireRole("ADMIN"), 
       .map(u => Number(u.id))
       .filter(id => !Number.isNaN(id));
 
-    for (const userId of orphanIds) {
-      await q(`DELETE FROM users WHERE id = $1 AND role = 'STUDENT'`, [userId]);
-    }
+    // 1) Quitar referencia en auditoría
+    await q(
+      `UPDATE audit_log
+       SET actor_user_id = NULL
+       WHERE actor_user_id = ANY($1)`,
+      [orphanIds]
+    );
+
+    // 2) Ahora sí borrar usuarios STUDENT sobrantes
+    await q(
+      `DELETE FROM users
+       WHERE id = ANY($1)
+         AND role = 'STUDENT'`,
+      [orphanIds]
+    );
 
     await audit(req, "CLEANUP_STUDENT_USERS", "USER", null, {
       deleted_user_ids: orphanIds,
