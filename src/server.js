@@ -1768,7 +1768,38 @@ app.get("/settings/users", requireAuth, requireRole("ADMIN"), async (req,res) =>
 
   render(req,res,"layout", { title:"Ajustes - Usuarios", active:"settings", body });
 });
+app.post("/settings/users/cleanup-students", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+    const orphanUsers = await q(
+      `SELECT u.id, u.username
+       FROM users u
+       LEFT JOIN student_accounts sa ON sa.user_id = u.id
+       WHERE u.role = 'STUDENT'
+         AND sa.user_id IS NULL`
+    );
 
+    const orphanIds = orphanUsers.rows.map(u => Number(u.id)).filter(id => !Number.isNaN(id));
+
+    if (!orphanIds.length) {
+      flash(req, "info", "No se encontraron usuarios STUDENT sobrantes.");
+      return res.redirect("/settings/users");
+    }
+
+    await q(`DELETE FROM users WHERE id = ANY($1) AND role = 'STUDENT'`, [orphanIds]);
+
+    await audit(req, "CLEANUP_STUDENT_USERS", "USER", null, {
+      deleted_user_ids: orphanIds,
+      total_deleted: orphanIds.length
+    });
+
+    flash(req, "success", `Se eliminaron ${orphanIds.length} usuarios STUDENT sobrantes.`);
+    return res.redirect("/settings/users");
+  } catch (err) {
+    console.error("Error limpiando usuarios STUDENT sobrantes:", err);
+    flash(req, "danger", "Ocurrió un error al limpiar los usuarios STUDENT sobrantes.");
+    return res.redirect("/settings/users");
+  }
+});
 app.post("/settings/users/new", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const { username, password, role } = req.body;
 
