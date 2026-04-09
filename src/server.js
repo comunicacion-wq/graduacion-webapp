@@ -810,10 +810,28 @@ app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, 
     return res.redirect("/students");
   }
 
+  const accountResult = await q(
+    `SELECT user_id FROM student_accounts WHERE student_id = $1`,
+    [studentId]
+  );
+
+  const userId = accountResult.rows[0]?.user_id || null;
+
   await q(`DELETE FROM change_requests WHERE student_id = $1`, [studentId]);
+  await q(`DELETE FROM student_accounts WHERE student_id = $1`, [studentId]);
+
+  if (userId) {
+    await q(`DELETE FROM users WHERE id = $1 AND role = 'STUDENT'`, [userId]);
+  }
+
   await q(`DELETE FROM students WHERE id = $1`, [studentId]);
 
-  flash(req, "success", "Alumno eliminado correctamente.");
+  await audit(req, "DELETE_STUDENT", "STUDENT", studentId, {
+    full_name: existing.rows[0].full_name,
+    deleted_user_id: userId
+  });
+
+  flash(req, "success", "Alumno y usuario vinculados eliminados correctamente.");
   res.redirect("/students");
 });
 app.post("/students/delete-multiple", requireAuth, requireRole("ADMIN"), async (req, res) => {
@@ -838,12 +856,32 @@ app.post("/students/delete-multiple", requireAuth, requireRole("ADMIN"), async (
       return res.redirect("/students");
     }
 
+    const linkedAccounts = await q(
+      `SELECT student_id, user_id
+       FROM student_accounts
+       WHERE student_id = ANY($1)`,
+      [ids]
+    );
+
+    const userIds = linkedAccounts.rows
+      .map(r => Number(r.user_id))
+      .filter(id => !Number.isNaN(id));
+
     await q(`DELETE FROM change_requests WHERE student_id = ANY($1)`, [ids]);
+    await q(`DELETE FROM student_accounts WHERE student_id = ANY($1)`, [ids]);
+
+    if (userIds.length) {
+      await q(`DELETE FROM users WHERE id = ANY($1) AND role = 'STUDENT'`, [userIds]);
+    }
+
     await q(`DELETE FROM students WHERE id = ANY($1)`, [ids]);
 
-    await audit(req, "DELETE_MULTIPLE_STUDENTS", "STUDENT", null, { student_ids: ids });
+    await audit(req, "DELETE_MULTIPLE_STUDENTS", "STUDENT", null, {
+      student_ids: ids,
+      deleted_user_ids: userIds
+    });
 
-    flash(req, "success", `Se eliminaron ${ids.length} alumnos correctamente.`);
+    flash(req, "success", `Se eliminaron ${ids.length} alumnos y sus usuarios vinculados correctamente.`);
     return res.redirect("/students");
   } catch (err) {
     console.error("Error eliminando alumnos en bloque:", err);
