@@ -194,7 +194,13 @@ app.post("/login", async (req,res) => {
     campuses = c.rows.map(x => x.campus_id);
   }
 
-  req.session.user = { id: u.id, username: u.username, role: u.role, campuses };
+  req.session.user = {
+  id: u.id,
+  username: u.username,
+  role: u.role,
+  campuses,
+  permissions: u.permissions || {}
+};
   await audit(req, "LOGIN", "USER", u.id, {});
   res.redirect(req.body.next || "/");
 });
