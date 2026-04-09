@@ -1770,27 +1770,29 @@ app.get("/settings/users", requireAuth, requireRole("ADMIN"), async (req,res) =>
 });
 app.post("/settings/users/cleanup-students", requireAuth, requireRole("ADMIN"), async (req, res) => {
   try {
-    const orphanUsers = await q(
-      `SELECT u.id, u.username
-       FROM users u
-       LEFT JOIN student_accounts sa ON sa.user_id = u.id
-       WHERE u.role = 'STUDENT'
-         AND sa.user_id IS NULL`
-    );
+    const orphanUsers = await q(`
+      SELECT u.id, u.username
+      FROM users u
+      WHERE u.role = 'STUDENT'
+        AND NOT EXISTS (
+          SELECT 1
+          FROM student_accounts sa
+          WHERE sa.user_id = u.id
+        )
+    `);
+
+    if (!orphanUsers.rows.length) {
+      flash(req, "info", "No se encontraron usuarios STUDENT sobrantes.");
+      return res.redirect("/settings/users");
+    }
 
     const orphanIds = orphanUsers.rows
       .map(u => Number(u.id))
       .filter(id => !Number.isNaN(id));
 
-    if (!orphanIds.length) {
-      flash(req, "info", "No se encontraron usuarios STUDENT sobrantes.");
-      return res.redirect("/settings/users");
+    for (const userId of orphanIds) {
+      await q(`DELETE FROM users WHERE id = $1 AND role = 'STUDENT'`, [userId]);
     }
-
-    await q(
-      `DELETE FROM users WHERE id = ANY($1) AND role = 'STUDENT'`,
-      [orphanIds]
-    );
 
     await audit(req, "CLEANUP_STUDENT_USERS", "USER", null, {
       deleted_user_ids: orphanIds,
@@ -1801,7 +1803,7 @@ app.post("/settings/users/cleanup-students", requireAuth, requireRole("ADMIN"), 
     return res.redirect("/settings/users");
   } catch (err) {
     console.error("Error limpiando usuarios STUDENT sobrantes:", err);
-    flash(req, "danger", "Ocurrió un error al limpiar los usuarios STUDENT sobrantes.");
+    flash(req, "danger", `Error al limpiar usuarios sobrantes: ${err.message}`);
     return res.redirect("/settings/users");
   }
 });
