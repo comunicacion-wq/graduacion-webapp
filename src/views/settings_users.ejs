@@ -3,6 +3,16 @@
   <a href="/settings" class="btn btn-secondary btn-sm">Volver</a>
 </div>
 
+<div class="mb-3">
+  <form method="POST" action="/settings/users/cleanup-students"
+        onsubmit="return confirm('¿Eliminar usuarios STUDENT que ya no estén vinculados a ningún alumno?');">
+    
+    <button type="submit" class="btn btn-outline-danger">
+      🧹 Limpiar usuarios STUDENT sobrantes
+    </button>
+  </form>
+</div>
+
 <div class="card mb-4">
   <div class="card-body">
     <form method="POST" action="/settings/users/new">
