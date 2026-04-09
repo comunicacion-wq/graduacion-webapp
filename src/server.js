@@ -816,7 +816,41 @@ app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, 
   flash(req, "success", "Alumno eliminado correctamente.");
   res.redirect("/students");
 });
+app.post("/students/delete-multiple", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+    let { student_ids } = req.body;
 
+    if (!student_ids) {
+      flash(req, "warning", "No seleccionaste alumnos para eliminar.");
+      return res.redirect("/students");
+    }
+
+    if (!Array.isArray(student_ids)) {
+      student_ids = [student_ids];
+    }
+
+    const ids = student_ids
+      .map(id => Number(id))
+      .filter(id => !Number.isNaN(id));
+
+    if (!ids.length) {
+      flash(req, "warning", "No se recibieron alumnos válidos para eliminar.");
+      return res.redirect("/students");
+    }
+
+    await q(`DELETE FROM change_requests WHERE student_id = ANY($1)`, [ids]);
+    await q(`DELETE FROM students WHERE id = ANY($1)`, [ids]);
+
+    await audit(req, "DELETE_MULTIPLE_STUDENTS", "STUDENT", null, { student_ids: ids });
+
+    flash(req, "success", `Se eliminaron ${ids.length} alumnos correctamente.`);
+    return res.redirect("/students");
+  } catch (err) {
+    console.error("Error eliminando alumnos en bloque:", err);
+    flash(req, "danger", "Ocurrió un error al eliminar los alumnos seleccionados.");
+    return res.redirect("/students");
+  }
+});
 app.post("/students/:id/resend-credentials", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const studentId = Number(req.params.id);
   await createStudentAccountAndSend(req, studentId);
