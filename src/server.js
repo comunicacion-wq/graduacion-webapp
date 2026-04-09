@@ -1778,14 +1778,19 @@ app.post("/settings/users/cleanup-students", requireAuth, requireRole("ADMIN"), 
          AND sa.user_id IS NULL`
     );
 
-    const orphanIds = orphanUsers.rows.map(u => Number(u.id)).filter(id => !Number.isNaN(id));
+    const orphanIds = orphanUsers.rows
+      .map(u => Number(u.id))
+      .filter(id => !Number.isNaN(id));
 
     if (!orphanIds.length) {
       flash(req, "info", "No se encontraron usuarios STUDENT sobrantes.");
       return res.redirect("/settings/users");
     }
 
-    await q(`DELETE FROM users WHERE id = ANY($1) AND role = 'STUDENT'`, [orphanIds]);
+    await q(
+      `DELETE FROM users WHERE id = ANY($1) AND role = 'STUDENT'`,
+      [orphanIds]
+    );
 
     await audit(req, "CLEANUP_STUDENT_USERS", "USER", null, {
       deleted_user_ids: orphanIds,
