@@ -4,6 +4,7 @@
   <div class="col-12 col-md-6">
     <label class="form-label">Nombre completo</label>
     <input class="form-control" name="full_name" required value="<%= student.full_name || '' %>">
+<div id="duplicateNameAlert" class="alert alert-warning mt-2 d-none"></div>
 <div id="duplicate-warning" class="alert alert-warning mt-2 d-none"></div>
   </div>
 
@@ -253,4 +254,53 @@ if (input && warning) {
     phoneInput.addEventListener("input", revisarDuplicados);
   }
 }
+</script>
+<script>
+  const fullNameInput = document.querySelector('input[name="full_name"]');
+  const duplicateAlert = document.getElementById("duplicateNameAlert");
+
+  let duplicateTimer = null;
+
+  if (fullNameInput && duplicateAlert) {
+    fullNameInput.addEventListener("input", function () {
+      clearTimeout(duplicateTimer);
+
+      const name = fullNameInput.value.trim();
+
+      if (name.length < 5) {
+        duplicateAlert.classList.add("d-none");
+        duplicateAlert.innerHTML = "";
+        return;
+      }
+
+      duplicateTimer = setTimeout(async function () {
+        try {
+          const response = await fetch(`/students/check-duplicate-name?name=${encodeURIComponent(name)}`);
+          const data = await response.json();
+
+          if (!data.matches || data.matches.length === 0) {
+            duplicateAlert.classList.add("d-none");
+            duplicateAlert.innerHTML = "";
+            return;
+          }
+
+          duplicateAlert.classList.remove("d-none");
+          duplicateAlert.innerHTML = `
+            <strong>Posibles alumnos ya registrados:</strong>
+            <ul class="mb-0 mt-2">
+              ${data.matches.map(s => `
+                <li>
+                  ${s.full_name}
+                  ${s.phone_e164 ? `<span class="text-muted">(${s.phone_e164})</span>` : ""}
+                </li>
+              `).join("")}
+            </ul>
+          `;
+        } catch (err) {
+          duplicateAlert.classList.add("d-none");
+          duplicateAlert.innerHTML = "";
+        }
+      }, 400);
+    });
+  }
 </script>
