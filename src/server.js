@@ -856,6 +856,21 @@ if (resend) {
 flash(req, "success", "Alumno actualizado.");
 res.redirect(`/students/${studentId}`);
 });
+app.post("/students/:id/graduate", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  const studentId = Number(req.params.id);
+
+  await q(
+    `UPDATE students
+     SET status = 'GRADUATED'
+     WHERE id = $1`,
+    [studentId]
+  );
+
+  await audit(req, "GRADUATE_STUDENT", "STUDENT", studentId, {});
+
+  flash(req, "success", "Alumno marcado como egresado correctamente.");
+  res.redirect("/students");
+});
 
 app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, res) => {
   const studentId = Number(req.params.id);
