@@ -871,7 +871,56 @@ app.post("/students/:id/graduate", requireAuth, requireRole("ADMIN"), async (req
   flash(req, "success", "Alumno marcado como egresado correctamente.");
   res.redirect("/students");
 });
+app.post("/students/graduate-filtered", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  const { campus_id, shift_id, period_id, year_id } = req.body;
 
+  const conditions = [`COALESCE(status, 'ACTIVE') = 'ACTIVE'`];
+  const params = [];
+  let i = 1;
+
+  if (campus_id) {
+    conditions.push(`campus_id = $${i++}`);
+    params.push(Number(campus_id));
+  }
+
+  if (shift_id) {
+    conditions.push(`shift_id = $${i++}`);
+    params.push(Number(shift_id));
+  }
+
+  if (period_id) {
+    conditions.push(`period_id = $${i++}`);
+    params.push(Number(period_id));
+  }
+
+  if (year_id) {
+    conditions.push(`year_id = $${i++}`);
+    params.push(Number(year_id));
+  }
+
+  if (!period_id || !year_id) {
+    flash(req, "danger", "Debes seleccionar periodo y año para egresar alumnos.");
+    return res.redirect("/students");
+  }
+
+  const where = conditions.join(" AND ");
+
+  const result = await q(
+    `UPDATE students
+     SET status = 'GRADUATED'
+     WHERE ${where}
+     RETURNING id`,
+    params
+  );
+
+  await audit(req, "GRADUATE_FILTERED_STUDENTS", "STUDENT", null, {
+    total_graduated: result.rows.length,
+    filters: { campus_id, shift_id, period_id, year_id }
+  });
+
+  flash(req, "success", `Se marcaron ${result.rows.length} alumnos como egresados.`);
+  res.redirect("/students");
+});
 app.post("/students/:id/delete", requireAuth, requireRole("ADMIN"), async (req, res) => {
   const studentId = Number(req.params.id);
 
