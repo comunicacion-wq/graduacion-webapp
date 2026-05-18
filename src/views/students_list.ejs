@@ -51,7 +51,19 @@
     <button class="btn btn-secondary" type="submit">Filtrar</button>
   </div>
 </form>
+<form method="POST" action="/students/graduate-filtered"
+      onsubmit="return confirm('¿Seguro que deseas egresar todos los alumnos filtrados por periodo y año?');"
+      class="mb-3 d-flex justify-content-end gap-2">
 
+  <input type="hidden" name="campus_id" value="<%= filters.campus_id || '' %>">
+  <input type="hidden" name="shift_id" value="<%= filters.shift_id || '' %>">
+  <input type="hidden" name="period_id" value="<%= filters.period_id || '' %>">
+  <input type="hidden" name="year_id" value="<%= filters.year_id || '' %>">
+
+  <button type="submit" class="btn btn-outline-secondary">
+    Egresar periodo filtrado
+  </button>
+</form>
 <form method="POST" action="/students/delete-multiple" id="bulkDeleteForm">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div class="form-check">
