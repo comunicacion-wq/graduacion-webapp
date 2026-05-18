@@ -665,9 +665,9 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
     `INSERT INTO students(full_name,phone_e164,campus_id,shift_id,period_id,year_id,career_id,grade,"group",package_id,discount_amount,discount_reason)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
      RETURNING id`,
-    [
-      b.full_name,
-      b.phone_e164,
+   [
+  b.full_name,
+  b.phone_e164 && b.phone_e164.trim() ? b.phone_e164.trim() : "",
       Number(b.campus_id),
       Number(b.shift_id),
       Number(b.period_id),
