@@ -2553,6 +2553,25 @@ app.get("/setup-expenses", requireAuth, async (req, res) => {
     res.status(500).send("Error al crear tablas de gastos");
   }
 });
+app.get("/setup-student-status", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+    await q(`
+      ALTER TABLE students
+      ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+    `);
+
+    await q(`
+      UPDATE students
+      SET status = 'ACTIVE'
+      WHERE status IS NULL OR status = ''
+    `);
+
+    res.send("Columna status agregada correctamente en students");
+  } catch (err) {
+    console.error("Error agregando status a students:", err);
+    res.status(500).send("Error al agregar columna status en students");
+  }
+});
 app.get("/expenses/contacts/new", requireAuth, async (req, res) => {
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
