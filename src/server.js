@@ -539,6 +539,39 @@ app.get("/students/check-duplicate", requireAuth, requireRole("ADMIN","CAJERO"),
     return res.status(500).json({ exact: [], similar: [], error: "Error revisando duplicados" });
   }
 });
+app.get("/students/check-duplicate-name", requireAuth, requireRole("ADMIN","CAJERO"), async (req, res) => {
+  try {
+    const name = (req.query.name || "").trim().toLowerCase();
+
+    if (name.length < 5) {
+      return res.json({ matches: [] });
+    }
+
+    const words = name
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (words.length < 2) {
+      return res.json({ matches: [] });
+    }
+
+    const search = `%${words.join("%")}%`;
+
+    const result = await q(
+      `SELECT id, full_name, phone_e164
+       FROM students
+       WHERE LOWER(full_name) LIKE $1
+       ORDER BY full_name ASC
+       LIMIT 8`,
+      [search]
+    );
+
+    return res.json({ matches: result.rows });
+  } catch (err) {
+    console.error("Error buscando duplicados:", err);
+    return res.json({ matches: [] });
+  }
+});
 app.get("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const cats = await catalogs();
   const student = {
