@@ -100,7 +100,9 @@ function studentQueryWhere(filters, user) {
   const w = [];
   const p = [];
   let i = 1;
-
+  
+w.push(`COALESCE(s.status, 'ACTIVE') = 'ACTIVE'`);
+  
   const add = (cond, val) => { w.push(cond.replace("?", `$${i++}`)); p.push(val); };
 
   if (filters.campus_id) add("s.campus_id = ?", Number(filters.campus_id));
