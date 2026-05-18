@@ -240,6 +240,7 @@ app.get("/students", requireAuth, async (req,res) => {
     shift_id: req.query.shift_id || "",
     period_id: req.query.period_id || "",
     year_id: req.query.year_id || "",
+    status: req.query.status || "",
     q: req.query.q || ""
   };
   const cats = await catalogs();
