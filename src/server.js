@@ -101,7 +101,13 @@ function studentQueryWhere(filters, user) {
   const p = [];
   let i = 1;
   
-w.push(`COALESCE(s.status, 'ACTIVE') = 'ACTIVE'`);
+if (filters.status === "GRADUATED") {
+  w.push(`COALESCE(s.status, 'ACTIVE') = 'GRADUATED'`);
+} else if (filters.status === "ALL") {
+  // no filtrar
+} else {
+  w.push(`COALESCE(s.status, 'ACTIVE') = 'ACTIVE'`);
+}
   
   const add = (cond, val) => { w.push(cond.replace("?", `$${i++}`)); p.push(val); };
 
