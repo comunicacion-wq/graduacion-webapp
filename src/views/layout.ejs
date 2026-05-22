@@ -28,24 +28,53 @@
 
 <div class="container-fluid">
   <div class="row">
-    <aside class="col-12 col-md-3 col-lg-2 bg-white border-end sidebar p-0">
-     
+   <aside class="col-12 col-md-3 col-lg-2 bg-white border-end sidebar p-0">
+  <div class="list-group list-group-flush">
 
-<% if (user && (user.role === "ADMIN" || user.permissions?.view_reports)) { %>
-<a class="list-group-item list-group-item-action <%= active==='reports'?'active':'' %>" href="/reports">Reportes</a>
-<% } %>
+    <%
+      const permissions = user?.permissions || {};
+      const isAdmin = user?.role === "ADMIN";
 
-<a class="list-group-item list-group-item-action <%= active==='requests'?'active':'' %>" href="/requests">Solicitudes</a>
+      const can = (key) => {
+        return isAdmin || permissions[key] === true;
+      };
+    %>
 
-<% if (user && (user.role === "ADMIN" || user.permissions?.view_audit)) { %>
-<a class="list-group-item list-group-item-action <%= active==='audit'?'active':'' %>" href="/audit">Auditoría</a>
-<% } %>
+    <a class="list-group-item list-group-item-action <%= active==='dashboard'?'active':'' %>" href="/">Dashboard</a>
 
-<% if (user && (user.role === "ADMIN" || user.permissions?.view_settings)) { %>
-<a class="list-group-item list-group-item-action <%= active==='settings'?'active':'' %>" href="/settings">Ajustes</a>
-<% } %>
-      </div>
-    </aside>
+    <% if (can('view_students') || can('create_students')) { %>
+      <a class="list-group-item list-group-item-action <%= active==='students'?'active':'' %>" href="/students">Control escolar</a>
+    <% } %>
+
+    <% if (can('create_payments')) { %>
+      <a class="list-group-item list-group-item-action <%= active==='payments'?'active':'' %>" href="/finance/collect">Finanzas</a>
+    <% } %>
+
+    <% if (can('view_arrears') || can('send_collection')) { %>
+      <a class="list-group-item list-group-item-action <%= active==='arrears'?'active':'' %>" href="/arrears">Adeudos / Cobranza</a>
+    <% } %>
+
+    <% if (isAdmin) { %>
+      <a class="list-group-item list-group-item-action <%= active==='expenses'?'active':'' %>" href="/expenses">Gastos</a>
+      <a class="list-group-item list-group-item-action <%= active==='expense_contacts'?'active':'' %>" href="/settings/expense-contacts">Proveedores</a>
+    <% } %>
+
+    <% if (can('view_reports')) { %>
+      <a class="list-group-item list-group-item-action <%= active==='reports'?'active':'' %>" href="/reports">Reportes</a>
+    <% } %>
+
+    <a class="list-group-item list-group-item-action <%= active==='requests'?'active':'' %>" href="/requests">Solicitudes</a>
+
+    <% if (can('view_audit')) { %>
+      <a class="list-group-item list-group-item-action <%= active==='audit'?'active':'' %>" href="/audit">Auditoría</a>
+    <% } %>
+
+    <% if (can('view_settings')) { %>
+      <a class="list-group-item list-group-item-action <%= active==='settings'?'active':'' %>" href="/settings">Ajustes</a>
+    <% } %>
+
+  </div>
+</aside>
     <main class="col-12 col-md-9 col-lg-10 p-4">
       <% if (flash && flash.length) { %>
         <% flash.forEach(f => { %>
