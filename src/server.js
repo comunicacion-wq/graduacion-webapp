@@ -202,7 +202,7 @@ app.post("/login", async (req,res) => {
     campuses = c.rows.map(x => x.campus_id);
   }
 
-  req.session.user = {
+req.session.user = {
   id: u.id,
   username: u.username,
   role: u.role,
@@ -1066,13 +1066,11 @@ async function cashboxIsOpen() {
   return !!r.rows[0]?.is_open;
 }
 
-app.get("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
-  const qtext = req.query.q || "";
-  const studentId = req.query.student_id ? Number(req.query.student_id) : null;
+app.get("/finance/collect", requireAuth, async (req,res) => {
+  const permissions = req.session.user?.permissions || {};
 
-  if (!(await cashboxIsOpen()) && req.session.user.role!=="ADMIN") {
-    flash(req,"danger","Caja cerrada. No se pueden registrar abonos.");
-    return res.redirect("/");
+  if (req.session.user.role !== "ADMIN" && permissions.create_payments !== true) {
+    return res.status(403).send("No autorizado");
   }
 
   let results = [];
@@ -1115,10 +1113,11 @@ app.get("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (r
   render(req,res,"layout", { title:"Registrar abono", active:"payments", body });
 });
 
-app.post("/finance/collect", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
-  if (!(await cashboxIsOpen()) && req.session.user.role !== "ADMIN") {
-    flash(req,"danger","Caja cerrada. No se pueden registrar abonos.");
-    return res.redirect("/");
+app.post("/finance/collect", requireAuth, async (req,res) => {
+  const permissions = req.session.user?.permissions || {};
+
+  if (req.session.user.role !== "ADMIN" && permissions.create_payments !== true) {
+    return res.status(403).send("No autorizado");
   }
 
   const { student_id, amount, method, note } = req.body;
