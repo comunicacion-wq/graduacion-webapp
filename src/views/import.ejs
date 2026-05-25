@@ -1,10 +1,61 @@
-<h3>Extraer archivo (Excel) — Plus</h3>
-<p class="text-muted">Este módulo es opcional. Aquí queda el espacio para subir Excel y mapear columnas.</p>
+<%- include('partials/header') %>
 
-<form method="post" action="/students/import" enctype="multipart/form-data">
-  <div class="mb-3">
-    <input type="file" name="file" accept=".xlsx" class="form-control">
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3>Importar alumnos desde Excel</h3>
+
+  <a href="/students" class="btn btn-secondary">
+    Volver
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+
+    <div class="alert alert-info">
+      El archivo Excel debe contener las siguientes columnas:
+      <br><br>
+
+      <strong>
+        nombre_completo,
+        telefono,
+        campus,
+        turno,
+        periodo,
+        anio,
+        carrera,
+        grado,
+        grupo,
+        paquete
+      </strong>
+    </div>
+
+    <form
+      action="/students/import"
+      method="POST"
+      enctype="multipart/form-data"
+    >
+
+      <div class="mb-3">
+        <label class="form-label">
+          Seleccionar archivo Excel
+        </label>
+
+        <input
+          type="file"
+          name="excel"
+          class="form-control"
+          accept=".xlsx,.xls"
+          required
+        >
+      </div>
+
+      <button class="btn btn-success">
+        Subir y registrar alumnos
+      </button>
+
+    </form>
+
   </div>
-  <button class="btn btn-primary">Subir (placeholder)</button>
-  <a class="btn btn-outline-secondary" href="/students">Volver</a>
-</form>
+</div>
+
+<%- include('partials/footer') %>
