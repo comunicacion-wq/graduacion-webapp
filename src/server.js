@@ -36,6 +36,8 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
+const uploadExcel = multer({ storage: multer.memoryStorage() });
+
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1060,11 +1062,19 @@ app.get("/students/import", requireAuth, requireRole("ADMIN"), async (req,res) =
   const body = await new Promise((resolve, reject) => {
     res.render("import", {}, (err, html) => err ? reject(err) : resolve(html));
   });
-  render(req,res,"layout", { title:"Importar Excel", active:"students", body });
+  render(req,res,"layout", {
+    title:"Importar Excel", 
+    active:"students", 
+    body });
 });
-app.post("/students/import", requireAuth, requireRole("ADMIN"), upload.single("file"), async (req,res) => {
-  flash(req,"info","Módulo Excel pendiente: archivo recibido (placeholder).");
-  res.redirect("/students");
+app.post("/students/import", requireAuth, requireRole("ADMIN"), uploadExcel.single("excel"), async (req,res) => {
+  if (!req.file) {
+    flash(req, "danger", "Debes seleccionar un archivo Excel.");
+    return res.redirect("/students/import");
+  }
+
+  flash(req, "success", "Archivo Excel recibido correctamente. Siguiente paso: leer y registrar alumnos.");
+  return res.redirect("/students/import");
 });
 
 // Finance collect
