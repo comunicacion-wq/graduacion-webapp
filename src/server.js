@@ -1072,15 +1072,113 @@ app.get("/students/import", requireAuth, requireRole("ADMIN"), async (req,res) =
     body });
 });
 app.post("/students/import", requireAuth, requireRole("ADMIN"), uploadExcel.single("excel"), async (req,res) => {
-  if (!req.file) {
-    flash(req, "danger", "Debes seleccionar un archivo Excel.");
+  try {
+    if (!req.file) {
+      flash(req, "danger", "Debes seleccionar un archivo Excel.");
+      return res.redirect("/students/import");
+    }
+
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const rows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
+
+    let created = 0;
+    let duplicated = 0;
+    let errors = 0;
+
+    for (const row of rows) {
+      const fullName = String(row.nombre_completo || "").trim();
+      const phone = String(row.telefono || "").trim();
+      const campusName = String(row.campus || "").trim();
+      const shiftName = String(row.turno || "").trim();
+      const periodName = String(row.periodo || "").trim();
+      const yearValue = String(row.anio || "").trim();
+      const careerName = String(row.carrera || "").trim();
+      const grade = String(row.grado || "").trim();
+      const group = String(row.grupo || "").trim();
+      const packageName = String(row.paquete || "").trim();
+
+      if (!fullName || !campusName || !shiftName || !periodName || !yearValue || !packageName) {
+        errors++;
+        continue;
+      }
+
+      const existing = await q(
+        `SELECT id FROM students WHERE LOWER(full_name) = LOWER($1) LIMIT 1`,
+        [fullName]
+      );
+
+      if (existing.rows[0]) {
+        duplicated++;
+        continue;
+      }
+
+      const campus = await q(`SELECT id FROM campuses WHERE LOWER(name) = LOWER($1) LIMIT 1`, [campusName]);
+      const shift = await q(`SELECT id FROM shifts WHERE LOWER(name) = LOWER($1) LIMIT 1`, [shiftName]);
+      const period = await q(`SELECT id FROM graduation_periods WHERE LOWER(name) = LOWER($1) LIMIT 1`, [periodName]);
+      const year = await q(`SELECT id FROM graduation_years WHERE year::text = $1 LIMIT 1`, [yearValue]);
+      const pack = await q(`SELECT id FROM packages WHERE LOWER(name) = LOWER($1) LIMIT 1`, [packageName]);
+
+      if (!campus.rows[0] || !shift.rows[0] || !period.rows[0] || !year.rows[0] || !pack.rows[0]) {
+        errors++;
+        continue;
+      }
+
+      let careerId = null;
+
+      if (careerName && careerName.toLowerCase() !== "sin carrera") {
+        const career = await q(`SELECT id FROM careers WHERE LOWER(name) = LOWER($1) LIMIT 1`, [careerName]);
+        careerId = career.rows[0]?.id || null;
+      }
+
+      const ins = await q(
+        `INSERT INTO students(
+          full_name,
+          phone_e164,
+          campus_id,
+          shift_id,
+          period_id,
+          year_id,
+          career_id,
+          grade,
+          "group",
+          package_id,
+          discount_amount,
+          discount_reason,
+          status
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        RETURNING id`,
+        [
+          fullName,
+          phone,
+          campus.rows[0].id,
+          shift.rows[0].id,
+          period.rows[0].id,
+          year.rows[0].id,
+          careerId,
+          grade,
+          group,
+          pack.rows[0].id,
+          0,
+          "",
+          "ACTIVE"
+        ]
+      );
+
+      await audit(req, "IMPORT_STUDENT", "STUDENT", ins.rows[0].id, { full_name: fullName });
+      created++;
+    }
+
+    flash(req, "success", `Importación terminada. Registrados: ${created}. Repetidos: ${duplicated}. Errores: ${errors}.`);
+    return res.redirect("/students/import");
+
+  } catch (err) {
+    console.error("Error importando alumnos:", err);
+    flash(req, "danger", "Ocurrió un error al importar el Excel.");
     return res.redirect("/students/import");
   }
-
-  flash(req, "success", "Archivo Excel recibido correctamente. Siguiente paso: leer y registrar alumnos.");
-  return res.redirect("/students/import");
 });
-
 // Finance collect
 async function cashboxIsOpen() {
   const r = await q(`SELECT is_open FROM cashbox_state WHERE id=1`);
