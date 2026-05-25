@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import dayjs from "dayjs";
 import multer from "multer";
+import xlsx from "xlsx";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -678,7 +679,13 @@ await q(
 await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e164 });
   return { whatsappLink };
 }
-
+app.get("/students/import", requireAuth, async (req, res) => {
+  res.render("import", {
+    title: "Importar alumnos",
+    section: "students",
+    user: req.session.user
+  });
+});
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const b = req.body;
 
