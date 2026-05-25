@@ -681,11 +681,15 @@ await q(
 await audit(req, "SEND_CREDENTIALS", "STUDENT", studentId, { to: student.phone_e164 });
   return { whatsappLink };
 }
-app.get("/students/import", requireAuth, async (req, res) => {
-  res.render("import", {
-    title: "Importar alumnos",
-    section: "students",
-    user: req.session.user
+app.get("/students/import", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const body = await new Promise((resolve, reject) => {
+    res.render("import", {}, (err, html) => err ? reject(err) : resolve(html));
+  });
+
+  render(req,res,"layout", {
+    title:"Importar Excel",
+    active:"students",
+    body
   });
 });
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
