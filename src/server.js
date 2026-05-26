@@ -768,7 +768,17 @@ if (result?.whatsappLink) {
 flash(req,"success","Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
 });
+app.get("/students/graduation-groups", requireAuth, async (req,res) => {
+  const body = await new Promise((resolve, reject) => {
+    res.render("graduation_groups", {}, (err, html) => err ? reject(err) : resolve(html));
+  });
 
+  render(req,res,"layout", {
+    title:"Grupos a egresar",
+    active:"students",
+    body
+  });
+});
 app.get("/students/:id", requireAuth, async (req,res) => {
   const studentId = Number(req.params.id);
   // Restrict cajero to campuses
