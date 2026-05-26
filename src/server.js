@@ -1191,12 +1191,14 @@ app.get("/finance/collect", requireAuth, async (req,res) => {
   if (req.session.user.role !== "ADMIN" && permissions.create_payments !== true) {
     return res.status(403).send("No autorizado");
   }
+let results = [];
+let student = null;
+let totals = null;
 
-  let results = [];
-  let student = null;
-  let totals = null;
+const qtext = req.query.q || "";
+const studentId = req.query.student_id ? Number(req.query.student_id) : null;
 
-  if (qtext) {
+if (qtext) {
     // quick search
     const r = await q(
       `
