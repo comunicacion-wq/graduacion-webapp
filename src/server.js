@@ -769,8 +769,26 @@ flash(req,"success","Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
 });
 app.get("/students/graduation-groups", requireAuth, async (req,res) => {
+  const cats = await catalogs();
+
+  const filters = {
+    campus_id: req.query.campus_id || "",
+    shift_id: req.query.shift_id || "",
+    period_id: req.query.period_id || "",
+    year_id: req.query.year_id || "",
+    career_id: req.query.career_id || "",
+    grade: req.query.grade || "",
+    group: req.query.group || "",
+    level: req.query.level || ""
+  };
+
   const body = await new Promise((resolve, reject) => {
-    res.render("graduation_groups", {}, (err, html) => err ? reject(err) : resolve(html));
+    res.render("graduation_groups", {
+      ...cats,
+      filters,
+      summary: null,
+      groups: []
+    }, (err, html) => err ? reject(err) : resolve(html));
   });
 
   render(req,res,"layout", {
