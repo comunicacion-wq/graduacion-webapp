@@ -49,15 +49,29 @@
         </select>
       </div>
 
-      <div class="col-md-3">
-        <label class="form-label">Grado</label>
-        <input type="text" class="form-control" placeholder="Ejemplo: 6">
-      </div>
+    <div class="col-md-3">
+  <label class="form-label">Grado</label>
+  <select class="form-select" name="grade">
+    <option value="">Todos</option>
+    <% grades.forEach(g => { %>
+      <option value="<%= g.grade %>" <%= filters.grade === g.grade ? 'selected' : '' %>>
+        <%= g.grade %>
+      </option>
+    <% }) %>
+  </select>
+</div>
 
-      <div class="col-md-3">
-        <label class="form-label">Grupo</label>
-        <input type="text" class="form-control" placeholder="Ejemplo: A">
-      </div>
+     <div class="col-md-3">
+  <label class="form-label">Grupo</label>
+  <select class="form-select" name="group">
+    <option value="">Todos</option>
+    <% groupsList.forEach(g => { %>
+      <option value="<%= g.group %>" <%= filters.group === g.group ? 'selected' : '' %>>
+        <%= g.group %>
+      </option>
+    <% }) %>
+  </select>
+</div>
 
     </div>
 
