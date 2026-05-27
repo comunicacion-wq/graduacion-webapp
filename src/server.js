@@ -768,6 +768,22 @@ if (result?.whatsappLink) {
 flash(req,"success","Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
 });
+app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
+  const { campus, turno, periodo, anio, carrera, grado, grupo } = req.query;
+
+  res.send(`
+    <h2>Lista de grupo</h2>
+    <p><strong>Campus:</strong> ${campus || ""}</p>
+    <p><strong>Turno:</strong> ${turno || ""}</p>
+    <p><strong>Periodo:</strong> ${periodo || ""}</p>
+    <p><strong>Año:</strong> ${anio || ""}</p>
+    <p><strong>Carrera:</strong> ${carrera || ""}</p>
+    <p><strong>Grado:</strong> ${grado || ""}</p>
+    <p><strong>Grupo:</strong> ${grupo || ""}</p>
+    <hr>
+    <p>PDF pendiente de generar. Esta ruta ya está conectada correctamente.</p>
+  `);
+});
 app.get("/students/graduation-groups", requireAuth, async (req,res) => {
  const cats = await catalogs();
 
