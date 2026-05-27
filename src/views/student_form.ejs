@@ -81,6 +81,26 @@
   <div class="col-12 col-md-4">
     <label class="form-label">Paquete</label>
     <select class="form-select" name="package_id" required>
+<div class="col-12 col-md-4">
+  <div class="form-check mt-4">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      name="billing_active"
+      value="1"
+      id="billing_active"
+      <%= student.billing_active ? 'checked' : '' %>
+    >
+
+    <label class="form-check-label" for="billing_active">
+      Activar cobranza del alumno
+    </label>
+
+    <div class="form-text">
+      Si está desactivado, el alumno aparece en Control Escolar, pero no afecta saldos ni cobranza.
+    </div>
+  </div>
+</div>
       <% packages.forEach(p => { %>
         <option value="<%= p.id %>" <%= String(student.package_id)===String(p.id) ? 'selected':'' %>><%= p.name %> - $<%= Number(p.cost).toFixed(2) %></option>
       <% }) %>
