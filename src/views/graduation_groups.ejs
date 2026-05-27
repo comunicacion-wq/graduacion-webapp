@@ -175,7 +175,8 @@
         <th>Carrera</th>
         <th>Grado</th>
         <th>Grupo</th>
-        <th>Total</th>
+       <th>Total</th>
+<th>Lista</th>
       </tr>
     </thead>
     <tbody>
@@ -189,6 +190,13 @@
           <td><%= g.grado || '' %></td>
           <td><%= g.grupo || '' %></td>
           <td><strong><%= g.total %></strong></td>
+<td>
+  <a class="btn btn-sm btn-outline-danger"
+     target="_blank"
+     href="/students/graduation-groups/pdf?campus=<%= encodeURIComponent(g.campus || '') %>&turno=<%= encodeURIComponent(g.turno || '') %>&periodo=<%= encodeURIComponent(g.periodo || '') %>&anio=<%= encodeURIComponent(g.anio || '') %>&carrera=<%= encodeURIComponent(g.carrera || '') %>&grado=<%= encodeURIComponent(g.grado || '') %>&grupo=<%= encodeURIComponent(g.grupo || '') %>">
+    Descargar lista PDF
+  </a>
+</td>
         </tr>
       <% }) %>
     </tbody>
