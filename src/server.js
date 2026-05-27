@@ -717,42 +717,41 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
     }
   }
 
- const ins = await q(
-INSERT INTO students(full_name,phone_e164,campus_id,shift_id,period_id,year_id,career_id,grade,"group",package_id,discount_amount,discount_reason,status,billing_active)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-
-   RETURNING id`,
-
+const ins = await q(
+  `INSERT INTO students(
+    full_name,
+    phone_e164,
+    campus_id,
+    shift_id,
+    period_id,
+    year_id,
+    career_id,
+    grade,
+    "group",
+    package_id,
+    discount_amount,
+    discount_reason,
+    status,
+    billing_active
+  )
+  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+  RETURNING id`,
   [
-
     b.full_name,
-
     b.phone_e164 && b.phone_e164.trim() ? b.phone_e164.trim() : "",
-
     Number(b.campus_id),
-
     Number(b.shift_id),
-
     Number(b.period_id),
-
     Number(b.year_id),
-
     b.career_id ? Number(b.career_id) : null,
-
     b.grade || "",
-
     b.group || "",
-
     Number(b.package_id),
-
     Number(b.discount_amount || 0),
-
-b.discount_reason || "",
-"ACTIVE",
-false
-
+    b.discount_reason || "",
+    "ACTIVE",
+    false
   ]
-
 );
 
   const studentId = ins.rows[0].id;
