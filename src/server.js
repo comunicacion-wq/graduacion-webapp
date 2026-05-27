@@ -795,14 +795,98 @@ const filters = {
   group: req.query.group || "",
   level: req.query.level || ""
 };
+  const where = [`COALESCE(s.status, 'ACTIVE') = 'ACTIVE'`];
+const params = [];
+let i = 1;
+
+if (filters.campus_id) {
+  where.push(`s.campus_id = $${i++}`);
+  params.push(Number(filters.campus_id));
+}
+
+if (filters.shift_id) {
+  where.push(`s.shift_id = $${i++}`);
+  params.push(Number(filters.shift_id));
+}
+
+if (filters.period_id) {
+  where.push(`s.period_id = $${i++}`);
+  params.push(Number(filters.period_id));
+}
+
+if (filters.year_id) {
+  where.push(`s.year_id = $${i++}`);
+  params.push(Number(filters.year_id));
+}
+
+if (filters.career_id) {
+  where.push(`s.career_id = $${i++}`);
+  params.push(Number(filters.career_id));
+}
+
+if (filters.grade) {
+  where.push(`s.grade = $${i++}`);
+  params.push(filters.grade);
+}
+
+if (filters.group) {
+  where.push(`s."group" = $${i++}`);
+  params.push(filters.group);
+}
+
+if (filters.level === "bachillerato") {
+  where.push(`ca.name IN ('BCU','BGMIX')`);
+}
+
+if (filters.level === "universidad") {
+  where.push(`ca.name NOT IN ('BCU','BGMIX')`);
+}
+
+const whereSql = where.join(" AND ");
+
+const summaryResult = await q(`
+  SELECT
+    COUNT(*)::int AS total_alumnos,
+    COUNT(DISTINCT CONCAT(COALESCE(s.grade,''), '-', COALESCE(s."group",''), '-', COALESCE(ca.name,''), '-', COALESCE(sh.name,'')))::int AS total_grupos,
+    SUM(CASE WHEN ca.name IN ('BCU','BGMIX') THEN 1 ELSE 0 END)::int AS bachillerato,
+    SUM(CASE WHEN ca.name NOT IN ('BCU','BGMIX') THEN 1 ELSE 0 END)::int AS universidad
+  FROM students s
+  LEFT JOIN careers ca ON ca.id = s.career_id
+  LEFT JOIN shifts sh ON sh.id = s.shift_id
+  WHERE ${whereSql}
+`, params);
+
+const groupsResult = await q(`
+  SELECT
+    c.name AS campus,
+    sh.name AS turno,
+    gp.name AS periodo,
+    gy.year AS anio,
+    ca.name AS carrera,
+    s.grade AS grado,
+    s."group" AS grupo,
+    COUNT(*)::int AS total
+  FROM students s
+  LEFT JOIN campuses c ON c.id = s.campus_id
+  LEFT JOIN shifts sh ON sh.id = s.shift_id
+  LEFT JOIN graduation_periods gp ON gp.id = s.period_id
+  LEFT JOIN graduation_years gy ON gy.id = s.year_id
+  LEFT JOIN careers ca ON ca.id = s.career_id
+  WHERE ${whereSql}
+  GROUP BY c.name, sh.name, gp.name, gy.year, ca.name, s.grade, s."group"
+  ORDER BY c.name, sh.name, ca.name, s.grade, s."group"
+`, params);
+
+const summary = summaryResult.rows[0];
+const groups = groupsResult.rows;
 const body = await new Promise((resolve, reject) => {
   res.render("graduation_groups", {
     ...cats,
     filters,
     grades: grades.rows,
     groupsList: groupsList.rows,
-    summary: null,
-    groups: []
+summary,
+groups
   }, (err, html) => err ? reject(err) : resolve(html));
 });
 
