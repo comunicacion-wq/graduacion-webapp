@@ -124,6 +124,75 @@
 </button>
 
     </form>
+<% if (summary) { %>
+  <hr>
 
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <small>Total alumnos</small>
+          <h3><%= summary.total_alumnos || 0 %></h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <small>Total grupos</small>
+          <h3><%= summary.total_grupos || 0 %></h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <small>Bachillerato</small>
+          <h3><%= summary.bachillerato || 0 %></h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <small>Universidad</small>
+          <h3><%= summary.universidad || 0 %></h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="table table-sm table-striped">
+    <thead>
+      <tr>
+        <th>Campus</th>
+        <th>Turno</th>
+        <th>Periodo</th>
+        <th>Año</th>
+        <th>Carrera</th>
+        <th>Grado</th>
+        <th>Grupo</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% groups.forEach(g => { %>
+        <tr>
+          <td><%= g.campus || '' %></td>
+          <td><%= g.turno || '' %></td>
+          <td><%= g.periodo || '' %></td>
+          <td><%= g.anio || '' %></td>
+          <td><%= g.carrera || '' %></td>
+          <td><%= g.grado || '' %></td>
+          <td><%= g.grupo || '' %></td>
+          <td><strong><%= g.total %></strong></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
   </div>
 </div>
