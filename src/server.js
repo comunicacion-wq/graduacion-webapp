@@ -696,6 +696,7 @@ app.get("/students/import", requireAuth, requireRole("ADMIN"), async (req,res) =
 });
 app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const b = req.body;
+  const billingActive = b.billing_active === "1";
 
   const duplicate = await q(
     `SELECT id, full_name
@@ -750,8 +751,8 @@ const ins = await q(
     Number(b.package_id),
     Number(b.discount_amount || 0),
     b.discount_reason || "",
-    "ACTIVE",
-    false
+"ACTIVE",
+billingActive
   ]
 );
 
