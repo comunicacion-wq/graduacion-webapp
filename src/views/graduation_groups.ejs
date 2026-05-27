@@ -9,7 +9,9 @@
 <div class="card">
   <div class="card-body">
 
-    <div class="row g-3">
+    <form method="GET" action="/students/graduation-groups">
+
+      <div class="row g-3">
 
       <div class="col-md-3">
         <label class="form-label">Campus</label>
@@ -61,9 +63,14 @@
 
       <div class="col-md-3">
         <label class="form-label">Carrera</label>
-        <select class="form-select">
-          <option>Todas</option>
-        </select>
+<select class="form-select" name="career_id">
+  <option value="">Todas</option>
+  <% careers.forEach(c => { %>
+    <option value="<%= c.id %>" <%= String(filters.career_id) === String(c.id) ? 'selected' : '' %>>
+      <%= c.name %>
+    </option>
+  <% }) %>
+</select>
       </div>
 
     <div class="col-md-3">
@@ -112,9 +119,11 @@
       </div>
     </div>
 
-    <button class="btn btn-primary">
-      Filtrar grupos
-    </button>
+<button class="btn btn-primary">
+  Filtrar grupos
+</button>
+
+    </form>
 
   </div>
 </div>
