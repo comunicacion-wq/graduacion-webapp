@@ -770,20 +770,114 @@ flash(req,"success","Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
 });
 app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
+
   const { campus, turno, periodo, anio, carrera, grado, grupo } = req.query;
 
-  res.send(`
-    <h2>Lista de grupo</h2>
-    <p><strong>Campus:</strong> ${campus || ""}</p>
-    <p><strong>Turno:</strong> ${turno || ""}</p>
-    <p><strong>Periodo:</strong> ${periodo || ""}</p>
-    <p><strong>Año:</strong> ${anio || ""}</p>
-    <p><strong>Carrera:</strong> ${carrera || ""}</p>
-    <p><strong>Grado:</strong> ${grado || ""}</p>
-    <p><strong>Grupo:</strong> ${grupo || ""}</p>
-    <hr>
-    <p>PDF pendiente de generar. Esta ruta ya está conectada correctamente.</p>
-  `);
+  const r = await q(`
+    SELECT
+      s.full_name,
+      s.phone_e164,
+      s.grade,
+      s."group",
+      c.name AS campus,
+      sh.name AS turno,
+      gp.name AS periodo,
+      gy.year AS anio,
+      ca.name AS carrera,
+      pk.name AS paquete
+    FROM students s
+    LEFT JOIN campuses c ON c.id = s.campus_id
+    LEFT JOIN shifts sh ON sh.id = s.shift_id
+    LEFT JOIN graduation_periods gp ON gp.id = s.period_id
+    LEFT JOIN graduation_years gy ON gy.id = s.year_id
+    LEFT JOIN careers ca ON ca.id = s.career_id
+    LEFT JOIN packages pk ON pk.id = s.package_id
+    WHERE
+      c.name = $1
+      AND sh.name = $2
+      AND gp.name = $3
+      AND gy.year::text = $4
+      AND ca.name = $5
+      AND s.grade::text = $6
+      AND s."group" = $7
+    ORDER BY s.full_name ASC
+  `, [
+    campus,
+    turno,
+    periodo,
+    anio,
+    carrera,
+    grado,
+    grupo
+  ]);
+
+  const doc = new PDFDocument({
+    margin: 40,
+    size: "LETTER"
+  });
+
+  res.setHeader("Content-Type", "application/pdf");
+
+  res.setHeader(
+    "Content-Disposition",
+    `inline; filename="lista-grupo.pdf"`
+  );
+
+  doc.pipe(res);
+
+  doc.fontSize(20).text("Lista de grupo", {
+    align: "center"
+  });
+
+  doc.moveDown();
+
+  doc.fontSize(11);
+  doc.text(`Campus: ${campus}`);
+  doc.text(`Turno: ${turno}`);
+  doc.text(`Periodo: ${periodo}`);
+  doc.text(`Año: ${anio}`);
+  doc.text(`Carrera: ${carrera}`);
+  doc.text(`Grado: ${grado}`);
+  doc.text(`Grupo: ${grupo}`);
+
+  doc.moveDown(2);
+
+  let y = doc.y;
+
+  doc.fontSize(10);
+
+  doc.text("#", 40, y);
+  doc.text("Alumno", 70, y);
+  doc.text("Teléfono", 280, y);
+  doc.text("Paquete", 420, y);
+
+  y += 20;
+
+  r.rows.forEach((s, index) => {
+
+    if (y > 720) {
+      doc.addPage();
+      y = 50;
+    }
+
+    doc.text(String(index + 1), 40, y);
+
+    doc.text(s.full_name || "", 70, y, {
+      width: 190
+    });
+
+    doc.text(s.phone_e164 || "", 280, y, {
+      width: 120
+    });
+
+    doc.text(s.paquete || "", 420, y, {
+      width: 130
+    });
+
+    y += 22;
+  });
+
+  doc.end();
 });
 app.get("/students/graduation-groups", requireAuth, async (req,res) => {
  const cats = await catalogs();
