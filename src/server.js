@@ -157,8 +157,8 @@ async function computeMetrics(filters, user) {
       WHERE status='CONFIRMED'
       GROUP BY student_id
     ) pay ON pay.student_id = s.id
-    WHERE COALESCE(s.billing_active, false) = true
-    ${where}
+${where}
+AND COALESCE(s.billing_active, false) = true
     `,
     params
   );
