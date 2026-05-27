@@ -146,6 +146,7 @@
     <%= s.billing_active ? 'Desactivar cobranza' : 'Activar cobranza' %>
   </button>
 </form>
+
 <form method="POST"
       action="/students/<%= s.id %>/graduate"
       style="display:inline;"
@@ -156,9 +157,16 @@
     Egresar
   </button>
 </form>
-              <form method="POST" action="/students/<%= s.id %>/delete" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este alumno?');">
-                <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
-              </form>
+
+<form method="POST"
+      action="/students/<%= s.id %>/delete"
+      style="display:inline;"
+      onsubmit="return confirm('¿Seguro que deseas eliminar este alumno?');">
+
+  <button type="submit" class="btn btn-sm btn-outline-danger">
+    Eliminar
+  </button>
+</form>
             </td>
           </tr>
         <% }) %>
