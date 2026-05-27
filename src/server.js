@@ -593,7 +593,8 @@ app.get("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req,
     period_id: cats.periods[0]?.id,
     year_id: cats.years[0]?.id,
     package_id: cats.packages[0]?.id,
-    discount_amount: 0
+    discount_amount: 0,
+billing_active: false
   };
   // For cajeros: default campus to their first allowed
   if (req.session.user.role === "CAJERO" && req.session.user.campuses?.length) {
