@@ -769,27 +769,42 @@ flash(req,"success","Alumno creado correctamente.");
 return res.redirect(`/students/${studentId}`);
 });
 app.get("/students/graduation-groups", requireAuth, async (req,res) => {
-  const cats = await catalogs();
+ const cats = await catalogs();
 
-  const filters = {
-    campus_id: req.query.campus_id || "",
-    shift_id: req.query.shift_id || "",
-    period_id: req.query.period_id || "",
-    year_id: req.query.year_id || "",
-    career_id: req.query.career_id || "",
-    grade: req.query.grade || "",
-    group: req.query.group || "",
-    level: req.query.level || ""
-  };
+const grades = await q(`
+  SELECT DISTINCT grade
+  FROM students
+  WHERE grade IS NOT NULL AND TRIM(grade) <> ''
+  ORDER BY grade
+`);
+
+const groupsList = await q(`
+  SELECT DISTINCT "group"
+  FROM students
+  WHERE "group" IS NOT NULL AND TRIM("group") <> ''
+  ORDER BY "group"
+`);
+
+const filters = {
+  campus_id: req.query.campus_id || "",
+  shift_id: req.query.shift_id || "",
+  period_id: req.query.period_id || "",
+  year_id: req.query.year_id || "",
+  career_id: req.query.career_id || "",
+  grade: req.query.grade || "",
+  group: req.query.group || "",
+  level: req.query.level || ""
+};
 
   const body = await new Promise((resolve, reject) => {
-    res.render("graduation_groups", {
-      ...cats,
-      filters,
-      summary: null,
-      groups: []
-    }, (err, html) => err ? reject(err) : resolve(html));
-  });
+   res.render("graduation_groups", {
+  ...cats,
+  filters,
+  grades: grades.rows,
+  groupsList: groupsList.rows,
+  summary: null,
+  groups: []
+}, (err, html) => err ? reject(err) : resolve(html));
 
   render(req,res,"layout", {
     title:"Grupos a egresar",
