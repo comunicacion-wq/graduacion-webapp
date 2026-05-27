@@ -718,10 +718,8 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
   }
 
  const ins = await q(
-
-  `INSERT INTO students(full_name,phone_e164,campus_id,shift_id,period_id,year_id,career_id,grade,"group",package_id,discount_amount,discount_reason,status)
-
-   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+INSERT INTO students(full_name,phone_e164,campus_id,shift_id,period_id,year_id,career_id,grade,"group",package_id,discount_amount,discount_reason,status,billing_active)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 
    RETURNING id`,
 
@@ -749,9 +747,9 @@ app.post("/students/new", requireAuth, requireRole("ADMIN","CAJERO"), async (req
 
     Number(b.discount_amount || 0),
 
-    b.discount_reason || "",
-
-    "ACTIVE"
+b.discount_reason || "",
+"ACTIVE",
+false
 
   ]
 
