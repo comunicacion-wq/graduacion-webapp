@@ -1031,7 +1031,29 @@ app.get("/students/:id", requireAuth, async (req,res) => {
   });
   render(req,res,"layout", { title:"Alumno", active:"students", body });
 });
+app.post("/students/:id/toggle-billing", requireAuth, async (req, res) => {
+  const studentId = Number(req.params.id);
 
+  const student = await q(
+    `SELECT billing_active FROM students WHERE id=$1`,
+    [studentId]
+  );
+
+  if (!student.rows.length) {
+    return res.status(404).send("Alumno no encontrado");
+  }
+
+  const current = !!student.rows[0].billing_active;
+
+  await q(
+    `UPDATE students
+     SET billing_active=$1
+     WHERE id=$2`,
+    [!current, studentId]
+  );
+
+  res.redirect("/students");
+});
 app.get("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const studentId = Number(req.params.id);
   const cats = await catalogs();
