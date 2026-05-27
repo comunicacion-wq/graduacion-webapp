@@ -795,23 +795,23 @@ const filters = {
   group: req.query.group || "",
   level: req.query.level || ""
 };
-
-  const body = await new Promise((resolve, reject) => {
-   res.render("graduation_groups", {
-  ...cats,
-  filters,
-  grades: grades.rows,
-  groupsList: groupsList.rows,
-  summary: null,
-  groups: []
-}, (err, html) => err ? reject(err) : resolve(html));
-
-  render(req,res,"layout", {
-    title:"Grupos a egresar",
-    active:"students",
-    body
-  });
+const body = await new Promise((resolve, reject) => {
+  res.render("graduation_groups", {
+    ...cats,
+    filters,
+    grades: grades.rows,
+    groupsList: groupsList.rows,
+    summary: null,
+    groups: []
+  }, (err, html) => err ? reject(err) : resolve(html));
 });
+
+render(req,res,"layout", {
+  title:"Grupos a egresar",
+  active:"students",
+  body
+});
+  });
 app.get("/students/:id", requireAuth, async (req,res) => {
   const studentId = Number(req.params.id);
   // Restrict cajero to campuses
