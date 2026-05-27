@@ -3023,6 +3023,25 @@ app.get("/setup-student-status", requireAuth, requireRole("ADMIN"), async (req, 
     res.status(500).send("Error al agregar columna status en students");
   }
 });
+app.get("/setup-student-billing", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+    await q(`
+      ALTER TABLE students
+      ADD COLUMN IF NOT EXISTS billing_active BOOLEAN NOT NULL DEFAULT false
+    `);
+
+    await q(`
+      UPDATE students
+      SET billing_active = false
+      WHERE billing_active IS NULL
+    `);
+
+    res.send("Columna billing_active agregada correctamente en students");
+  } catch (err) {
+    console.error("Error agregando billing_active a students:", err);
+    res.status(500).send("Error al agregar columna billing_active en students");
+  }
+});
 app.get("/expenses/contacts/new", requireAuth, async (req, res) => {
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
