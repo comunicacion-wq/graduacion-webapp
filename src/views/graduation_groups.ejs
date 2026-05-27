@@ -13,33 +13,50 @@
 
       <div class="col-md-3">
         <label class="form-label">Campus</label>
-        <select class="form-select">
-          <option>Todos</option>
-        </select>
+       <select class="form-select" name="campus_id">
+  <option value="">Todos</option>
+  <% campuses.forEach(c => { %>
+    <option value="<%= c.id %>" <%= String(filters.campus_id) === String(c.id) ? 'selected' : '' %>>
+      <%= c.name %>
+    </option>
+  <% }) %>
+</select>
       </div>
 
       <div class="col-md-3">
         <label class="form-label">Turno</label>
-        <select class="form-select">
-          <option>Todos</option>
-        </select>
+       <select class="form-select" name="shift_id">
+  <option value="">Todos</option>
+  <% shifts.forEach(s => { %>
+    <option value="<%= s.id %>" <%= String(filters.shift_id) === String(s.id) ? 'selected' : '' %>>
+      <%= s.name %>
+    </option>
+  <% }) %>
+</select>
       </div>
 
       <div class="col-md-3">
         <label class="form-label">Periodo</label>
-        <select class="form-select">
-          <option>Todos</option>
-          <option>Enero-Abril</option>
-          <option>Mayo-Agosto</option>
-          <option>Septiembre-Diciembre</option>
-        </select>
+       <select class="form-select" name="period_id">
+  <option value="">Todos</option>
+  <% periods.forEach(p => { %>
+    <option value="<%= p.id %>" <%= String(filters.period_id) === String(p.id) ? 'selected' : '' %>>
+      <%= p.name %>
+    </option>
+  <% }) %>
+</select>
       </div>
 
       <div class="col-md-3">
         <label class="form-label">Año</label>
-        <select class="form-select">
-          <option>2026</option>
-        </select>
+      <select class="form-select" name="year_id">
+  <option value="">Todos</option>
+  <% years.forEach(y => { %>
+    <option value="<%= y.id %>" <%= String(filters.year_id) === String(y.id) ? 'selected' : '' %>>
+      <%= y.year %>
+    </option>
+  <% }) %>
+</select>
       </div>
 
       <div class="col-md-3">
