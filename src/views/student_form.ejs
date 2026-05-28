@@ -79,9 +79,18 @@
   </div>
 
   <div class="col-12 col-md-4">
-    <label class="form-label">Paquete</label>
-    <select class="form-select" name="package_id" required>
-<div class="col-12 col-md-4">
+   <div class="col-12 col-md-3">
+  <label class="form-label">Paquete</label>
+  <select class="form-select" name="package_id" required>
+    <% packages.forEach(p => { %>
+      <option value="<%= p.id %>" <%= String(student.package_id) === String(p.id) ? 'selected' : '' %>>
+        <%= p.name %> - $<%= Number(p.cost || 0).toFixed(2) %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+
+<div class="col-12 col-md-3">
   <div class="form-check mt-4">
     <input
       class="form-check-input"
