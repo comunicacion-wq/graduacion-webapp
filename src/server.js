@@ -1246,6 +1246,39 @@ if (userId) {
   flash(req, "success", "Alumno y usuario vinculados eliminados correctamente.");
   res.redirect("/students");
 });
+app.post("/students/billing-multiple", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  const ids = Array.isArray(req.body.student_ids)
+    ? req.body.student_ids
+    : req.body.student_ids
+      ? [req.body.student_ids]
+      : [];
+
+  const action = req.body.billing_action;
+
+  if (!ids.length) {
+    flash(req, "danger", "Selecciona al menos un alumno.");
+    return res.redirect("/students");
+  }
+
+  const active = action === "activate";
+
+  await q(
+    `UPDATE students
+     SET billing_active = $1
+     WHERE id = ANY($2::int[])`,
+    [active, ids.map(Number)]
+  );
+
+  flash(
+    req,
+    "success",
+    active
+      ? `Cobranza activada para ${ids.length} alumno(s).`
+      : `Cobranza desactivada para ${ids.length} alumno(s).`
+  );
+
+  return res.redirect("/students");
+});
 app.post("/students/delete-multiple", requireAuth, requireRole("ADMIN"), async (req, res) => {
   try {
     let { student_ids } = req.body;
