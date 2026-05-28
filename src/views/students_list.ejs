@@ -96,9 +96,35 @@
       </label>
     </div>
 
-    <button class="btn btn-danger" type="submit" onclick="return confirm('¿Eliminar los alumnos seleccionados?')">
-      Eliminar seleccionados
-    </button>
+<div class="d-flex gap-2">
+  <button
+    class="btn btn-success"
+    type="submit"
+    formaction="/students/billing-multiple"
+    name="billing_action"
+    value="activate"
+    onclick="return confirm('¿Activar cobranza para los alumnos seleccionados?')">
+    Activar cobranza seleccionados
+  </button>
+
+  <button
+    class="btn btn-warning"
+    type="submit"
+    formaction="/students/billing-multiple"
+    name="billing_action"
+    value="deactivate"
+    onclick="return confirm('¿Desactivar cobranza para los alumnos seleccionados?')">
+    Desactivar cobranza seleccionados
+  </button>
+
+  <button
+    class="btn btn-danger"
+    type="submit"
+    formaction="/students/delete-multiple"
+    onclick="return confirm('¿Eliminar los alumnos seleccionados?')">
+    Eliminar seleccionados
+  </button>
+</div>
   </div>
 
   <div class="table-responsive">
