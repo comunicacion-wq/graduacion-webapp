@@ -1955,52 +1955,13 @@ app.post("/requests/:id/decide", requireAuth, requireRole("ADMIN"), async (req,r
 });
 
 // Audit
-app.get("/audit", requireAuth, requireRole("ADMIN"), async (req,res) => {
-const r = await q(`
+ u.username as actor_username,
 
-  SELECT 
+      s.full_name as student_name,
 
-    a.*,
+      s.phone_e164 as student_phone
 
-    u.username as actor_username,
-
-    s.full_name as student_name,
-
-    s.phone_e164 as student_phone
-
-  FROM audit_log a
-
-  LEFT JOIN users u ON u.id=a.actor_user_id
-
-  LEFT JOIN students s ON s.id = NULLIF(
-
-    COALESCE(
-
-      a.details->>'student_id',
-
-      REPLACE(a.entity_id, 'STUDENT #', '')
-
-    ),
-
-    ''
-
-  )::int
-
-  ORDER BY a.created_at DESC
-
-  LIMIT 200
-
-`);
-)::int
-ORDER BY a.created_at DESC
-LIMIT 200
-  );
-  const rows = r.rows.map(x => ({ ...x, created_at_fmt: dayjs(x.created_at).format("DD/MM/YYYY HH:mm") }));
-  const body = await new Promise((resolve, reject) => {
-    res.render("audit", { rows }, (err, html) => err ? reject(err) : resolve(html));
-  });
-  render(req,res,"layout", { title:"Auditoría", active:"audit", body });
-});
+    FROM audit_log a
 
 // Notifications
 app.get("/notifications", requireAuth, async (req,res) => {
