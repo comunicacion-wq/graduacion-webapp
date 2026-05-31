@@ -1948,13 +1948,28 @@ app.post("/requests/:id/decide", requireAuth, requireRole("ADMIN"), async (req,r
 });
 
 // Audit
- u.username as actor_username,
-
-      s.full_name as student_name,
-
-      s.phone_e164 as student_phone
-
+app.get("/audit", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const r = await q(`
+    SELECT 
+      a.*,
+      u.username AS actor_username
     FROM audit_log a
+    LEFT JOIN users u ON u.id = a.actor_user_id
+    ORDER BY a.created_at DESC
+    LIMIT 200
+  `);
+
+  const rows = r.rows.map(x => ({
+    ...x,
+    created_at_fmt: dayjs(x.created_at).format("DD/MM/YYYY HH:mm")
+  }));
+
+  const body = await new Promise((resolve, reject) => {
+    res.render("audit", { rows }, (err, html) => err ? reject(err) : resolve(html));
+  });
+
+  render(req,res,"layout", { title:"Auditoría", active:"audit", body });
+});
 
 // Notifications
 app.get("/notifications", requireAuth, async (req,res) => {
