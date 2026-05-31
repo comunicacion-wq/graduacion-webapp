@@ -1597,35 +1597,28 @@ app.get("/pdf/:name", requireAuth, async (req,res) => {
 });
 
 // Payments list
-app.get("/finance/payments", requireAuth, async (req,res) => {
-  const user = req.session.user;
-  let where = "";
-  let params = [];
-  if (user.role === "CAJERO" && (user.campuses||[]).length) {
-    where = "WHERE s.campus_id = ANY($1)";
-    params = [user.campuses];
-  }
-  const r = await q(
-    `
-    SELECT p.*, s.full_name, c.name as campus_name, u.username as created_by_username
-    FROM payments p
-    JOIN students s ON s.id=p.student_id
-    LEFT JOIN campuses c ON c.id=s.campus_id
-    LEFT JOIN users u ON u.id=p.created_by
-    ${where}
-    ORDER BY p.created_at DESC
-    LIMIT 300
-    `,
-    params
-  );
-  const rows = r.rows.map(x => ({ ...x, created_at_fmt: dayjs(x.created_at).format("DD/MM/YYYY HH:mm") }));
-  const body = "<h3>Pagos (historial)</h3><p class='text-muted'>En este MVP, revisa pagos desde la ficha del alumno para acciones.</p>"
-    + "<div class='table-responsive'><table class='table table-sm table-striped'><thead><tr><th>Fecha</th><th>Alumno</th><th>Campus</th><th>Monto</th><th>Estatus</th><th>Cajero</th></tr></thead><tbody>"
-    + rows.map(p => `<tr><td>${p.created_at_fmt}</td><td>${p.full_name}</td><td>${p.campus_name||''}</td><td>$${Number(p.amount).toFixed(2)}</td><td>${p.status}</td><td>${p.created_by_username||''}</td></tr>`).join("")
-    + "</tbody></table></div>";
-  render(req,res,"layout", { title:"Finanzas", active:"payments", body });
-});
+app.get("/audit", requireAuth, requireRole("ADMIN"), async (req,res) => {
+  const r = await q(`
+    SELECT 
+      a.*,
+      u.username AS actor_username
+    FROM audit_log a
+    LEFT JOIN users u ON u.id = a.actor_user_id
+    ORDER BY a.created_at DESC
+    LIMIT 200
+  `);
 
+  const rows = r.rows.map(x => ({
+    ...x,
+    created_at_fmt: dayjs(x.created_at).format("DD/MM/YYYY HH:mm")
+  }));
+
+  const body = await new Promise((resolve, reject) => {
+    res.render("audit", { rows }, (err, html) => err ? reject(err) : resolve(html));
+  });
+
+  render(req,res,"layout", { title:"Auditoría", active:"audit", body });
+});
 // Cancel payment (ADMIN direct; cajeros use requests)
 app.post("/payments/:id/cancel", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const paymentId = Number(req.params.id);
