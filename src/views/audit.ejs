@@ -12,7 +12,36 @@
         <td><%= r.actor_username || '' %></td>
         <td><%= r.action %></td>
         <td><%= r.entity %> #<%= r.entity_id || '' %></td>
-        <td><pre class="mb-0 small"><%= JSON.stringify(r.details || {}, null, 2) %></pre></td>
+       <td>
+  <% const d = r.details || {}; %>
+
+  <% if (r.action === 'CREATE_STUDENT') { %>
+    <strong>Alumno registrado:</strong><br>
+    <%= d.full_name || 'Sin nombre' %>
+
+  <% } else if (r.action === 'SEND_CREDENTIALS') { %>
+    <strong>Credenciales enviadas</strong><br>
+    WhatsApp: <%= d.to || 'Sin teléfono' %>
+
+  <% } else if (r.action === 'CREATE_PAYMENT') { %>
+    <strong>Pago registrado:</strong><br>
+    Monto: $<%= Number(d.amount || 0).toFixed(2) %><br>
+    ID alumno: <%= d.student_id || '' %>
+
+  <% } else if (r.action === 'CANCEL_PAYMENT') { %>
+    <strong>Pago cancelado:</strong><br>
+    Monto: $<%= Number(d.amount || 0).toFixed(2) %><br>
+    ID alumno: <%= d.student_id || '' %>
+
+  <% } else if (r.action === 'DELETE_MULTIPLE_STUDENTS') { %>
+    <strong>Eliminación de alumno(s):</strong><br>
+    Alumno(s) ID: <%= (d.student_ids || []).join(', ') %><br>
+    Usuario(s) eliminado(s): <%= (d.deleted_user_ids || []).join(', ') %>
+
+  <% } else { %>
+    <pre class="mb-0 small"><%= JSON.stringify(d, null, 2) %></pre>
+  <% } %>
+</td>
       </tr>
     <% }) %>
   </tbody>
