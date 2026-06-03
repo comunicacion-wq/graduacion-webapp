@@ -161,15 +161,15 @@
             <td class="text-end">
               <a class="btn btn-sm btn-outline-primary" href="/students/<%= s.id %>">Ver</a>
               <a class="btn btn-sm btn-primary" href="/students/<%= s.id %>/edit">Editar</a>
-<form method="POST" action="/students/<%= s.id %>/toggle-billing" style="display:inline;">
-  <button
-    type="submit"
-    class="btn btn-sm <%= s.billing_active ? 'btn-outline-warning' : 'btn-outline-success' %>"
-    onclick="return confirm('¿Cambiar estatus de cobranza de este alumno?')"
-  >
-    <%= s.billing_active ? 'Desactivar cobranza' : 'Activar cobranza' %>
-  </button>
-</form>
+<button
+  type="submit"
+  formaction="/students/<%= s.id %>/toggle-billing"
+  formmethod="POST"
+  class="btn btn-sm <%= s.billing_active ? 'btn-outline-warning' : 'btn-outline-success' %>"
+  onclick="return confirm('¿Cambiar estatus de cobranza de este alumno?')"
+>
+  <%= s.billing_active ? 'Desactivar cobranza' : 'Activar cobranza' %>
+</button>
 
 <form method="POST"
       action="/students/<%= s.id %>/graduate"
