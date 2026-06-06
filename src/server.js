@@ -305,7 +305,13 @@ const groups = await q(`
   );
 
   const body = await new Promise((resolve, reject) => {
-    res.render("students_list", { ...cats, filters, students: s.rows }, (err, html) => err ? reject(err) : resolve(html));
+res.render("students_list", {
+  ...cats,
+  filters,
+  students: s.rows,
+  grades: grades.rows,
+  groups: groups.rows
+}, (err, html) => err ? reject(err) : resolve(html));
   });
   render(req,res,"layout", { title:"Alumnos", active:"students", body });
 });
