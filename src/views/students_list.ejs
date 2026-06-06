@@ -52,6 +52,38 @@
     </select>
   </div>
 <div class="col-12 col-md-2">
+  <select class="form-select" name="career_id">
+    <option value="">Carrera (Todas)</option>
+    <% careers.forEach(c => { %>
+      <option value="<%= c.id %>" <%= String(filters.career_id)===String(c.id) ? 'selected':'' %>>
+        <%= c.name %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+
+<div class="col-12 col-md-1">
+  <select class="form-select" name="grade">
+    <option value="">Grado</option>
+    <% grades.forEach(g => { %>
+      <option value="<%= g.grade %>" <%= String(filters.grade)===String(g.grade) ? 'selected':'' %>>
+        <%= g.grade %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+
+<div class="col-12 col-md-1">
+  <select class="form-select" name="group">
+    <option value="">Grupo</option>
+    <% groups.forEach(g => { %>
+      <option value="<%= g.group %>" <%= String(filters.group)===String(g.group) ? 'selected':'' %>>
+        <%= g.group %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+<div class="col-12 col-md-2">
   <select class="form-select" name="status">
     <option value="">Activos</option>
 
