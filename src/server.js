@@ -240,15 +240,41 @@ app.get("/", requireAuth, async (req,res) => {
 
 // Students list
 app.get("/students", requireAuth, async (req,res) => {
-  const filters = {
-    campus_id: req.query.campus_id || "",
-    shift_id: req.query.shift_id || "",
-    period_id: req.query.period_id || "",
-    year_id: req.query.year_id || "",
-    status: req.query.status || "",
-    q: req.query.q || ""
-  };
+const filters = {
+
+  campus_id: req.query.campus_id || "",
+
+  shift_id: req.query.shift_id || "",
+
+  period_id: req.query.period_id || "",
+
+  year_id: req.query.year_id || "",
+
+  career_id: req.query.career_id || "",
+
+  grade: req.query.grade || "",
+
+  group: req.query.group || "",
+
+  status: req.query.status || "",
+
+  q: req.query.q || ""
+
+};
   const cats = await catalogs();
+  const grades = await q(`
+  SELECT DISTINCT grade
+  FROM students
+  WHERE grade IS NOT NULL AND grade <> ''
+  ORDER BY grade
+`);
+
+const groups = await q(`
+  SELECT DISTINCT "group" AS group
+  FROM students
+  WHERE "group" IS NOT NULL AND "group" <> ''
+  ORDER BY "group"
+`);
   const { where, params } = studentQueryWhere(filters, req.session.user);
 
   const s = await q(
