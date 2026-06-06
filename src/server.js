@@ -119,7 +119,20 @@ if (filters.status === "GRADUATED") {
   if (filters.shift_id) add("s.shift_id = ?", Number(filters.shift_id));
   if (filters.period_id) add("s.period_id = ?", Number(filters.period_id));
   if (filters.year_id) add("s.year_id = ?", Number(filters.year_id));
-  
+  if (filters.career_id) {
+  wh.push(`s.career_id = $${params.length + 1}`);
+  params.push(Number(filters.career_id));
+}
+
+if (filters.grade) {
+  wh.push(`s.grade = $${params.length + 1}`);
+  params.push(filters.grade);
+}
+
+if (filters.group) {
+  wh.push(`s."group" = $${params.length + 1}`);
+  params.push(filters.group);
+}
 if (filters.q) {
   w.push(`(LOWER(s.full_name) LIKE $${i} OR s.phone_e164 LIKE $${i + 1})`);
   p.push(`%${filters.q.toLowerCase()}%`);
