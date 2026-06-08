@@ -316,7 +316,10 @@ res.render("students_list", {
   filters,
   students: s.rows,
   grades: grades.rows,
-  groups: groups.rows
+  groups: groups.rows,
+  totalFiltered,
+  totalBillingActive,
+  packageSummary
 }, (err, html) => err ? reject(err) : resolve(html));
   });
   render(req,res,"layout", { title:"Alumnos", active:"students", body });
