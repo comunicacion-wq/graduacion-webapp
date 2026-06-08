@@ -129,6 +129,36 @@
     Egresar periodo filtrado
   </button>
 </form>
+<div class="row g-2 mb-3">
+  <div class="col-12 col-md-3">
+    <div class="card">
+      <div class="card-body py-2">
+        <div class="text-muted small">Total filtrados</div>
+        <h4 class="mb-0"><%= totalFiltered || 0 %></h4>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-3">
+    <div class="card">
+      <div class="card-body py-2">
+        <div class="text-muted small">Cobranza activa</div>
+        <h4 class="mb-0"><%= totalBillingActive || 0 %></h4>
+      </div>
+    </div>
+  </div>
+
+  <% packageSummary.forEach(pkg => { %>
+    <div class="col-12 col-md-3">
+      <div class="card">
+        <div class="card-body py-2">
+          <div class="text-muted small"><%= pkg.name %></div>
+          <h4 class="mb-0"><%= pkg.total || 0 %></h4>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
 <form method="POST" action="/students/billing-multiple" id="bulkActionForm">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div class="form-check">
