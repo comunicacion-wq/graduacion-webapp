@@ -84,6 +84,16 @@
   </select>
 </div>
 <div class="col-12 col-md-2">
+  <select class="form-select" name="package_id">
+    <option value="">Paquete (Todos)</option>
+    <% packages.forEach(p => { %>
+      <option value="<%= p.id %>" <%= String(filters.package_id)===String(p.id) ? 'selected':'' %>>
+        <%= p.name %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+<div class="col-12 col-md-2">
   <select class="form-select" name="status">
     <option value="">Activos</option>
 
