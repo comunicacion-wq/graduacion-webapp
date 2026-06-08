@@ -125,6 +125,7 @@ if (filters.grade) add("s.grade = ?", filters.grade);
 
 if (filters.group) add('s."group" = ?', filters.group);
   if (filters.package_id) add("s.package_id = ?", Number(filters.package_id));
+  if (filters.package_id) add("COALESCE(s.billing_active, false) = ?", true);
 if (filters.q) {
   w.push(`(LOWER(s.full_name) LIKE $${i} OR s.phone_e164 LIKE $${i + 1})`);
   p.push(`%${filters.q.toLowerCase()}%`);
