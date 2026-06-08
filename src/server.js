@@ -299,7 +299,17 @@ const groups = await q(`
     `,
     params
   );
+const activeBillingStudents = s.rows.filter(student => student.billing_active === true);
 
+const totalFiltered = s.rows.length;
+
+const totalBillingActive = activeBillingStudents.length;
+
+const packageSummary = cats.packages.map(pkg => ({
+  id: pkg.id,
+  name: pkg.name,
+  total: activeBillingStudents.filter(student => Number(student.package_id) === Number(pkg.id)).length
+}));
   const body = await new Promise((resolve, reject) => {
 res.render("students_list", {
   ...cats,
