@@ -245,25 +245,16 @@ app.get("/", requireAuth, async (req,res) => {
 // Students list
 app.get("/students", requireAuth, async (req,res) => {
 const filters = {
-
   campus_id: req.query.campus_id || "",
-
   shift_id: req.query.shift_id || "",
-
   period_id: req.query.period_id || "",
-
   year_id: req.query.year_id || "",
-
   career_id: req.query.career_id || "",
-
   grade: req.query.grade || "",
-
   group: req.query.group || "",
-
+  package_id: req.query.package_id || "",
   status: req.query.status || "",
-
   q: req.query.q || ""
-
 };
   const cats = await catalogs();
   const grades = await q(`
