@@ -821,12 +821,20 @@ app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
       s.phone_e164,
       s.grade,
       s."group",
+      s.billing_active,
       c.name AS campus,
       sh.name AS turno,
       gp.name AS periodo,
       gy.year AS anio,
       ca.name AS carrera,
-      pk.name AS paquete
+      pk.name AS paquete,
+      pk.cost AS paquete_costo,
+      COALESCE(pay.total_paid, 0) AS pagado,
+      CASE 
+        WHEN COALESCE(s.billing_active, false) = true THEN 
+          GREATEST(0, COALESCE(pk.cost,0) - COALESCE(s.discount_amount,0) - COALESCE(pay.total_paid,0))
+        ELSE 0
+      END AS saldo
     FROM students s
     LEFT JOIN campuses c ON c.id = s.campus_id
     LEFT JOIN shifts sh ON sh.id = s.shift_id
@@ -834,6 +842,12 @@ app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
     LEFT JOIN graduation_years gy ON gy.id = s.year_id
     LEFT JOIN careers ca ON ca.id = s.career_id
     LEFT JOIN packages pk ON pk.id = s.package_id
+    LEFT JOIN (
+      SELECT student_id, COALESCE(SUM(amount),0) AS total_paid
+      FROM payments
+      WHERE status='CONFIRMED'
+      GROUP BY student_id
+    ) pay ON pay.student_id = s.id
     WHERE
       c.name = $1
       AND sh.name = $2
@@ -854,8 +868,9 @@ app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
   ]);
 
   const doc = new PDFDocument({
-    margin: 40,
-    size: "LETTER"
+    margin: 30,
+    size: "LETTER",
+    layout: "landscape"
   });
 
   res.setHeader("Content-Type", "application/pdf");
@@ -867,56 +882,80 @@ app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
 
   doc.pipe(res);
 
-  doc.fontSize(20).text("Lista de grupo", {
+  doc.fontSize(18).text("Lista de grupo", {
     align: "center"
   });
 
   doc.moveDown();
 
-  doc.fontSize(11);
-  doc.text(`Campus: ${campus}`);
-  doc.text(`Turno: ${turno}`);
-  doc.text(`Periodo: ${periodo}`);
-  doc.text(`Año: ${anio}`);
-  doc.text(`Carrera: ${carrera}`);
-  doc.text(`Grado: ${grado}`);
-  doc.text(`Grupo: ${grupo}`);
+  doc.fontSize(10);
+  doc.text(`Campus: ${campus}     Turno: ${turno}     Periodo: ${periodo}     Año: ${anio}`);
+  doc.text(`Carrera: ${carrera}     Grado: ${grado}     Grupo: ${grupo}`);
 
-  doc.moveDown(2);
+  doc.moveDown(1.5);
 
   let y = doc.y;
 
-  doc.fontSize(10);
+  doc.fontSize(9).font("Helvetica-Bold");
 
-  doc.text("#", 40, y);
-  doc.text("Alumno", 70, y);
-  doc.text("Teléfono", 280, y);
-  doc.text("Paquete", 420, y);
+  doc.text("#", 30, y, { width: 25 });
+  doc.text("Alumno", 55, y, { width: 190 });
+  doc.text("Teléfono", 250, y, { width: 90 });
+  doc.text("Paquete", 345, y, { width: 75 });
+  doc.text("Cobranza", 425, y, { width: 70 });
+  doc.text("Pagado", 500, y, { width: 70 });
+  doc.text("Saldo", 575, y, { width: 70 });
+  doc.text("Estatus", 650, y, { width: 100 });
 
-  y += 20;
+  y += 18;
+
+  doc.font("Helvetica");
 
   r.rows.forEach((s, index) => {
 
-    if (y > 720) {
+    if (y > 560) {
       doc.addPage();
-      y = 50;
+      y = 40;
+
+      doc.fontSize(9).font("Helvetica-Bold");
+      doc.text("#", 30, y, { width: 25 });
+      doc.text("Alumno", 55, y, { width: 190 });
+      doc.text("Teléfono", 250, y, { width: 90 });
+      doc.text("Paquete", 345, y, { width: 75 });
+      doc.text("Cobranza", 425, y, { width: 70 });
+      doc.text("Pagado", 500, y, { width: 70 });
+      doc.text("Saldo", 575, y, { width: 70 });
+      doc.text("Estatus", 650, y, { width: 100 });
+      y += 18;
+      doc.font("Helvetica");
     }
 
-    doc.text(String(index + 1), 40, y);
+    const cobranzaActiva = s.billing_active === true;
+    const pagado = cobranzaActiva ? Number(s.pagado || 0) : 0;
+    const saldo = cobranzaActiva ? Number(s.saldo || 0) : 0;
 
-    doc.text(s.full_name || "", 70, y, {
-      width: 190
-    });
+    let estatus = "Sin apertura";
 
-    doc.text(s.phone_e164 || "", 280, y, {
-      width: 120
-    });
+    if (cobranzaActiva && saldo <= 0) {
+      estatus = "Pagado";
+    } else if (cobranzaActiva && pagado > 0 && saldo > 0) {
+      estatus = "Abonando";
+    } else if (cobranzaActiva && pagado <= 0 && saldo > 0) {
+      estatus = "Sin pago";
+    }
 
-    doc.text(s.paquete || "", 420, y, {
-      width: 130
-    });
+    doc.fontSize(8);
 
-    y += 22;
+    doc.text(String(index + 1), 30, y, { width: 25 });
+    doc.text(s.full_name || "", 55, y, { width: 190 });
+    doc.text(s.phone_e164 || "", 250, y, { width: 90 });
+    doc.text(s.paquete || "", 345, y, { width: 75 });
+    doc.text(cobranzaActiva ? "Activa" : "No activa", 425, y, { width: 70 });
+    doc.text(`$${pagado.toFixed(2)}`, 500, y, { width: 70 });
+    doc.text(`$${saldo.toFixed(2)}`, 575, y, { width: 70 });
+    doc.text(estatus, 650, y, { width: 100 });
+
+    y += 18;
   });
 
   doc.end();
