@@ -3325,10 +3325,10 @@ app.get("/portal", requireStudentPortal, async (req,res) => {
   }));
 
   res.render("portal_dashboard", {
-    student: info.student,
-    totals: info.totals,
-    payments
-  });
+  student: info.student,
+  totals: info.totals,
+  payments,
+  canDownloadPaymentHistory: info.student.billing_active === true
 });
 app.get("/cobranza/preview", requireAuth, async (req, res) => {
   try {
