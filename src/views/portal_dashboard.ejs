@@ -25,6 +25,19 @@
 
   <div class="row mb-4">
     <div class="col-md-4 mb-3">
+<% if (canDownloadPaymentHistory) { %>
+
+<div class="mb-4 text-end">
+    <a href="/portal/payment-history.pdf"
+       target="_blank"
+       class="btn btn-success btn-lg">
+
+        📄 Descargar historial de pagos
+
+    </a>
+</div>
+
+<% } %>
       <div class="card">
         <div class="card-body">
           <h6>Total del paquete</h6>
