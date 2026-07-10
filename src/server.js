@@ -3331,6 +3331,271 @@ res.render("portal_dashboard", {
   canDownloadPaymentHistory: info.student.billing_active === true
 });
 });
+// PDF del historial de pagos del alumno
+app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) => {
+  const studentId = req.session.studentUser.student_id;
+
+  const info = await getStudentTotals(studentId);
+
+  if (!info) {
+    return res.status(404).send("Alumno no encontrado");
+  }
+
+  const student = info.student;
+  const totals = info.totals;
+
+  // El historial solo puede generarse si la cobranza está activa
+  if (student.billing_active !== true) {
+    return res
+      .status(403)
+      .send("El historial de pagos no está disponible porque la cobranza no está activa.");
+  }
+
+  const pay = await q(
+    `
+    SELECT
+      id,
+      amount,
+      method,
+      status,
+      note,
+      created_at
+    FROM payments
+    WHERE student_id = $1
+      AND status = 'CONFIRMED'
+    ORDER BY created_at ASC
+    `,
+    [studentId]
+  );
+
+  const payments = pay.rows;
+
+  const currentYear = dayjs().format("YYYY");
+  const folio = `HP-${currentYear}-${String(studentId).padStart(6, "0")}`;
+
+  const doc = new PDFDocument({
+    size: "LETTER",
+    layout: "portrait",
+    margin: 36
+  });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="historial-pagos-${folio}.pdf"`
+  );
+
+  doc.pipe(res);
+
+  // Encabezado provisional
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(20)
+    .fillColor("#4400B2")
+    .text("UNIVERSIDAD Y PREPARATORIA ITCC", {
+      align: "center"
+    });
+
+  doc.moveDown(0.4);
+
+  doc
+    .fontSize(24)
+    .text("HISTORIAL DE PAGOS", {
+      align: "center"
+    });
+
+  doc.moveDown(0.3);
+
+  doc
+    .font("Helvetica")
+    .fontSize(9)
+    .fillColor("#333333")
+    .text(
+      "Este documento refleja el historial de pagos y el estado actual del paquete contratado.",
+      {
+        align: "center"
+      }
+    );
+
+  doc.moveDown(1);
+
+  doc.fontSize(10);
+  doc.text(`Folio: ${folio}`);
+  doc.text(`Fecha de emisión: ${dayjs().format("DD/MM/YYYY HH:mm")}`);
+
+  doc.moveDown();
+
+  // Datos del alumno
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(13)
+    .fillColor("#4400B2")
+    .text("DATOS DEL ALUMNO");
+
+  doc.moveDown(0.4);
+
+  doc.font("Helvetica").fontSize(10).fillColor("#111111");
+
+  doc.text(`Nombre completo: ${student.full_name || ""}`);
+  doc.text(`Teléfono: ${student.phone_e164 || "No registrado"}`);
+  doc.text(`Campus: ${student.campus_name || ""}`);
+  doc.text(`Turno: ${student.shift_name || ""}`);
+  doc.text(`Periodo: ${student.period_name || ""}`);
+  doc.text(`Año: ${student.grad_year || ""}`);
+  doc.text(`Carrera: ${student.career_name || "Sin carrera registrada"}`);
+  doc.text(`Grado: ${student.grade || ""}`);
+  doc.text(`Grupo: ${student.group || ""}`);
+  doc.text(`Paquete: ${student.package_name || ""}`);
+  doc.text("Estado de cobranza: Activa");
+
+  doc.moveDown();
+
+  // Resumen del paquete
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(13)
+    .fillColor("#4400B2")
+    .text("RESUMEN DEL PAQUETE");
+
+  doc.moveDown(0.4);
+
+  const totalDue = Number(totals.total_due || 0);
+  const totalPaid = Number(totals.total_paid || 0);
+  const balance = Number(totals.balance || 0);
+  const discount = Number(student.discount_amount || 0);
+
+  doc.font("Helvetica").fontSize(10).fillColor("#111111");
+  doc.text(`Total del paquete: $${totalDue.toFixed(2)}`);
+  doc.text(`Descuento: $${discount.toFixed(2)}`);
+  doc.text(`Total pagado: $${totalPaid.toFixed(2)}`);
+  doc.text(`Saldo pendiente: $${balance.toFixed(2)}`);
+
+  doc.moveDown();
+
+  // Tabla de pagos
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(13)
+    .fillColor("#4400B2")
+    .text("PAGOS REALIZADOS");
+
+  doc.moveDown(0.5);
+
+  let y = doc.y;
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .fillColor("#FFFFFF");
+
+  doc.rect(36, y, 540, 20).fill("#4400B2");
+
+  doc.text("FECHA", 45, y + 6, { width: 105 });
+  doc.text("MONTO", 160, y + 6, { width: 90 });
+  doc.text("MÉTODO", 260, y + 6, { width: 130 });
+  doc.text("ESTATUS", 405, y + 6, { width: 120 });
+
+  y += 25;
+
+  doc.font("Helvetica").fontSize(9).fillColor("#111111");
+
+  if (payments.length === 0) {
+    doc.text("No existen pagos confirmados registrados.", 45, y);
+    y += 20;
+  } else {
+    payments.forEach((payment, index) => {
+      if (y > 690) {
+        doc.addPage({
+          size: "LETTER",
+          layout: "portrait",
+          margin: 36
+        });
+
+        y = 45;
+      }
+
+      if (index % 2 === 0) {
+        doc.rect(36, y - 3, 540, 20).fill("#F5F1FC");
+        doc.fillColor("#111111");
+      }
+
+      doc.text(
+        dayjs(payment.created_at).format("DD/MM/YYYY"),
+        45,
+        y,
+        { width: 105 }
+      );
+
+      doc.text(
+        `$${Number(payment.amount || 0).toFixed(2)}`,
+        160,
+        y,
+        { width: 90 }
+      );
+
+      doc.text(
+        payment.method || "No especificado",
+        260,
+        y,
+        { width: 130 }
+      );
+
+      doc
+        .fillColor("#148A2A")
+        .text("Pagado", 405, y, { width: 120 });
+
+      doc.fillColor("#111111");
+
+      y += 20;
+    });
+  }
+
+  doc.moveDown(2);
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(11)
+    .fillColor("#4400B2")
+    .text(`TOTAL PAGADO: $${totalPaid.toFixed(2)}`, {
+      align: "right"
+    });
+
+  doc.moveDown(2);
+
+  doc
+    .font("Helvetica")
+    .fontSize(9)
+    .fillColor("#333333")
+    .text(
+      "En caso de alguna aclaración, favor de acudir al departamento de egresos de la Universidad ITCC.",
+      {
+        align: "center"
+      }
+    );
+
+  doc.moveDown(3);
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(10)
+    .fillColor("#4400B2")
+    .text("__________________________________", {
+      align: "center"
+    });
+
+  doc.text("FIRMA", { align: "center" });
+  doc.text("LIC. ANDRÉS SILVA FERNÁNDEZ", {
+    align: "center"
+  });
+  doc.text("COORDINACIÓN DE GRADUACIONES", {
+    align: "center"
+  });
+  doc.text("UNIVERSIDAD ITCC", {
+    align: "center"
+  });
+
+  doc.end();
+});
 app.get("/cobranza/preview", requireAuth, async (req, res) => {
   try {
     const filters = {
