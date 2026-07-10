@@ -3324,11 +3324,12 @@ app.get("/portal", requireStudentPortal, async (req,res) => {
     created_at_fmt: dayjs(p.created_at).format("DD/MM/YYYY HH:mm")
   }));
 
-  res.render("portal_dashboard", {
+res.render("portal_dashboard", {
   student: info.student,
   totals: info.totals,
   payments,
   canDownloadPaymentHistory: info.student.billing_active === true
+});
 });
 app.get("/cobranza/preview", requireAuth, async (req, res) => {
   try {
