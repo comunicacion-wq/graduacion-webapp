@@ -3387,213 +3387,619 @@ app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) =>
 
   doc.pipe(res);
 
-  // Encabezado provisional
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(20)
-    .fillColor("#4400B2")
-    .text("UNIVERSIDAD Y PREPARATORIA ITCC", {
-      align: "center"
-    });
+  const PURPLE = "#4400B2";
+  const DARK_PURPLE = "#2A006F";
+  const YELLOW = "#FFC400";
+  const GREEN = "#148A2A";
+  const RED = "#D71920";
+  const LIGHT_PURPLE = "#F5F1FC";
+  const GRAY = "#555555";
+  const BORDER = "#D7CCE9";
 
-  doc.moveDown(0.4);
-
-  doc
-    .fontSize(24)
-    .text("HISTORIAL DE PAGOS", {
-      align: "center"
-    });
-
-  doc.moveDown(0.3);
-
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor("#333333")
-    .text(
-      "Este documento refleja el historial de pagos y el estado actual del paquete contratado.",
-      {
-        align: "center"
-      }
-    );
-
-  doc.moveDown(1);
-
-  doc.fontSize(10);
-  doc.text(`Folio: ${folio}`);
-  doc.text(`Fecha de emisión: ${dayjs().format("DD/MM/YYYY HH:mm")}`);
-
-  doc.moveDown();
-
-  // Datos del alumno
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(13)
-    .fillColor("#4400B2")
-    .text("DATOS DEL ALUMNO");
-
-  doc.moveDown(0.4);
-
-  doc.font("Helvetica").fontSize(10).fillColor("#111111");
-
-  doc.text(`Nombre completo: ${student.full_name || ""}`);
-  doc.text(`Teléfono: ${student.phone_e164 || "No registrado"}`);
-  doc.text(`Campus: ${student.campus_name || ""}`);
-  doc.text(`Turno: ${student.shift_name || ""}`);
-  doc.text(`Periodo: ${student.period_name || ""}`);
-  doc.text(`Año: ${student.grad_year || ""}`);
-  doc.text(`Carrera: ${student.career_name || "Sin carrera registrada"}`);
-  doc.text(`Grado: ${student.grade || ""}`);
-  doc.text(`Grupo: ${student.group || ""}`);
-  doc.text(`Paquete: ${student.package_name || ""}`);
-  doc.text("Estado de cobranza: Activa");
-
-  doc.moveDown();
-
-  // Resumen del paquete
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(13)
-    .fillColor("#4400B2")
-    .text("RESUMEN DEL PAQUETE");
-
-  doc.moveDown(0.4);
+  const money = value =>
+    `$${Number(value || 0).toLocaleString("es-MX", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
 
   const totalDue = Number(totals.total_due || 0);
   const totalPaid = Number(totals.total_paid || 0);
   const balance = Number(totals.balance || 0);
   const discount = Number(student.discount_amount || 0);
 
-  doc.font("Helvetica").fontSize(10).fillColor("#111111");
-  doc.text(`Total del paquete: $${totalDue.toFixed(2)}`);
-  doc.text(`Descuento: $${discount.toFixed(2)}`);
-  doc.text(`Total pagado: $${totalPaid.toFixed(2)}`);
-  doc.text(`Saldo pendiente: $${balance.toFixed(2)}`);
+  // Fondo general
+  doc.rect(0, 0, 612, 792).fill("#FFFFFF");
 
-  doc.moveDown();
+  // Encabezado morado
+  doc
+    .save()
+    .moveTo(0, 0)
+    .lineTo(355, 0)
+    .lineTo(305, 118)
+    .lineTo(0, 118)
+    .closePath()
+    .fill(DARK_PURPLE)
+    .restore();
 
-  // Tabla de pagos
+  // Franja amarilla decorativa
+  doc
+    .save()
+    .moveTo(320, 0)
+    .lineTo(338, 0)
+    .lineTo(290, 118)
+    .lineTo(278, 118)
+    .closePath()
+    .fill(YELLOW)
+    .restore();
+
+  // Logotipo provisional tipográfico
   doc
     .font("Helvetica-Bold")
-    .fontSize(13)
-    .fillColor("#4400B2")
-    .text("PAGOS REALIZADOS");
+    .fontSize(51)
+    .fillColor("#FFFFFF")
+    .text("ITCC", 35, 20, {
+      width: 235,
+      align: "left"
+    });
 
-  doc.moveDown(0.5);
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(12)
+    .fillColor(DARK_PURPLE)
+    .rect(42, 80, 220, 24)
+    .fill(YELLOW);
 
-  let y = doc.y;
+  doc
+    .fillColor(DARK_PURPLE)
+    .text("Universidad y Preparatoria", 52, 87, {
+      width: 200,
+      align: "center"
+    });
+
+  // Datos superiores
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .fillColor(PURPLE)
+    .text("FOLIO:", 395, 22);
+
+  doc
+    .fontSize(11)
+    .text(folio, 395, 35);
+
+  doc
+    .fontSize(9)
+    .text("FECHA DE EMISIÓN:", 395, 58);
+
+  doc
+    .font("Helvetica")
+    .fontSize(9)
+    .fillColor("#222222")
+    .text(dayjs().format("DD [de] MMMM [de] YYYY"), 395, 72);
+
+  doc
+    .font("Helvetica-Bold")
+    .fillColor(PURPLE)
+    .text("FECHA DE GENERACIÓN:", 395, 91);
+
+  doc
+    .font("Helvetica")
+    .fillColor("#222222")
+    .text(dayjs().format("DD/MM/YYYY HH:mm"), 395, 104);
+
+  // Título
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(27)
+    .fillColor(PURPLE)
+    .text("HISTORIAL DE PAGOS", 40, 135, {
+      width: 532,
+      align: "center"
+    });
+
+  doc
+    .font("Helvetica")
+    .fontSize(8.5)
+    .fillColor(GRAY)
+    .text(
+      "Este documento refleja el historial de pagos y el estado actual del paquete contratado.",
+      40,
+      168,
+      {
+        width: 532,
+        align: "center"
+      }
+    );
+
+  // Función para dibujar encabezado de sección
+  const sectionLabel = (text, x, y, width) => {
+    doc
+      .roundedRect(x, y, width, 20, 6)
+      .fill(PURPLE);
+
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(9)
+      .fillColor("#FFFFFF")
+      .text(text, x, y + 6, {
+        width,
+        align: "center"
+      });
+  };
+
+  // Recuadro datos alumno
+  doc
+    .roundedRect(30, 200, 270, 292, 9)
+    .lineWidth(1)
+    .strokeColor(PURPLE)
+    .stroke();
+
+  sectionLabel("DATOS DEL ALUMNO", 72, 191, 185);
+
+  const studentRows = [
+    ["NOMBRE COMPLETO:", student.full_name || ""],
+    ["TELÉFONO (WHATSAPP):", student.phone_e164 || "No registrado"],
+    ["CAMPUS:", student.campus_name || ""],
+    ["TURNO:", student.shift_name || ""],
+    ["PERIODO:", student.period_name || ""],
+    ["AÑO:", student.grad_year || ""],
+    ["CARRERA:", student.career_name || "Sin carrera registrada"],
+    ["GRADO:", student.grade || ""],
+    ["GRUPO:", student.group || ""],
+    ["PAQUETE:", student.package_name || ""],
+    ["ESTADO DE COBRANZA:", "Cobranza activa"]
+  ];
+
+  let infoY = 222;
+
+  studentRows.forEach((row, index) => {
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(7.6)
+      .fillColor(PURPLE)
+      .text(row[0], 48, infoY, {
+        width: 110
+      });
+
+    doc
+      .font("Helvetica")
+      .fontSize(7.6)
+      .fillColor(
+        index === studentRows.length - 1 ? GREEN : "#222222"
+      )
+      .text(row[1], 160, infoY, {
+        width: 122
+      });
+
+    if (index < studentRows.length - 1) {
+      doc
+        .moveTo(47, infoY + 17)
+        .lineTo(284, infoY + 17)
+        .lineWidth(0.4)
+        .strokeColor(BORDER)
+        .stroke();
+    }
+
+    infoY += 24;
+  });
+
+  // Recuadro resumen
+  doc
+    .roundedRect(312, 200, 270, 292, 9)
+    .lineWidth(1)
+    .strokeColor(PURPLE)
+    .stroke();
+
+  sectionLabel("RESUMEN DEL PAQUETE", 357, 191, 180);
+
+  const summaryRows = [
+    ["PAQUETE:", student.package_name || ""],
+    ["TOTAL DEL PAQUETE:", money(totalDue)],
+    ["DESCUENTO:", money(discount)],
+    ["TOTAL PAGADO:", money(totalPaid)],
+    ["SALDO PENDIENTE:", money(balance)]
+  ];
+
+  let summaryY = 232;
+
+  summaryRows.forEach((row, index) => {
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(8)
+      .fillColor(PURPLE)
+      .text(row[0], 335, summaryY, {
+        width: 120
+      });
+
+    let valueColor = "#222222";
+
+    if (index === 2 && discount > 0) valueColor = GREEN;
+    if (index === 4 && balance > 0) valueColor = RED;
+    if (index === 4 && balance <= 0) valueColor = GREEN;
+
+    doc
+      .font(index === 0 ? "Helvetica" : "Helvetica-Bold")
+      .fontSize(index === 0 ? 7.5 : 10)
+      .fillColor(valueColor)
+      .text(row[1], 450, summaryY, {
+        width: 110,
+        align: "right"
+      });
+
+    if (index < summaryRows.length - 1) {
+      doc
+        .moveTo(333, summaryY + 29)
+        .lineTo(560, summaryY + 29)
+        .lineWidth(0.4)
+        .strokeColor(BORDER)
+        .stroke();
+    }
+
+    summaryY += index === 0 ? 55 : 49;
+  });
+
+  // Pagos realizados
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(14)
+    .fillColor(PURPLE)
+    .text("PAGOS REALIZADOS", 48, 513);
+
+  doc
+    .moveTo(195, 523)
+    .lineTo(285, 523)
+    .lineWidth(2)
+    .strokeColor(YELLOW)
+    .stroke();
+
+  let tableY = 542;
+
+  // Encabezado tabla
+  doc
+    .roundedRect(30, tableY, 552, 22, 5)
+    .fill(PURPLE);
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(7.5)
+    .fillColor("#FFFFFF")
+    .text("FECHA", 42, tableY + 7, {
+      width: 110,
+      align: "center"
+    });
+
+  doc.text("MONTO", 160, tableY + 7, {
+    width: 90,
+    align: "center"
+  });
+
+  doc.text("MÉTODO", 260, tableY + 7, {
+    width: 145,
+    align: "center"
+  });
+
+  doc.text("ESTATUS", 420, tableY + 7, {
+    width: 145,
+    align: "center"
+  });
+
+  tableY += 22;
+
+  const maxPaymentsFirstPage = 6;
+  const visiblePayments = payments.slice(0, maxPaymentsFirstPage);
+
+  if (visiblePayments.length === 0) {
+    doc
+      .rect(30, tableY, 552, 24)
+      .fill(LIGHT_PURPLE);
+
+    doc
+      .font("Helvetica")
+      .fontSize(8)
+      .fillColor(GRAY)
+      .text(
+        "No existen pagos confirmados registrados.",
+        42,
+        tableY + 8,
+        {
+          width: 520,
+          align: "center"
+        }
+      );
+
+    tableY += 24;
+  } else {
+    visiblePayments.forEach((payment, index) => {
+      const rowColor = index % 2 === 0 ? "#FFFFFF" : LIGHT_PURPLE;
+
+      doc.rect(30, tableY, 552, 22).fill(rowColor);
+
+      doc
+        .font("Helvetica")
+        .fontSize(7.4)
+        .fillColor("#222222")
+        .text(
+          dayjs(payment.created_at).format("DD/MM/YYYY"),
+          42,
+          tableY + 7,
+          {
+            width: 110,
+            align: "center"
+          }
+        );
+
+      doc.text(
+        money(payment.amount),
+        160,
+        tableY + 7,
+        {
+          width: 90,
+          align: "center"
+        }
+      );
+
+      doc.text(
+        payment.method || "No especificado",
+        260,
+        tableY + 7,
+        {
+          width: 145,
+          align: "center"
+        }
+      );
+
+      doc
+        .font("Helvetica-Bold")
+        .fillColor(GREEN)
+        .text("✓ Pagado", 420, tableY + 7, {
+          width: 145,
+          align: "center"
+        });
+
+      tableY += 22;
+    });
+  }
+
+  // Total pagado
+  doc
+    .rect(30, tableY, 552, 24)
+    .fill("#EEE6FA");
 
   doc
     .font("Helvetica-Bold")
     .fontSize(9)
-    .fillColor("#FFFFFF");
+    .fillColor(PURPLE)
+    .text(
+      `TOTAL PAGADO: ${money(totalPaid)}`,
+      42,
+      tableY + 7,
+      {
+        width: 520,
+        align: "center"
+      }
+    );
 
-  doc.rect(36, y, 540, 20).fill("#4400B2");
+  tableY += 36;
 
-  doc.text("FECHA", 45, y + 6, { width: 105 });
-  doc.text("MONTO", 160, y + 6, { width: 90 });
-  doc.text("MÉTODO", 260, y + 6, { width: 130 });
-  doc.text("ESTATUS", 405, y + 6, { width: 120 });
+  // Nota aclaratoria
+  doc
+    .roundedRect(30, tableY, 552, 26, 5)
+    .lineWidth(0.8)
+    .strokeColor(YELLOW)
+    .stroke();
 
-  y += 25;
+  doc
+    .font("Helvetica")
+    .fontSize(7.5)
+    .fillColor(PURPLE)
+    .text(
+      "En caso de alguna aclaración, favor de acudir al Departamento de Egresos de la Universidad ITCC.",
+      47,
+      tableY + 9,
+      {
+        width: 518,
+        align: "center"
+      }
+    );
 
-  doc.font("Helvetica").fontSize(9).fillColor("#111111");
+  // Firma
+  const signatureY = tableY + 46;
 
-  if (payments.length === 0) {
-    doc.text("No existen pagos confirmados registrados.", 45, y);
-    y += 20;
-  } else {
-    payments.forEach((payment, index) => {
-      if (y > 690) {
+  doc
+    .moveTo(170, signatureY)
+    .lineTo(350, signatureY)
+    .lineWidth(0.8)
+    .strokeColor(PURPLE)
+    .stroke();
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(7.5)
+    .fillColor(PURPLE)
+    .text("FIRMA", 170, signatureY + 7, {
+      width: 180,
+      align: "center"
+    });
+
+  doc.text("LIC. ANDRÉS SILVA FERNÁNDEZ", 150, signatureY + 19, {
+    width: 220,
+    align: "center"
+  });
+
+  doc.text("COORDINACIÓN DE GRADUACIONES", 150, signatureY + 30, {
+    width: 220,
+    align: "center"
+  });
+
+  doc.text("UNIVERSIDAD ITCC", 150, signatureY + 41, {
+    width: 220,
+    align: "center"
+  });
+
+  // Sello provisional
+  doc
+    .circle(455, signatureY + 29, 39)
+    .lineWidth(1.5)
+    .strokeColor(PURPLE)
+    .stroke();
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(17)
+    .fillColor(PURPLE)
+    .text("ITCC", 419, signatureY + 19, {
+      width: 72,
+      align: "center"
+    });
+
+  doc
+    .fontSize(5.5)
+    .text("Universidad y Preparatoria", 415, signatureY + 39, {
+      width: 80,
+      align: "center"
+    });
+
+  // Pie de página
+  doc
+    .rect(0, 760, 612, 32)
+    .fill(DARK_PURPLE);
+
+  doc
+    .font("Helvetica")
+    .fontSize(7)
+    .fillColor("#FFFFFF")
+    .text("ITCC Universidad y Preparatoria", 40, 772, {
+      width: 180
+    });
+
+  doc.text("www.itcc.edu.mx", 230, 772, {
+    width: 150,
+    align: "center"
+  });
+
+  doc
+    .font("Helvetica-Bold")
+    .fillColor(YELLOW)
+    .text("#yosoyitcc", 420, 772, {
+      width: 150,
+      align: "right"
+    });
+
+  // Si hay más pagos, generar páginas adicionales
+  if (payments.length > maxPaymentsFirstPage) {
+    const remainingPayments = payments.slice(maxPaymentsFirstPage);
+
+    let pageRows = [];
+
+    remainingPayments.forEach((payment, index) => {
+      pageRows.push(payment);
+
+      const isLast = index === remainingPayments.length - 1;
+
+      if (pageRows.length === 24 || isLast) {
         doc.addPage({
           size: "LETTER",
           layout: "portrait",
           margin: 36
         });
 
-        y = 45;
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(17)
+          .fillColor(PURPLE)
+          .text("HISTORIAL DE PAGOS — CONTINUACIÓN", {
+            align: "center"
+          });
+
+        doc
+          .font("Helvetica")
+          .fontSize(9)
+          .fillColor(GRAY)
+          .text(student.full_name || "", {
+            align: "center"
+          });
+
+        let extraY = 90;
+
+        doc
+          .rect(36, extraY, 540, 22)
+          .fill(PURPLE);
+
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(8)
+          .fillColor("#FFFFFF")
+          .text("FECHA", 45, extraY + 7, {
+            width: 105,
+            align: "center"
+          });
+
+        doc.text("MONTO", 160, extraY + 7, {
+          width: 90,
+          align: "center"
+        });
+
+        doc.text("MÉTODO", 260, extraY + 7, {
+          width: 130,
+          align: "center"
+        });
+
+        doc.text("ESTATUS", 405, extraY + 7, {
+          width: 120,
+          align: "center"
+        });
+
+        extraY += 22;
+
+        pageRows.forEach((p, rowIndex) => {
+          doc
+            .rect(36, extraY, 540, 22)
+            .fill(rowIndex % 2 === 0 ? "#FFFFFF" : LIGHT_PURPLE);
+
+          doc
+            .font("Helvetica")
+            .fontSize(8)
+            .fillColor("#222222")
+            .text(
+              dayjs(p.created_at).format("DD/MM/YYYY"),
+              45,
+              extraY + 7,
+              {
+                width: 105,
+                align: "center"
+              }
+            );
+
+          doc.text(money(p.amount), 160, extraY + 7, {
+            width: 90,
+            align: "center"
+          });
+
+          doc.text(
+            p.method || "No especificado",
+            260,
+            extraY + 7,
+            {
+              width: 130,
+              align: "center"
+            }
+          );
+
+          doc
+            .font("Helvetica-Bold")
+            .fillColor(GREEN)
+            .text("✓ Pagado", 405, extraY + 7, {
+              width: 120,
+              align: "center"
+            });
+
+          extraY += 22;
+        });
+
+        pageRows = [];
       }
-
-      if (index % 2 === 0) {
-        doc.rect(36, y - 3, 540, 20).fill("#F5F1FC");
-        doc.fillColor("#111111");
-      }
-
-      doc.text(
-        dayjs(payment.created_at).format("DD/MM/YYYY"),
-        45,
-        y,
-        { width: 105 }
-      );
-
-      doc.text(
-        `$${Number(payment.amount || 0).toFixed(2)}`,
-        160,
-        y,
-        { width: 90 }
-      );
-
-      doc.text(
-        payment.method || "No especificado",
-        260,
-        y,
-        { width: 130 }
-      );
-
-      doc
-        .fillColor("#148A2A")
-        .text("Pagado", 405, y, { width: 120 });
-
-      doc.fillColor("#111111");
-
-      y += 20;
     });
   }
-
-  doc.moveDown(2);
-
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(11)
-    .fillColor("#4400B2")
-    .text(`TOTAL PAGADO: $${totalPaid.toFixed(2)}`, {
-      align: "right"
-    });
-
-  doc.moveDown(2);
-
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor("#333333")
-    .text(
-      "En caso de alguna aclaración, favor de acudir al departamento de egresos de la Universidad ITCC.",
-      {
-        align: "center"
-      }
-    );
-
-  doc.moveDown(3);
-
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(10)
-    .fillColor("#4400B2")
-    .text("__________________________________", {
-      align: "center"
-    });
-
-  doc.text("FIRMA", { align: "center" });
-  doc.text("LIC. ANDRÉS SILVA FERNÁNDEZ", {
-    align: "center"
-  });
-  doc.text("COORDINACIÓN DE GRADUACIONES", {
-    align: "center"
-  });
-  doc.text("UNIVERSIDAD ITCC", {
-    align: "center"
-  });
-
   doc.end();
 });
 app.get("/cobranza/preview", requireAuth, async (req, res) => {
