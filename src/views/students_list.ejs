@@ -230,12 +230,41 @@
             <td><%= (s.period_name || '') %> / <%= (s.grad_year || '') %></td>
             <td><%= s.package_name || '' %></td>
             <td>$<%= Number(s.balance || 0).toFixed(2) %></td>
+
             <td class="text-end">
-              <a class="btn btn-sm btn-outline-primary" href="/students/<%= s.id %>">Ver</a>
-              <a class="btn btn-sm btn-primary" href="/students/<%= s.id %>/edit">Editar</a>
+             <a
+  class="btn btn-sm btn-outline-primary"
+  href="/students/<%= s.id %>"
+>
+  Ver
+</a>
+
+<a
+  class="btn btn-sm btn-primary"
+  href="/students/<%= s.id %>/edit"
+>
+  Editar
+</a>
+
+<% if (s.billing_active) { %>
+  <a
+    class="btn btn-sm btn-outline-dark"
+    href="/students/<%= s.id %>/payment-history.pdf"
+    target="_blank"
+  >
+    📄 Historial
+  </a>
+<% } %>
+
 <button
   type="submit"
   formaction="/students/<%= s.id %>/toggle-billing"
+  formmethod="POST"
+  class="btn btn-sm <%= s.billing_active ? 'btn-outline-warning' : 'btn-outline-success' %>"
+  onclick="return confirm('¿Cambiar estatus de cobranza de este alumno?')"
+>
+  <%= s.billing_active ? 'Desactivar cobranza' : 'Activar cobranza' %>
+</button>
   formmethod="POST"
   class="btn btn-sm <%= s.billing_active ? 'btn-outline-warning' : 'btn-outline-success' %>"
   onclick="return confirm('¿Cambiar estatus de cobranza de este alumno?')"
