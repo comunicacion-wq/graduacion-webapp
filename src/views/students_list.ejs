@@ -232,67 +232,64 @@
             <td>$<%= Number(s.balance || 0).toFixed(2) %></td>
 
             <td class="text-end">
-             <a
-  class="btn btn-sm btn-outline-primary"
-  href="/students/<%= s.id %>"
->
-  Ver
-</a>
+  <div class="d-flex flex-wrap justify-content-end gap-1">
 
-<a
-  class="btn btn-sm btn-primary"
-  href="/students/<%= s.id %>/edit"
->
-  Editar
-</a>
+    <a
+      class="btn btn-sm btn-outline-primary"
+      href="/students/<%= s.id %>"
+    >
+      Ver
+    </a>
 
-<% if (s.billing_active) { %>
-  <a
-    class="btn btn-sm btn-outline-dark"
-    href="/students/<%= s.id %>/payment-history.pdf"
-    target="_blank"
-  >
-    📄 Historial
-  </a>
-<% } %>
+    <a
+      class="btn btn-sm btn-primary"
+      href="/students/<%= s.id %>/edit"
+    >
+      Editar
+    </a>
 
-<button
-  type="submit"
-  formaction="/students/<%= s.id %>/toggle-billing"
-  formmethod="POST"
-  class="btn btn-sm <%= s.billing_active ? 'btn-outline-warning' : 'btn-outline-success' %>"
-  onclick="return confirm('¿Cambiar estatus de cobranza de este alumno?')"
->
-  <%= s.billing_active ? 'Desactivar cobranza' : 'Activar cobranza' %>
-</button>
-  formmethod="POST"
-  class="btn btn-sm <%= s.billing_active ? 'btn-outline-warning' : 'btn-outline-success' %>"
-  onclick="return confirm('¿Cambiar estatus de cobranza de este alumno?')"
->
-  <%= s.billing_active ? 'Desactivar cobranza' : 'Activar cobranza' %>
-</button>
+    <% if (s.billing_active) { %>
+      <a
+        class="btn btn-sm btn-outline-dark"
+        href="/students/<%= s.id %>/payment-history.pdf"
+        target="_blank"
+      >
+        📄 Historial
+      </a>
+    <% } %>
 
-<form method="POST"
-      action="/students/<%= s.id %>/graduate"
-      style="display:inline;"
-      onsubmit="return confirm('¿Marcar alumno como egresado?');">
+    <button
+      type="submit"
+      formaction="/students/<%= s.id %>/toggle-billing"
+      formmethod="POST"
+      class="btn btn-sm <%= s.billing_active ? 'btn-outline-warning' : 'btn-outline-success' %>"
+      onclick="return confirm('¿Cambiar estatus de cobranza de este alumno?');"
+    >
+      <%= s.billing_active ? 'Desactivar cobranza' : 'Activar cobranza' %>
+    </button>
 
-  <button type="submit"
-          class="btn btn-sm btn-outline-secondary">
-    Egresar
-  </button>
-</form>
+    <button
+      type="submit"
+      formaction="/students/<%= s.id %>/graduate"
+      formmethod="POST"
+      class="btn btn-sm btn-outline-secondary"
+      onclick="return confirm('¿Marcar alumno como egresado?');"
+    >
+      Egresar
+    </button>
 
-<form method="POST"
-      action="/students/<%= s.id %>/delete"
-      style="display:inline;"
-      onsubmit="return confirm('¿Seguro que deseas eliminar este alumno?');">
+    <button
+      type="submit"
+      formaction="/students/<%= s.id %>/delete"
+      formmethod="POST"
+      class="btn btn-sm btn-outline-danger"
+      onclick="return confirm('¿Seguro que deseas eliminar este alumno?');"
+    >
+      Eliminar
+    </button>
 
-  <button type="submit" class="btn btn-sm btn-outline-danger">
-    Eliminar
-  </button>
-</form>
-            </td>
+  </div>
+</td>
           </tr>
         <% }) %>
       </tbody>
