@@ -3179,6 +3179,79 @@ app.get("/setup-student-billing", requireAuth, requireRole("ADMIN"), async (req,
     res.status(500).send("Error al agregar columna billing_active en students");
   }
 });
+app.get(
+  "/setup-payment-history-folios",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res) => {
+    try {
+      await q(`
+        ALTER TABLE students
+        ADD COLUMN IF NOT EXISTS payment_history_folio TEXT
+      `);
+
+      await q(`
+        ALTER TABLE students
+        ADD COLUMN IF NOT EXISTS payment_history_folio_created_at TIMESTAMP
+      `);
+
+      await q(`
+        ALTER TABLE students
+        ADD COLUMN IF NOT EXISTS payment_history_status TEXT
+        NOT NULL DEFAULT 'ACTIVE'
+      `);
+
+      await q(`
+        UPDATE students s
+        SET
+          payment_history_folio =
+            'HP-' ||
+            COALESCE(
+              (
+                SELECT gy.year::text
+                FROM graduation_years gy
+                WHERE gy.id = s.year_id
+              ),
+              EXTRACT(YEAR FROM NOW())::int::text
+            ) ||
+            '-' ||
+            LPAD(s.id::text, 6, '0'),
+
+          payment_history_folio_created_at =
+            COALESCE(s.payment_history_folio_created_at, NOW()),
+
+          payment_history_status =
+            COALESCE(s.payment_history_status, 'ACTIVE')
+
+        WHERE
+          s.payment_history_folio IS NULL
+          OR TRIM(s.payment_history_folio) = ''
+      `);
+
+      await q(`
+        CREATE UNIQUE INDEX IF NOT EXISTS
+        students_payment_history_folio_unique
+        ON students(payment_history_folio)
+      `);
+
+      const result = await q(`
+        SELECT COUNT(*)::int AS total
+        FROM students
+        WHERE payment_history_folio IS NOT NULL
+      `);
+
+      return res.send(
+        `Folios creados correctamente. Alumnos con folio: ${result.rows[0].total}`
+      );
+    } catch (error) {
+      console.error("Error creando folios permanentes:", error);
+
+      return res
+        .status(500)
+        .send("No fue posible crear los folios permanentes.");
+    }
+  }
+);
 app.get("/expenses/contacts/new", requireAuth, async (req, res) => {
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
