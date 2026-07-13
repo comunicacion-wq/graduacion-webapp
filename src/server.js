@@ -3443,9 +3443,13 @@ app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) =>
 
   const payments = pay.rows;
 
-  const currentYear = dayjs().format("YYYY");
-  const folio = `HP-${currentYear}-${String(studentId).padStart(6, "0")}`;
+const folio = student.payment_history_folio;
 
+if (!folio) {
+  return res
+    .status(500)
+    .send("El alumno no tiene un folio asignado.");
+}
 const doc = new PDFDocument({
 
   size: "LETTER",
