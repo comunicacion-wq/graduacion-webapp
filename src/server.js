@@ -881,7 +881,7 @@ app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
   );
 
   doc.pipe(res);
-
+  
   doc.fontSize(18).text("Lista de grupo", {
     align: "center"
   });
