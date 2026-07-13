@@ -3432,29 +3432,14 @@ app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) =>
     .fill(YELLOW)
     .restore();
 
-  // Logotipo provisional tipográfico
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(51)
-    .fillColor("#FFFFFF")
-    .text("ITCC", 35, 20, {
-      width: 235,
-      align: "left"
-    });
+ // Logotipo oficial ITCC
+const logoPath = process.cwd() + "/src/logo-itcc.jpeg";
 
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(12)
-    .fillColor(DARK_PURPLE)
-    .rect(42, 80, 220, 24)
-    .fill(YELLOW);
-
-  doc
-    .fillColor(DARK_PURPLE)
-    .text("Universidad y Preparatoria", 52, 87, {
-      width: 200,
-      align: "center"
-    });
+doc.image(logoPath, 30, 13, {
+  fit: [250, 93],
+  align: "center",
+  valign: "center"
+});
 
   // Datos superiores
   doc
