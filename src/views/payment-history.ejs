@@ -82,20 +82,89 @@ td{
 </head>
 
 <body>
-
 <div class="header">
 
-<img src="/images/logo-itcc.png" class="logo">
+  <div class="title">
+    UNIVERSIDAD Y PREPARATORIA ITCC
+  </div>
 
-<div class="title">
-HISTORIAL DE PAGOS
+  <div class="title">
+    HISTORIAL DE PAGOS
+  </div>
+
+  <div class="subtitle">
+    Este documento refleja el historial de pagos y el estado actual del paquete contratado.
+  </div>
+
 </div>
 
-<div class="subtitle">
-Este documento refleja el historial de pagos y estado del paquete contratado.
-</div>
+<div class="box">
+
+  <div class="section">
+    DATOS DEL ALUMNO
+  </div>
+
+  <table>
+    <tbody>
+      <tr>
+        <td><strong>Nombre completo:</strong></td>
+        <td><%= student.full_name || "" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Teléfono (WhatsApp):</strong></td>
+        <td><%= student.phone_e164 || "No registrado" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Campus:</strong></td>
+        <td><%= student.campus_name || "" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Turno:</strong></td>
+        <td><%= student.shift_name || "" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Periodo:</strong></td>
+        <td><%= student.period_name || "" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Año:</strong></td>
+        <td><%= student.grad_year || "" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Carrera:</strong></td>
+        <td><%= student.career_name || "Sin carrera registrada" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Grado:</strong></td>
+        <td><%= student.grade || "" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Grupo:</strong></td>
+        <td><%= student.group || "" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Paquete:</strong></td>
+        <td><%= student.package_name || "" %></td>
+      </tr>
+
+      <tr>
+        <td><strong>Estado de cobranza:</strong></td>
+        <td style="color:#148A2A; font-weight:bold;">
+          Cobranza activa
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
 </div>
-
 </body>
 </html>
