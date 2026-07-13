@@ -3859,32 +3859,34 @@ app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) =>
       align: "center"
     });
 
-  // Pie de página
-  doc
-    .rect(0, 760, 612, 32)
-    .fill(DARK_PURPLE);
+// Pie de página dentro del área imprimible
+doc
+  .rect(0, 730, 612, 32)
+  .fill(DARK_PURPLE);
 
-  doc
-    .font("Helvetica")
-    .fontSize(7)
-    .fillColor("#FFFFFF")
-    .text("ITCC Universidad y Preparatoria", 40, 772, {
-      width: 180
-    });
-
-  doc.text("www.itcc.edu.mx", 230, 772, {
-    width: 150,
-    align: "center"
+doc
+  .font("Helvetica")
+  .fontSize(7)
+  .fillColor("#FFFFFF")
+  .text("ITCC Universidad y Preparatoria", 40, 742, {
+    width: 180,
+    lineBreak: false
   });
 
-  doc
-    .font("Helvetica-Bold")
-    .fillColor(YELLOW)
-    .text("#yosoyitcc", 420, 772, {
-      width: 150,
-      align: "right"
-    });
+doc.text("www.itcc.edu.mx", 230, 742, {
+  width: 150,
+  align: "center",
+  lineBreak: false
+});
 
+doc
+  .font("Helvetica-Bold")
+  .fillColor(YELLOW)
+  .text("#yosoyitcc", 420, 742, {
+    width: 150,
+    align: "right",
+    lineBreak: false
+  });
   // Si hay más pagos, generar páginas adicionales
   if (payments.length > maxPaymentsFirstPage) {
     const remainingPayments = payments.slice(maxPaymentsFirstPage);
