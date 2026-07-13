@@ -75,9 +75,14 @@ CREATE TABLE IF NOT EXISTS students (
   discount_amount NUMERIC(10,2) DEFAULT 0,
   discount_reason TEXT DEFAULT '',
   active BOOLEAN DEFAULT TRUE,
+
+  payment_history_folio TEXT UNIQUE,
+  payment_history_folio_created_at TIMESTAMP,
+  payment_history_status TEXT NOT NULL DEFAULT 'ACTIVE'
+    CHECK (payment_history_status IN ('ACTIVE','CANCELLED')),
+
   created_at TIMESTAMP DEFAULT NOW()
 );
-
 -- Student user (portal)
 CREATE TABLE IF NOT EXISTS student_accounts (
   student_id INT UNIQUE REFERENCES students(id) ON DELETE CASCADE,
