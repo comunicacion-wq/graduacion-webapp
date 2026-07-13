@@ -3373,11 +3373,15 @@ app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) =>
   const currentYear = dayjs().format("YYYY");
   const folio = `HP-${currentYear}-${String(studentId).padStart(6, "0")}`;
 
-  const doc = new PDFDocument({
-    size: "LETTER",
-    layout: "portrait",
-    margin: 36
-  });
+const doc = new PDFDocument({
+
+  size: "LETTER",
+
+  layout: "portrait",
+
+  margin: 0
+
+});
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader(
@@ -3386,13 +3390,7 @@ app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) =>
   );
 
   doc.pipe(res);
-const path = require("path");
 
-const logoPath = path.join(__dirname, "public", "images", "logo-itcc.png");
-
-doc.image(logoPath, 36, 25, {
-  width: 180
-});
   const PURPLE = "#4400B2";
   const DARK_PURPLE = "#2A006F";
   const YELLOW = "#FFC400";
@@ -3438,10 +3436,11 @@ doc.image(logoPath, 36, 25, {
     .fill(YELLOW)
     .restore();
 
- // Logotipo oficial ITCC
-const logoPath = process.cwd() + "/src/logo-itcc.jpeg";
+// Logotipo oficial ITCC
+const paymentHistoryLogoPath =
+  process.cwd() + "/src/public/images/logo-itcc.png";
 
-doc.image(logoPath, 30, 13, {
+doc.image(paymentHistoryLogoPath, 30, 13, {
   fit: [250, 93],
   align: "center",
   valign: "center"
