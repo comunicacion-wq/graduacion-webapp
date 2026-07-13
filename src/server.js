@@ -3372,7 +3372,25 @@ function requireStudentPortal(req, res, next) {
   if (!req.session.studentUser) return res.redirect("/portal/login");
   next();
 }
+function requireStudentPortalOrAdmin(req, res, next) {
+  const isStudent = Boolean(
+    req.session &&
+    req.session.studentUser &&
+    req.session.studentUser.student_id
+  );
 
+  const isAdmin = Boolean(
+    req.session &&
+    req.session.user &&
+    req.session.user.role === "ADMIN"
+  );
+
+  if (isStudent || isAdmin) {
+    return next();
+  }
+
+  return res.status(401).send("No tienes autorización para consultar este historial.");
+}
 app.get("/portal/logout", requireStudentPortal, (req,res) => {
   req.session.studentUser = null;
   res.redirect("/portal/login");
@@ -3405,8 +3423,18 @@ res.render("portal_dashboard", {
 });
 });
 // PDF del historial de pagos del alumno
-app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) => {
-  const studentId = req.session.studentUser.student_id;
+app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, res) => {
+  const isAdmin =
+    req.session.user &&
+    req.session.user.role === "ADMIN";
+
+  const studentId = isAdmin
+    ? Number(req.query.student_id)
+    : Number(req.session.studentUser.student_id);
+
+  if (!Number.isInteger(studentId) || studentId <= 0) {
+    return res.status(400).send("El alumno seleccionado no es válido.");
+  }
 
   const info = await getStudentTotals(studentId);
 
