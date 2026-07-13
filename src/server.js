@@ -3386,7 +3386,13 @@ app.get("/portal/payment-history.pdf", requireStudentPortal, async (req, res) =>
   );
 
   doc.pipe(res);
+const path = require("path");
 
+const logoPath = path.join(__dirname, "public", "images", "logo-itcc.png");
+
+doc.image(logoPath, 36, 25, {
+  width: 180
+});
   const PURPLE = "#4400B2";
   const DARK_PURPLE = "#2A006F";
   const YELLOW = "#FFC400";
