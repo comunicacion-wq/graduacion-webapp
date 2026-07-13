@@ -166,5 +166,42 @@ td{
   </table>
 
 </div>
+<div class="box">
+
+<div class="section">
+RESUMEN DEL PAQUETE
+</div>
+
+<table>
+
+<tr>
+<td><strong>Total del paquete</strong></td>
+<td>$<%= Number(totals.total_due||0).toFixed(2) %></td>
+</tr>
+
+<tr>
+<td><strong>Descuento</strong></td>
+<td>$<%= Number(student.discount_amount||0).toFixed(2) %></td>
+</tr>
+
+<tr>
+<td><strong>Total pagado</strong></td>
+<td>$<%= Number(totals.total_paid||0).toFixed(2) %></td>
+</tr>
+
+<tr>
+<td>
+<strong>Saldo pendiente</strong>
+</td>
+
+<td style="color:red;font-weight:bold">
+$<%= Number(totals.balance||0).toFixed(2) %>
+</td>
+
+</tr>
+
+</table>
+
+</div>
 </body>
 </html>
