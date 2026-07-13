@@ -960,6 +960,24 @@ app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
 
   doc.end();
 });
+app.get(
+  "/students/:id/payment-history.pdf",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res) => {
+
+    const studentId = Number(req.params.id);
+
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).send("Alumno inválido.");
+    }
+
+    return res.redirect(
+      `/portal/payment-history.pdf?student_id=${studentId}`
+    );
+
+  }
+);
 app.get("/students/graduation-groups", requireAuth, async (req,res) => {
  const cats = await catalogs();
 
