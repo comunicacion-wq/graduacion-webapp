@@ -44,14 +44,24 @@ CREATE TABLE IF NOT EXISTS packages (
 
 -- Users
 CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('ADMIN','CAJERO','STUDENT')),
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT NOW()
-);
 
+  id SERIAL PRIMARY KEY,
+
+  username TEXT NOT NULL UNIQUE,
+
+  password_hash TEXT NOT NULL,
+
+  role TEXT NOT NULL CHECK (
+
+    role IN ('ADMIN','CAJERO','STUDENT','PROVEEDOR')
+
+  ),
+
+  active BOOLEAN DEFAULT TRUE,
+
+  created_at TIMESTAMP DEFAULT NOW()
+
+);
 -- Cajero campus assignment (many-to-many)
 CREATE TABLE IF NOT EXISTS user_campuses (
   user_id INT REFERENCES users(id) ON DELETE CASCADE,
