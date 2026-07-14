@@ -4327,5 +4327,93 @@ Te pedimos realizar tu pago a la brevedad para evitar contratiempos en tu proces
     res.send("Error al cargar cobranza: " + error.message);
   }
 });
+app.get(
+  "/provider/verify",
+  requireAuth,
+  requireRole("PROVEEDOR"),
+  (req, res) => {
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <title>Verificador de Folios</title>
+
+        <style>
+
+        body{
+          font-family:Arial;
+          background:#f5f5f5;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+        }
+
+        .card{
+          width:500px;
+          background:white;
+          padding:40px;
+          border-radius:12px;
+          box-shadow:0 5px 20px rgba(0,0,0,.15);
+        }
+
+        h2{
+          color:#4400B2;
+          text-align:center;
+        }
+
+        input{
+          width:100%;
+          padding:12px;
+          font-size:18px;
+          margin-top:20px;
+          margin-bottom:20px;
+        }
+
+        button{
+          width:100%;
+          padding:14px;
+          border:none;
+          background:#4400B2;
+          color:white;
+          font-size:18px;
+          border-radius:8px;
+          cursor:pointer;
+        }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <div class="card">
+
+          <h2>VERIFICADOR DE FOLIOS ITCC</h2>
+
+          <form action="/provider/verify" method="POST">
+
+            <input
+              name="folio"
+              placeholder="HP-2026-000001"
+              required>
+
+            <button>
+              Verificar folio
+            </button>
+
+          </form>
+
+        </div>
+
+      </body>
+
+      </html>
+    `);
+
+  }
+);
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
