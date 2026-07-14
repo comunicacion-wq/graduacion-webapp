@@ -3197,8 +3197,7 @@ app.get("/setup-student-billing", requireAuth, requireRole("ADMIN"), async (req,
     res.status(500).send("Error al agregar columna billing_active en students");
   }
 });
-app.get(
-  "/setup-payment-history-folios",
+app.get("/setup-payment-history-folios",
   requireAuth,
   requireRole("ADMIN"),
   async (req, res) => {
@@ -3267,6 +3266,40 @@ app.get(
       return res
         .status(500)
         .send("No fue posible crear los folios permanentes.");
+    }
+  }
+);
+app.get(
+  "/setup-provider-role",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res) => {
+    try {
+      await q(`
+        ALTER TABLE users
+        DROP CONSTRAINT IF EXISTS users_role_check
+      `);
+
+      await q(`
+        ALTER TABLE users
+        ADD CONSTRAINT users_role_check
+        CHECK (
+          role IN ('ADMIN','CAJERO','STUDENT','PROVEEDOR')
+        )
+      `);
+
+      return res.send(
+        "Rol PROVEEDOR habilitado correctamente."
+      );
+    } catch (error) {
+      console.error("Error habilitando rol PROVEEDOR:", error);
+
+      return res
+        .status(500)
+        .send(
+          "No fue posible habilitar el rol PROVEEDOR: " +
+          error.message
+        );
     }
   }
 );
