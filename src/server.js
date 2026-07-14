@@ -221,7 +221,10 @@ req.session.user = {
   permissions: u.permissions || {}
 };
   await audit(req, "LOGIN", "USER", u.id, {});
-  res.redirect(req.body.next || "/");
+  if (u.role === "PROVEEDOR") {
+  return res.redirect("/provider/verify");
+}
+return res.redirect(req.body.next || "/");
 });
 app.get("/logout", requireAuth, async (req,res) => {
   await audit(req, "LOGOUT", "USER", req.session.user.id, {});
