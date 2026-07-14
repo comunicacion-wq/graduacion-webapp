@@ -4327,8 +4327,7 @@ Te pedimos realizar tu pago a la brevedad para evitar contratiempos en tu proces
     res.send("Error al cargar cobranza: " + error.message);
   }
 });
-app.get(
-  "/provider/verify",
+app.get("/provider/verify",
   requireAuth,
   requireRole("PROVEEDOR"),
   (req, res) => {
@@ -4413,6 +4412,343 @@ app.get(
       </html>
     `);
 
+  }
+);
+app.post(
+  "/provider/verify",
+  requireAuth,
+  requireRole("PROVEEDOR"),
+  async (req, res) => {
+    try {
+      const folio = String(req.body.folio || "")
+        .trim()
+        .toUpperCase();
+
+      if (!folio) {
+        return res.status(400).send("Debes ingresar un folio.");
+      }
+
+      const result = await q(
+        `
+        SELECT
+          s.id,
+          s.full_name,
+          s.payment_history_folio,
+          s.payment_history_status,
+          s.billing_active,
+          s.discount_amount,
+
+          c.name AS campus_name,
+          sh.name AS shift_name,
+          gp.name AS period_name,
+          gy.year AS grad_year,
+          ca.name AS career_name,
+          pk.name AS package_name,
+          pk.cost AS package_cost,
+
+          COALESCE(pay.total_paid, 0)::numeric AS total_paid,
+
+          GREATEST(
+            0,
+            COALESCE(pk.cost, 0)
+            - COALESCE(s.discount_amount, 0)
+            - COALESCE(pay.total_paid, 0)
+          )::numeric AS balance
+
+        FROM students s
+
+        LEFT JOIN campuses c
+          ON c.id = s.campus_id
+
+        LEFT JOIN shifts sh
+          ON sh.id = s.shift_id
+
+        LEFT JOIN graduation_periods gp
+          ON gp.id = s.period_id
+
+        LEFT JOIN graduation_years gy
+          ON gy.id = s.year_id
+
+        LEFT JOIN careers ca
+          ON ca.id = s.career_id
+
+        LEFT JOIN packages pk
+          ON pk.id = s.package_id
+
+        LEFT JOIN (
+          SELECT
+            student_id,
+            SUM(amount) AS total_paid
+          FROM payments
+          WHERE status = 'CONFIRMED'
+          GROUP BY student_id
+        ) pay
+          ON pay.student_id = s.id
+
+        WHERE UPPER(s.payment_history_folio) = $1
+        LIMIT 1
+        `,
+        [folio]
+      );
+
+      const student = result.rows[0];
+
+      if (!student) {
+        return res.send(`
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Folio no encontrado</title>
+
+            <style>
+              body {
+                margin: 0;
+                font-family: Arial, Helvetica, sans-serif;
+                background: #f3f3f3;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              }
+
+              .card {
+                width: min(520px, 88%);
+                background: #ffffff;
+                padding: 38px;
+                border-radius: 16px;
+                box-shadow: 0 8px 30px rgba(0,0,0,.15);
+                text-align: center;
+              }
+
+              .status {
+                font-size: 22px;
+                font-weight: bold;
+                color: #d71920;
+                margin-bottom: 15px;
+              }
+
+              .folio {
+                background: #f5f1fc;
+                padding: 14px;
+                border-radius: 8px;
+                color: #4400b2;
+                font-weight: bold;
+                margin: 20px 0;
+              }
+
+              a {
+                display: inline-block;
+                background: #4400b2;
+                color: #ffffff;
+                padding: 12px 22px;
+                border-radius: 8px;
+                text-decoration: none;
+              }
+            </style>
+          </head>
+
+          <body>
+            <div class="card">
+              <div class="status">❌ FOLIO NO ENCONTRADO</div>
+
+              <p>
+                El documento no pudo validarse. Revisa que el folio esté escrito correctamente.
+              </p>
+
+              <div class="folio">${folio}</div>
+
+              <a href="/provider/verify">
+                Consultar otro folio
+              </a>
+            </div>
+          </body>
+          </html>
+        `);
+      }
+
+      const documentValid =
+        student.payment_history_status === "ACTIVE" &&
+        student.billing_active === true;
+
+      const totalPaid = Number(student.total_paid || 0);
+      const balance = Number(student.balance || 0);
+
+      const money = value =>
+        Number(value || 0).toLocaleString("es-MX", {
+          style: "currency",
+          currency: "MXN"
+        });
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Resultado de verificación</title>
+
+          <style>
+            body {
+              margin: 0;
+              font-family: Arial, Helvetica, sans-serif;
+              background: #f3f3f3;
+              min-height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+
+            .card {
+              width: min(650px, 90%);
+              background: #ffffff;
+              padding: 35px;
+              border-radius: 16px;
+              box-shadow: 0 8px 30px rgba(0,0,0,.15);
+            }
+
+            h1 {
+              color: #4400b2;
+              text-align: center;
+              margin-top: 0;
+            }
+
+            .status {
+              padding: 16px;
+              border-radius: 10px;
+              margin: 20px 0;
+              text-align: center;
+              font-size: 21px;
+              font-weight: bold;
+              color: #ffffff;
+              background: ${documentValid ? "#148a2a" : "#d71920"};
+            }
+
+            .row {
+              display: grid;
+              grid-template-columns: 190px 1fr;
+              gap: 12px;
+              padding: 11px 0;
+              border-bottom: 1px solid #e3e3e3;
+            }
+
+            .label {
+              color: #4400b2;
+              font-weight: bold;
+            }
+
+            .balance {
+              color: ${balance > 0 ? "#d71920" : "#148a2a"};
+              font-weight: bold;
+            }
+
+            .button {
+              display: block;
+              margin-top: 25px;
+              background: #4400b2;
+              color: #ffffff;
+              padding: 13px;
+              border-radius: 8px;
+              text-align: center;
+              text-decoration: none;
+            }
+
+            @media (max-width: 600px) {
+              .row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+              }
+            }
+          </style>
+        </head>
+
+        <body>
+          <div class="card">
+            <h1>VERIFICACIÓN ITCC</h1>
+
+            <div class="status">
+              ${
+                documentValid
+                  ? "✓ DOCUMENTO AUTÉNTICO"
+                  : "✕ DOCUMENTO NO VÁLIDO"
+              }
+            </div>
+
+            <div class="row">
+              <div class="label">Folio:</div>
+              <div>${student.payment_history_folio}</div>
+            </div>
+
+            <div class="row">
+              <div class="label">Alumno:</div>
+              <div>${student.full_name}</div>
+            </div>
+
+            <div class="row">
+              <div class="label">Campus:</div>
+              <div>${student.campus_name || ""}</div>
+            </div>
+
+            <div class="row">
+              <div class="label">Turno:</div>
+              <div>${student.shift_name || ""}</div>
+            </div>
+
+            <div class="row">
+              <div class="label">Periodo:</div>
+              <div>
+                ${student.period_name || ""}
+                ${student.grad_year ? " / " + student.grad_year : ""}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="label">Carrera:</div>
+              <div>${student.career_name || ""}</div>
+            </div>
+
+            <div class="row">
+              <div class="label">Paquete:</div>
+              <div>${student.package_name || ""}</div>
+            </div>
+
+            <div class="row">
+              <div class="label">Total pagado:</div>
+              <div>${money(totalPaid)}</div>
+            </div>
+
+            <div class="row">
+              <div class="label">Saldo pendiente:</div>
+              <div class="balance">${money(balance)}</div>
+            </div>
+
+            <div class="row">
+              <div class="label">Cobranza:</div>
+              <div>
+                ${student.billing_active ? "Activa" : "No activa"}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="label">Estado del folio:</div>
+              <div>${student.payment_history_status || "ACTIVE"}</div>
+            </div>
+
+            <a class="button" href="/provider/verify">
+              Verificar otro folio
+            </a>
+          </div>
+        </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error("Error verificando folio:", error);
+
+      return res
+        .status(500)
+        .send("No fue posible verificar el folio: " + error.message);
+    }
   }
 );
 const port = process.env.PORT || 3000;
