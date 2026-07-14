@@ -3269,8 +3269,7 @@ app.get("/setup-payment-history-folios",
     }
   }
 );
-app.get(
-  "/setup-provider-role",
+app.get("/setup-provider-role",
   requireAuth,
   requireRole("ADMIN"),
   async (req, res) => {
@@ -3300,6 +3299,47 @@ app.get(
           "No fue posible habilitar el rol PROVEEDOR: " +
           error.message
         );
+    }
+  }
+);
+app.get(
+  "/setup-create-provider",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res) => {
+    try {
+      const bcrypt = await import("bcrypt");
+
+      const username = "fotoestudio";
+      const password = "Foto2026";
+
+      const hash = await bcrypt.hash(password, 10);
+
+      const existing = await q(
+        "SELECT id FROM users WHERE username=$1",
+        [username]
+      );
+
+      if (existing.rows.length === 0) {
+        await q(
+          `
+          INSERT INTO users
+          (username,password_hash,role)
+          VALUES ($1,$2,'PROVEEDOR')
+          `,
+          [username, hash]
+        );
+      }
+
+      res.send(`
+        <h2>Usuario creado correctamente</h2>
+        <p><b>Usuario:</b> fotoestudio</p>
+        <p><b>Contraseña:</b> Foto2026</p>
+      `);
+
+    } catch(err) {
+      console.error(err);
+      res.status(500).send(err.message);
     }
   }
 );
