@@ -3308,8 +3308,6 @@ app.get(
   requireRole("ADMIN"),
   async (req, res) => {
     try {
-      const bcrypt = await import("bcrypt");
-
       const username = "fotoestudio";
       const password = "Foto2026";
 
