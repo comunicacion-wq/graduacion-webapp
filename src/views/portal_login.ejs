@@ -86,28 +86,36 @@
     );
 }
 
-    .leopard-watermark {
-      position: absolute;
-      top: 0;
-      left: -120px;
+   .leopard-watermark{
 
-      width: min(730px, 100vw);
-      height: 60%;
+    position:absolute;
 
-      opacity: 0.12;
-      filter: grayscale(1) contrast(1.2);
+    top:-40px;
 
-      background:
-        radial-gradient(
-          ellipse at center,
-          rgba(255,255,255,.2),
-          transparent 67%
-        );
+    left:-170px;
 
-      transform: rotate(-8deg);
-      z-index: -2;
-      pointer-events: none;
-    }
+    width:650px;
+
+    height:900px;
+
+    background:url("/images/Leopardo-Login.png") no-repeat;
+
+    background-size:contain;
+
+    background-position:left top;
+
+    opacity:.13;
+
+    filter:
+        grayscale(1)
+        hue-rotate(245deg)
+        saturate(2)
+        brightness(.65);
+
+    pointer-events:none;
+
+    z-index:-2;
+}
 
    .diagonal-lines {
   position: absolute;
