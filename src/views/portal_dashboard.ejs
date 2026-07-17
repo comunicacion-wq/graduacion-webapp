@@ -30,7 +30,127 @@ font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
+.portal-app {
+  width: 100%;
+  max-width: 760px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding:
+    max(28px, env(safe-area-inset-top))
+    26px
+    60px;
+}
 
+.portal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-logo {
+  display: block;
+  width: 255px;
+  max-width: 48vw;
+  height: auto;
+  object-fit: contain;
+}
+
+.header-divider {
+  width: 1px;
+  height: 74px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.header-title {
+  font-size: 28px;
+  line-height: 1.08;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.logout-button {
+  position: relative;
+  flex: 0 0 auto;
+
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+  text-decoration: none;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.logout-button svg {
+  width: 32px;
+  height: 32px;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+  background: #ffc400;
+}
+
+@media (max-width: 640px) {
+  .portal-app {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+
+  .portal-header {
+    gap: 12px;
+  }
+
+  .header-brand {
+    gap: 13px;
+  }
+
+  .header-logo {
+    width: 250px;
+    max-width: 47vw;
+  }
+
+  .header-divider {
+    height: 62px;
+  }
+
+  .header-title {
+    font-size: 19px;
+  }
+
+  .logout-button {
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+  }
+
+  .logout-button svg {
+    width: 28px;
+    height: 28px;
+  }
+}
 background:
 
 linear-gradient(
@@ -59,6 +179,60 @@ min-height:100vh;
 </head>
 
 <body>
+
+  <main class="portal-app">
+
+    <header class="portal-header">
+
+      <div class="header-brand">
+
+        <img
+          class="header-logo"
+          src="/images/logo-itcc.png"
+          alt="Universidad y Preparatoria ITCC"
+        >
+
+        <div class="header-divider"></div>
+
+        <div class="header-title">
+          Portal del<br>
+          estudiante
+        </div>
+
+      </div>
+
+      <a
+        class="logout-button"
+        href="/portal/logout"
+        aria-label="Cerrar sesión"
+      >
+        <span class="notification-dot"></span>
+
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18 8A6 6 0 0 0 6 8c0 7-3 7-3 9h18c0-2-3-2-3-9"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M10 21h4"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
+
+    </header>
+
+  </main>
 
 </body>
 
