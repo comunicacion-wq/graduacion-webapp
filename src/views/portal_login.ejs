@@ -30,7 +30,7 @@
       margin: 0;
     }
 
-    body {
+  body {
   font-family:
     Arial,
     Helvetica,
@@ -39,19 +39,15 @@
   color: var(--itcc-white);
 
   background:
-    radial-gradient(
-      circle at 50% 5%,
-      rgba(79, 15, 170, 0.42) 0%,
-      transparent 40%
-    ),
     linear-gradient(
-      180deg,
-      #160044 0%,
-      #240068 42%,
-      #31008a 72%,
-      #1a0053 100%
-    );
+      rgba(16, 0, 60, 0.12),
+      rgba(16, 0, 60, 0.12)
+    ),
+    url("/images/leopardo-login.png")
+    center top / cover
+    no-repeat;
 
+  background-color: #17003e;
   overflow-x: hidden;
 }
 
@@ -546,9 +542,6 @@ background:url("/images/leopardo-login.png") no-repeat;
 
   <main class="login-page">
 
-    <div class="background-overlay"></div>
-    <div class="leopard-watermark"></div>
-    <div class="diagonal-lines"></div>
 
     <section class="login-card">
 
@@ -686,9 +679,6 @@ background:url("/images/leopardo-login.png") no-repeat;
       </footer>
 
     </section>
-
-    <div class="pixel-decoration"></div>
-    <div class="bottom-decoration"></div>
 
   </main>
 
