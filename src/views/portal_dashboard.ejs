@@ -173,7 +173,45 @@ color:white;
 min-height:100vh;
 
 }
+/* ===== TARJETA DEL ALUMNO ===== */
 
+.student-card{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+    backdrop-filter:blur(16px);
+    border-radius:22px;
+    padding:20px;
+    margin:25px 0;
+}
+
+.student-avatar{
+    width:82px;
+    height:82px;
+    border-radius:50%;
+    background:linear-gradient(180deg,#9e72ff,#ffffff);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:40px;
+    color:#4400B2;
+    flex-shrink:0;
+}
+
+.student-info h3{
+    margin:0;
+    font-size:24px;
+    font-weight:700;
+    color:#fff;
+}
+
+.student-info p{
+    margin:6px 0;
+    color:rgba(255,255,255,.85);
+    font-size:16px;
+}
 </style>
 
 </head>
@@ -231,7 +269,71 @@ min-height:100vh;
       </a>
 
     </header>
+<section class="welcome-section">
 
+  <div class="welcome-copy">
+    <h1>
+      ¡Hola,
+      <%= String(student.full_name || "").split(" ")[0] %>! 👋
+    </h1>
+
+    <p>
+      Bienvenido a tu portal de graduación
+    </p>
+  </div>
+
+  <article class="student-card">
+
+    <div class="student-avatar" aria-hidden="true">
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="32"
+          cy="22"
+          r="12"
+          fill="currentColor"
+        />
+
+        <path
+          d="M12 56C14.5 43.5 21 37 32 37C43 37 49.5 43.5 52 56"
+          fill="currentColor"
+        />
+      </svg>
+    </div>
+
+    <div class="student-info">
+
+      <h2>
+        <%= student.full_name || "" %>
+      </h2>
+
+      <div class="student-detail">
+        <span class="detail-icon">☎</span>
+        <span><%= student.phone_e164 || "" %></span>
+      </div>
+
+      <div class="student-detail">
+        <span class="detail-icon">🎓</span>
+        <span>
+          Paquete: <%= student.package_name || "" %>
+        </span>
+      </div>
+
+      <div class="student-detail">
+        <span class="detail-icon">🏫</span>
+        <span>
+          Campus: <%= student.campus_name || "" %>
+        </span>
+      </div>
+
+    </div>
+
+  </article>
+
+</section>
   </main>
 
 </body>
