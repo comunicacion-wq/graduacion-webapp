@@ -482,6 +482,99 @@ font-size:24px;
   }
 
 }
+/* ===== TARJETA PDF ===== */
+
+.pdf-download-card{
+    margin-top:22px;
+    padding:18px 22px;
+
+    display:flex;
+    align-items:center;
+    gap:18px;
+
+    text-decoration:none;
+    color:#ffffff;
+
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:22px;
+
+    backdrop-filter:blur(18px);
+
+    transition:.25s ease;
+}
+
+.pdf-download-card:hover{
+    transform:translateY(-2px);
+    border-color:#FFC400;
+}
+
+.pdf-download-icon{
+    width:62px;
+    height:62px;
+
+    border-radius:18px;
+
+    background:#d32f2f;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:#fff;
+    font-weight:800;
+    font-size:18px;
+
+    flex-shrink:0;
+}
+
+.pdf-download-copy{
+    flex:1;
+}
+
+.pdf-download-copy strong{
+    display:block;
+    font-size:18px;
+    margin-bottom:5px;
+}
+
+.pdf-download-copy span{
+    color:rgba(255,255,255,.75);
+    font-size:14px;
+}
+
+.pdf-download-arrow{
+    font-size:34px;
+    color:#FFC400;
+    font-weight:bold;
+}
+
+@media(max-width:640px){
+
+    .pdf-download-card{
+        padding:16px;
+        gap:14px;
+    }
+
+    .pdf-download-icon{
+        width:54px;
+        height:54px;
+        font-size:16px;
+    }
+
+    .pdf-download-copy strong{
+        font-size:16px;
+    }
+
+    .pdf-download-copy span{
+        font-size:13px;
+    }
+
+    .pdf-download-arrow{
+        font-size:28px;
+    }
+
+}
 </style>
 
 </head>
@@ -638,7 +731,27 @@ font-size:24px;
 
   </article>
 <section class="payment-summary">
+<a
+  href="/portal/payment-history.pdf"
+  class="pdf-download-card"
+  target="_blank"
+  rel="noopener"
+>
 
+  <div class="pdf-download-icon">
+    <span>PDF</span>
+  </div>
+
+  <div class="pdf-download-copy">
+    <strong>Descargar archivo PDF</strong>
+    <span>Historial completo de pagos</span>
+  </div>
+
+  <div class="pdf-download-arrow" aria-hidden="true">
+    ›
+  </div>
+
+</a>
   <div class="summary-card">
     <span class="summary-title">
       💰 Total del paquete
