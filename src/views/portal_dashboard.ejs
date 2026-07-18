@@ -265,6 +265,49 @@ min-height:100vh;
     margin: 5px 0;
   }
 }
+/* ===== RESUMEN DE PAGOS ===== */
+
+.payment-summary{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:18px;
+    margin-top:25px;
+}
+
+.summary-card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.10);
+    backdrop-filter:blur(12px);
+    border-radius:20px;
+    padding:20px;
+    text-align:center;
+}
+
+.summary-title{
+    display:block;
+    color:rgba(255,255,255,.75);
+    font-size:15px;
+    margin-bottom:10px;
+}
+
+.summary-card h2{
+    color:#fff;
+    font-size:28px;
+    margin:0;
+    font-weight:700;
+}
+
+@media(max-width:768px){
+
+.payment-summary{
+grid-template-columns:1fr;
+}
+
+.summary-card h2{
+font-size:24px;
+}
+
+}
 </style>
 
 </head>
@@ -385,7 +428,48 @@ min-height:100vh;
     </div>
 
   </article>
+<section class="payment-summary">
 
+  <div class="summary-card">
+    <span class="summary-title">
+      💰 Total del paquete
+    </span>
+
+    <h2>
+      $<%= Number(totals.total_due || 0).toLocaleString("es-MX", {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }) %>
+    </h2>
+  </div>
+
+  <div class="summary-card">
+    <span class="summary-title">
+      ✅ Total abonado
+    </span>
+
+    <h2>
+      $<%= Number(totals.total_paid || 0).toLocaleString("es-MX", {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }) %>
+    </h2>
+  </div>
+
+  <div class="summary-card">
+    <span class="summary-title">
+      📌 Saldo pendiente
+    </span>
+
+    <h2>
+      $<%= Number(totals.balance || 0).toLocaleString("es-MX", {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }) %>
+    </h2>
+  </div>
+
+</section>
 </section>
   </main>
 
