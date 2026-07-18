@@ -1947,6 +1947,9 @@ app.get("/requests", requireAuth, async (req,res) => {
   });
 render(req,res,"layout", { title:"Solicitudes", active:"requests", body });
 });
+<% if (canDownloadPaymentHistory) { %>
+<a class="btn" href="/portal/payment-history/pdf">Descargar historial PDF</a>
+<% } %>
 
 app.get("/requests/new", requireAuth, requireRole("CAJERO"), async (req,res) => {
   // list students in cajero campuses
