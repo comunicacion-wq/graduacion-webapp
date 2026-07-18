@@ -365,22 +365,42 @@ font-size:24px;
 
 @media(max-width:768px){
 
-.graduation-countdown{
-grid-template-columns:1fr;
-}
+  .graduation-countdown{
+    grid-template-columns:1.35fr repeat(4,minmax(0,1fr));
+    margin:24px 0;
+    border-radius:18px;
+  }
 
-.countdown-item{
-border-left:none;
-border-top:1px solid rgba(255,255,255,.08);
-}
+  .countdown-intro{
+    flex-direction:column;
+    gap:5px;
+    padding:14px 6px;
+    text-align:center;
+  }
 
-.countdown-item strong{
-font-size:34px;
-}
+  .countdown-cap{
+    font-size:27px;
+  }
 
-.countdown-intro{
-padding:18px;
-}
+  .countdown-intro p{
+    font-size:11px;
+    line-height:1.15;
+  }
+
+  .countdown-item{
+    padding:15px 3px;
+    border-top:none;
+    border-left:1px solid rgba(255,196,0,.45);
+  }
+
+  .countdown-item strong{
+    font-size:27px;
+  }
+
+  .countdown-item span{
+    margin-top:7px;
+    font-size:9px;
+  }
 
 }
 </style>
