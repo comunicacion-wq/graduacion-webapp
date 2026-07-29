@@ -3519,6 +3519,32 @@ res.render("portal_dashboard", {
   canDownloadPaymentHistory: info.student.billing_active === true
 });
 });
+app.get("/portal/payments", requireStudentPortal, async (req, res) => {
+  const studentId = req.session.studentUser.student_id;
+
+  const info = await getStudentTotals(studentId);
+  if (!info) return res.status(404).send("Alumno no encontrado");
+
+  const pay = await q(
+    `SELECT id, amount, method, status, note, created_at
+     FROM payments
+     WHERE student_id=$1
+     ORDER BY created_at DESC`,
+    [studentId]
+  );
+
+  const payments = pay.rows.map(p => ({
+    ...p,
+    created_at_fmt: dayjs(p.created_at).format("DD/MM/YYYY HH:mm")
+  }));
+
+  res.render("portal_payments", {
+    student: info.student,
+    totals: info.totals,
+    payments,
+    canDownloadPaymentHistory: info.student.billing_active === true
+  });
+});
 // PDF del historial de pagos del alumno
 app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, res) => {
   const isAdmin =
