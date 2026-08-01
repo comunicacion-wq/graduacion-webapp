@@ -20,7 +20,18 @@ import { getStudentTotals } from "./totals.js";
 import { generateLiquidationPDF } from "./pdf.js";
 
 dotenv.config();
+// ===============================
+// CONFIGURACIÓN DEL SISTEMA
+// ===============================
 
+// false = producción
+// true = modo desarrollo
+const DEVELOPMENT_MODE = true;
+
+// Usuarios que pueden probar funciones nuevas
+const DEVELOPMENT_STUDENTS = [
+  // Agrega aquí los ID de alumnos autorizados
+];
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -61,7 +72,19 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
+// ===================================
+// MODO DESARROLLO
+// ===================================
 
+function canUseDevelopmentModules(studentId) {
+
+  if (!DEVELOPMENT_MODE) {
+    return false;
+  }
+
+  return DEVELOPMENT_STUDENTS.includes(studentId);
+
+}
 // flash messages (simple)
 app.use((req, res, next) => {
   res.locals.flash = req.session.flash || [];
