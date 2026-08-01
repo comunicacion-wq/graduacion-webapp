@@ -1,17 +1,113 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis pagos</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mis pagos | Portal del estudiante ITCC</title>
+  <style>
+    :root{--purple:#4400B2;--purple-dark:#17003E;--yellow:#FFC400;--white:#fff;--soft:rgba(255,255,255,.75);--glass:rgba(255,255,255,.07);--border:rgba(255,255,255,.11);--green:#2CCB71;--red:#FF6B6B}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}html,body{min-height:100%;margin:0}
+    body{min-height:100vh;color:var(--white);font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,rgba(18,0,66,.34),rgba(23,0,62,.90)),url('/images/leopardo-login.png') center top/cover fixed no-repeat;background-color:var(--purple-dark);overflow-x:hidden}
+    .portal-app{width:100%;max-width:760px;min-height:100vh;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 26px max(26px,env(safe-area-inset-bottom))}
+    .portal-header{display:flex;justify-content:space-between;align-items:center;gap:20px}.header-brand{min-width:0;display:flex;align-items:center;gap:18px}.header-logo{display:block;width:255px;max-width:48vw;height:auto;object-fit:contain}.header-divider{width:1px;height:72px;flex-shrink:0;background:rgba(255,255,255,.58)}.header-title{color:#fff;font-size:27px;line-height:1.08;font-weight:800}.logout-button{position:relative;flex:0 0 auto;width:54px;height:54px;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(12px)}.logout-button svg{width:29px;height:29px}.notification-dot{position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:var(--yellow)}
+    .page-heading{margin-top:42px}.page-heading h1{margin:0;font-size:34px;line-height:1.1;font-weight:800}.page-heading p{margin:9px 0 0;color:var(--soft);font-size:17px;line-height:1.45}
+    .student-card{width:100%;margin-top:23px;padding:22px 24px;display:flex;align-items:center;gap:20px;background:linear-gradient(135deg,rgba(68,0,178,.28),rgba(255,255,255,.05));border:1px solid var(--border);border-radius:24px;backdrop-filter:blur(18px);box-shadow:0 16px 38px rgba(8,0,45,.18)}.student-avatar{width:92px;height:92px;flex:0 0 92px;display:flex;align-items:center;justify-content:center;color:var(--purple);border-radius:50%;background:linear-gradient(180deg,#F2EEFF 0%,#C9B6FF 100%);box-shadow:inset 0 0 0 3px rgba(255,255,255,.28),0 10px 25px rgba(0,0,0,.18)}.student-avatar svg{width:72%;height:72%}.student-info{min-width:0;flex:1}.student-info h2{margin:0 0 10px;font-size:22px;line-height:1.2;font-weight:800;text-transform:uppercase}.student-detail{margin-top:7px;display:flex;align-items:center;gap:9px;color:rgba(255,255,255,.87);font-size:15px;line-height:1.35}.detail-icon{width:22px;flex:0 0 22px;text-align:center;color:var(--yellow);font-size:17px}
+    .section-title{margin:30px 0 14px;display:flex;align-items:end;justify-content:space-between;gap:16px}.section-title h2{margin:0;font-size:25px;font-weight:800}.section-title span{color:var(--soft);font-size:13px}
+    .payment-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.summary-card{min-width:0;padding:18px 15px;text-align:center;background:var(--glass);border:1px solid var(--border);border-radius:20px;backdrop-filter:blur(14px)}.summary-card.balance{color:var(--purple-dark);background:var(--yellow);border-color:rgba(255,196,0,.95)}.summary-title{display:block;margin-bottom:9px;color:var(--soft);font-size:13px;line-height:1.25}.summary-card.balance .summary-title{color:rgba(23,0,62,.74)}.summary-card h3{margin:0;font-size:22px;line-height:1.1;font-weight:800;overflow-wrap:anywhere}.summary-card.balance h3{color:var(--purple-dark)}
+    .payments-history-section{margin-top:24px;padding:20px;background:var(--glass);border:1px solid var(--border);border-radius:24px;backdrop-filter:blur(18px)}.payments-history-header{margin-bottom:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.payments-history-header h2{margin:0;font-size:24px;font-weight:800}.payments-history-header p{margin:6px 0 0;color:rgba(255,255,255,.70);font-size:14px;line-height:1.4}.payments-count{flex-shrink:0;padding:8px 12px;color:var(--purple-dark);background:var(--yellow);border-radius:999px;font-size:12px;font-weight:800}.payments-list{display:flex;flex-direction:column;gap:12px}.payment-history-card{padding:16px;display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:18px}.payment-history-number{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--purple-dark);background:var(--yellow);border-radius:14px;font-size:16px;font-weight:800}.payment-history-info{min-width:0;display:flex;flex-direction:column;gap:4px}.payment-history-info strong{font-size:15px}.payment-history-info span{color:rgba(255,255,255,.68);font-size:12px;overflow-wrap:anywhere}.payment-history-amount{font-size:18px;font-weight:800;white-space:nowrap}.payment-status{display:inline-flex;width:fit-content;padding:4px 8px;color:var(--green)!important;background:rgba(44,203,113,.11);border:1px solid rgba(44,203,113,.28);border-radius:999px;font-size:10px!important;font-weight:800;text-transform:uppercase}.payment-status.canceled{color:var(--red)!important;background:rgba(255,107,107,.10);border-color:rgba(255,107,107,.28)}.payments-empty{padding:26px 20px;text-align:center;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.16);border-radius:18px}.payments-empty strong{display:block;font-size:16px}.payments-empty p{margin:7px 0 0;color:rgba(255,255,255,.68);font-size:13px;line-height:1.45}
+    .payments-pdf-button{margin-top:16px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;color:var(--purple-dark);text-decoration:none;background:#fff;border-radius:18px;transition:transform .2s ease,box-shadow .2s ease}.payments-pdf-button:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.16)}.payments-pdf-copy strong{display:block;color:var(--purple-dark);font-size:16px;font-weight:800}.payments-pdf-copy span{display:block;margin-top:4px;color:rgba(23,0,62,.65);font-size:12px}.payments-pdf-arrow{color:var(--yellow);font-size:32px;line-height:1;font-weight:800}.history-disabled{margin-top:16px;padding:16px 18px;color:rgba(255,255,255,.72);text-align:center;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.14);border-radius:18px;font-size:13px;line-height:1.45}
+    .bottom-nav{position:sticky;bottom:10px;z-index:50;width:100%;margin-top:26px;padding:8px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;background:rgba(31,0,83,.94);border:1px solid rgba(255,255,255,.12);border-radius:21px;backdrop-filter:blur(20px);box-shadow:0 16px 40px rgba(0,0,0,.28)}.bottom-nav a{min-width:0;min-height:75px;padding:8px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:rgba(255,255,255,.82);text-align:center;text-decoration:none;border-radius:15px;transition:.2s ease}.bottom-nav a:hover{background:rgba(255,255,255,.07)}.bottom-nav a.active{color:#fff;background:linear-gradient(180deg,rgba(68,0,178,.92),rgba(50,0,132,.92))}.bottom-nav .nav-icon{font-size:23px;line-height:1}.bottom-nav a span{font-size:10px;line-height:1.15;font-weight:700}
+    @media(max-width:640px){.portal-app{padding-left:22px;padding-right:22px}.portal-header{gap:12px}.header-brand{gap:13px}.header-logo{width:250px;max-width:47vw}.header-divider{height:62px}.header-title{font-size:19px}.logout-button{width:48px;height:48px;border-radius:15px}.logout-button svg{width:27px;height:27px}.page-heading{margin-top:34px}.page-heading h1{font-size:28px}.page-heading p{font-size:15px}.student-card{gap:15px;padding:18px 16px;border-radius:21px}.student-avatar{width:76px;height:76px;flex-basis:76px}.student-info h2{margin-bottom:8px;font-size:17px}.student-detail{gap:7px;margin-top:6px;font-size:13px}.detail-icon{width:19px;flex-basis:19px;font-size:15px}.section-title h2{font-size:21px}.payment-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.summary-card{padding:14px 7px;border-radius:17px}.summary-title{font-size:10px}.summary-card h3{font-size:16px}.payments-history-section{padding:16px;border-radius:21px}.payments-history-header h2{font-size:20px}.payment-history-card{grid-template-columns:40px 1fr;gap:12px}.payment-history-number{width:40px;height:40px}.payment-history-amount{grid-column:2;font-size:17px}}
+    @media(max-width:390px){.portal-app{padding-left:16px;padding-right:16px}.header-logo{max-width:43vw}.header-title{font-size:17px}.summary-card h3{font-size:14px}.bottom-nav a span{font-size:9px}}
+  </style>
 </head>
-
 <body>
+  <main class="portal-app">
+    <header class="portal-header">
+      <div class="header-brand">
+        <img class="header-logo" src="/images/logo-itcc.png" alt="Universidad y Preparatoria ITCC">
+        <div class="header-divider"></div>
+        <div class="header-title">Portal del<br>estudiante</div>
+      </div>
+      <a class="logout-button" href="/portal/logout" aria-label="Cerrar sesión" title="Cerrar sesión">
+        <span class="notification-dot"></span>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 7-3 9h18c0-2-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 21h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </a>
+    </header>
 
-    <h1>Mis pagos</h1>
+    <section class="page-heading">
+      <h1>Mis pagos</h1>
+      <p>Consulta todos los abonos registrados para tu graduación.</p>
+    </section>
 
-    <p>Esta será la pantalla donde el alumno consultará todo su historial de pagos.</p>
+    <article class="student-card">
+      <div class="student-avatar" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="32" cy="22" r="12" fill="currentColor"/>
+          <path d="M12 56C14.5 43.5 21 37 32 37C43 37 49.5 43.5 52 56" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="student-info">
+        <h2><%= student.full_name || "" %></h2>
+        <div class="student-detail"><span class="detail-icon">☎</span><span><%= student.phone_e164 || "" %></span></div>
+        <div class="student-detail"><span class="detail-icon">🎓</span><span>Paquete: <%= student.package_name || "" %></span></div>
+        <div class="student-detail"><span class="detail-icon">🏫</span><span>Campus: <%= student.campus_name || "" %></span></div>
+      </div>
+    </article>
 
+    <div class="section-title"><h2>Resumen de pagos</h2><span>Información actualizada</span></div>
+
+    <section class="payment-summary">
+      <div class="summary-card"><span class="summary-title">Total del paquete</span><h3>$<%= Number(totals.total_due || 0).toLocaleString("es-MX", {minimumFractionDigits:2,maximumFractionDigits:2}) %></h3></div>
+      <div class="summary-card"><span class="summary-title">Total abonado</span><h3>$<%= Number(totals.total_paid || 0).toLocaleString("es-MX", {minimumFractionDigits:2,maximumFractionDigits:2}) %></h3></div>
+      <div class="summary-card balance"><span class="summary-title">Saldo pendiente</span><h3>$<%= Number(totals.balance || 0).toLocaleString("es-MX", {minimumFractionDigits:2,maximumFractionDigits:2}) %></h3></div>
+    </section>
+
+    <section class="payments-history-section">
+      <div class="payments-history-header">
+        <div><h2>Historial de pagos</h2><p>Todos los movimientos registrados en tu cuenta.</p></div>
+        <span class="payments-count"><%= Array.isArray(payments) ? payments.length : 0 %> pagos</span>
+      </div>
+      <div class="payments-list">
+        <% if (Array.isArray(payments) && payments.length > 0) { %>
+          <% payments.forEach(function(payment, index) { %>
+            <article class="payment-history-card">
+              <div class="payment-history-number"><%= index + 1 %></div>
+              <div class="payment-history-info">
+                <strong>Abono de graduación</strong>
+                <span>Fecha: <%= payment.created_at_fmt || "" %></span>
+                <span>Método: <%= payment.method || "No especificado" %></span>
+                <% if (payment.note) { %><span>Nota: <%= payment.note %></span><% } %>
+                <span class="payment-status <%= payment.status === 'CANCELED' ? 'canceled' : '' %>"><%= payment.status === "CANCELED" ? "Cancelado" : "Confirmado" %></span>
+              </div>
+              <div class="payment-history-amount">$<%= Number(payment.amount || 0).toLocaleString("es-MX", {minimumFractionDigits:2,maximumFractionDigits:2}) %></div>
+            </article>
+          <% }) %>
+        <% } else { %>
+          <div class="payments-empty"><strong>Aún no hay pagos registrados</strong><p>Cuando realices un abono, aparecerá en este apartado.</p></div>
+        <% } %>
+      </div>
+
+      <% if (canDownloadPaymentHistory) { %>
+        <a href="/portal/payment-history.pdf" class="payments-pdf-button" target="_blank" rel="noopener">
+          <div class="payments-pdf-copy"><strong>Descargar historial</strong><span>Archivo PDF con todos tus pagos</span></div>
+          <span class="payments-pdf-arrow" aria-hidden="true">›</span>
+        </a>
+      <% } else { %>
+        <div class="history-disabled">La descarga del historial estará disponible cuando la cobranza del alumno se encuentre activa.</div>
+      <% } %>
+    </section>
+
+    <nav class="bottom-nav">
+      <a href="/portal"><div class="nav-icon">🏠</div><span>Inicio</span></a>
+      <a href="/portal/payments" class="active"><div class="nav-icon">💳</div><span>Mis pagos</span></a>
+      <a href="/portal/tickets"><div class="nav-icon">🎫</div><span>Boletos</span></a>
+      <a href="/portal/itinerary"><div class="nav-icon">📅</div><span>Itinerario</span></a>
+      <a href="/portal/photos"><div class="nav-icon">🖼️</div><span>Fotos</span></a>
+    </nav>
+  </main>
 </body>
 </html>
