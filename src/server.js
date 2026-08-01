@@ -3569,6 +3569,23 @@ app.get("/portal/payments", requireStudentPortal, async (req, res) => {
     canDownloadPaymentHistory: info.student.billing_active === true
   });
 });
+app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
+
+  const studentId = req.session.studentUser.student_id;
+
+  const info = await getStudentTotals(studentId);
+
+  if (!info) {
+    return res.status(404).send("Alumno no encontrado");
+  }
+
+  res.render("portal_tickets", {
+    student: info.student,
+    totals: info.totals,
+    developmentMode: canUseDevelopmentModules(studentId)
+  });
+
+});
 // PDF del historial de pagos del alumno
 app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, res) => {
   const isAdmin =
