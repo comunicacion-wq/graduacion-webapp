@@ -3539,7 +3539,8 @@ res.render("portal_dashboard", {
   student: info.student,
   totals: info.totals,
   payments,
-  canDownloadPaymentHistory: info.student.billing_active === true
+  canDownloadPaymentHistory: info.student.billing_active === true,
+  developmentMode: canUseDevelopmentModules(studentId)
 });
 });
 app.get("/portal/payments", requireStudentPortal, async (req, res) => {
