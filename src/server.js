@@ -3574,7 +3574,9 @@ app.get("/portal/payments", requireStudentPortal, async (req, res) => {
 app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
 
   const studentId = req.session.studentUser.student_id;
-
+if (!canUseDevelopmentModules(studentId)) {
+  return res.status(403).send("Módulo de boletos no disponible.");
+}
   const info = await getStudentTotals(studentId);
 
   if (!info) {
