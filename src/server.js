@@ -29,9 +29,11 @@ dotenv.config();
 const DEVELOPMENT_MODE = true;
 
 // Usuarios que pueden probar funciones nuevas
-const DEVELOPMENT_STUDENTS = [
+const DEVELOPMENT_STUDENTS = [ 
+  766
+  ];
   // Agrega aquí los ID de alumnos autorizados
-];
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
