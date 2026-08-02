@@ -1,6 +1,7 @@
 import express from "express";
 import session from "express-session";
 import path from "path";
+import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -3254,6 +3255,98 @@ app.get("/setup-tickets", requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Error al crear tablas de boletos");
+  }
+});
+app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
+  try {
+    const studentId = 766;
+    const includedTickets = 5;
+
+    const studentResult = await q(
+      `
+      SELECT id, full_name
+      FROM students
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [studentId]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).send("Alumno de prueba no encontrado");
+    }
+
+    const existingResult = await q(
+      `
+      SELECT COUNT(*)::int AS total
+      FROM graduation_tickets
+      WHERE student_id = $1
+        AND ticket_type = 'INCLUDED'
+      `,
+      [studentId]
+    );
+
+    const existingTickets = Number(existingResult.rows[0]?.total || 0);
+
+    if (existingTickets >= includedTickets) {
+      return res.send(
+        `El alumno ${studentId} ya tiene ${existingTickets} boletos incluidos. No se generaron duplicados.`
+      );
+    }
+
+    const currentYear = new Date().getFullYear();
+    const missingTickets = includedTickets - existingTickets;
+
+    for (let index = 1; index <= missingTickets; index += 1) {
+      const ticketNumber = existingTickets + index;
+
+      const folio = `ITCC-${currentYear}-${studentId}-${String(
+        ticketNumber
+      ).padStart(3, "0")}`;
+
+      const secureToken = crypto.randomUUID();
+
+      await q(
+        `
+        INSERT INTO graduation_tickets (
+          student_id,
+          folio,
+          secure_token,
+          ticket_type,
+          status
+        )
+        VALUES ($1, $2, $3, 'INCLUDED', 'AVAILABLE')
+        ON CONFLICT (folio) DO NOTHING
+        `,
+        [studentId, folio, secureToken]
+      );
+    }
+
+    const finalResult = await q(
+      `
+      SELECT folio, status, ticket_type
+      FROM graduation_tickets
+      WHERE student_id = $1
+      ORDER BY id ASC
+      `,
+      [studentId]
+    );
+
+    const folios = finalResult.rows
+      .map(ticket => `${ticket.folio} - ${ticket.status}`)
+      .join("<br>");
+
+    res.send(`
+      <h2>Boletos de prueba generados correctamente</h2>
+      <p>Alumno: ${studentResult.rows[0].full_name}</p>
+      <p>Total de boletos: ${finalResult.rows.length}</p>
+      <hr>
+      ${folios}
+    `);
+
+  } catch (err) {
+    console.error("Error al generar boletos de prueba:", err);
+    res.status(500).send("Error al generar boletos de prueba");
   }
 });
 app.get("/setup-student-status", requireAuth, requireRole("ADMIN"), async (req, res) => {
