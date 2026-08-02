@@ -1,22 +1,112 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
-
-  <title>Boletos de graduación</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boletos de graduación | Portal ITCC</title>
+<style>
+:root{--purple:#4400B2;--dark:#17003E;--yellow:#FFC400;--white:#fff;--glass:rgba(255,255,255,.07);--border:rgba(255,255,255,.11);--soft:rgba(255,255,255,.76)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:Arial,Helvetica,sans-serif;color:var(--white);background:linear-gradient(rgba(18,0,66,.34),rgba(23,0,62,.90)),url("/images/leopardo-login.png") center top/cover fixed no-repeat;background-color:var(--dark);overflow-x:hidden}
+.portal-app{width:100%;max-width:760px;min-height:100vh;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 26px max(155px,env(safe-area-inset-bottom))}
+.portal-header{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.header-brand{display:flex;align-items:center;gap:18px;min-width:0}
+.header-logo{display:block;width:255px;max-width:48vw;height:auto}
+.header-divider{width:1px;height:72px;background:rgba(255,255,255,.58)}
+.header-title{font-size:27px;line-height:1.08;font-weight:800}
+.logout-button{position:relative;width:54px;height:54px;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:rgba(255,255,255,.06)}
+.logout-button svg{width:29px;height:29px}.notification-dot{position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:var(--yellow)}
+.page-heading{margin-top:42px}.page-heading-top{display:flex;align-items:center;justify-content:space-between;gap:14px}.page-heading h1{margin:0;font-size:34px;font-weight:800}.page-heading p{margin:9px 0 0;color:var(--soft);font-size:17px;line-height:1.45}
+.test-badge{padding:8px 12px;color:var(--dark);background:var(--yellow);border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase}
+.student-card{width:100%;margin-top:23px;padding:22px 24px;display:flex;align-items:center;gap:20px;background:linear-gradient(135deg,rgba(68,0,178,.28),rgba(255,255,255,.05));border:1px solid var(--border);border-radius:24px}
+.student-avatar{width:92px;height:92px;flex:0 0 92px;display:flex;align-items:center;justify-content:center;color:var(--purple);border-radius:50%;background:linear-gradient(#F2EEFF,#C9B6FF)}
+.student-avatar svg{width:72%;height:72%}.student-info{min-width:0;flex:1}.student-info h2{margin:0 0 10px;font-size:22px;line-height:1.2;font-weight:800;text-transform:uppercase}.student-detail{margin-top:7px;display:flex;gap:9px;color:rgba(255,255,255,.87);font-size:15px}.detail-icon{width:22px;flex:0 0 22px;text-align:center;color:var(--yellow)}
+.section-title{margin:30px 0 14px}.section-title h2{margin:0;font-size:25px}
+.ticket-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.ticket-summary-card{padding:18px 15px;text-align:center;background:var(--glass);border:1px solid var(--border);border-radius:20px}.ticket-summary-card.total{background:var(--yellow);color:var(--dark)}.ticket-summary-card span{display:block;margin-bottom:8px;color:var(--soft);font-size:12px}.ticket-summary-card.total span{color:rgba(23,0,62,.72)}.ticket-summary-card strong{font-size:26px}.ticket-summary-card.total strong{color:var(--dark)}
+.ticket-status-card,.preview-section{margin-top:24px;padding:20px;background:var(--glass);border:1px solid var(--border);border-radius:24px}.ticket-status-top{display:flex;align-items:center;justify-content:space-between;gap:14px}.ticket-status-card h2,.preview-section h2{margin:0;font-size:23px}.status-pill{padding:7px 11px;color:#FF9F1C;background:rgba(255,159,28,.11);border:1px solid rgba(255,159,28,.30);border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase}.ticket-status-card p,.preview-section>p{margin:14px 0 0;color:rgba(255,255,255,.74);font-size:14px;line-height:1.5}
+.ticket-condition{margin-top:16px;padding:15px 16px;display:flex;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:18px}.ticket-condition-icon{font-size:24px}.ticket-condition strong{display:block;font-size:14px}.ticket-condition span{display:block;margin-top:5px;color:rgba(255,255,255,.68);font-size:12px;line-height:1.45}
+.payment-warning{margin-top:16px;padding:16px 18px;color:var(--dark);background:var(--yellow);border-radius:18px}.payment-warning strong{display:block;font-size:15px}.payment-warning span{display:block;margin-top:5px;color:rgba(23,0,62,.72);font-size:12px}.payment-warning a{display:inline-flex;margin-top:10px;color:var(--dark);font-size:12px;font-weight:800}
+.ticket-preview-card{margin-top:16px;padding:18px;display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:14px;background:linear-gradient(135deg,rgba(68,0,178,.52),rgba(23,0,62,.80));border:1px solid var(--border);border-radius:20px}.ticket-preview-icon{width:56px;height:56px;display:flex;align-items:center;justify-content:center;color:var(--dark);background:var(--yellow);border-radius:17px;font-size:27px}.ticket-preview-info strong{display:block;font-size:15px}.ticket-preview-info span{display:block;margin-top:5px;color:rgba(255,255,255,.68);font-size:12px}.ticket-preview-status{padding:6px 9px;color:#FF9F1C;background:rgba(255,159,28,.10);border:1px solid rgba(255,159,28,.28);border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase}.preview-note{margin-top:14px;padding:14px 15px;color:rgba(255,255,255,.70);text-align:center;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.14);border-radius:16px;font-size:12px}
+.bottom-nav{position:sticky;bottom:10px;z-index:50;width:100%;margin-top:26px;padding:8px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;background:rgba(31,0,83,.94);border:1px solid rgba(255,255,255,.12);border-radius:21px}.bottom-nav a{min-width:0;min-height:75px;padding:8px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:rgba(255,255,255,.82);text-align:center;text-decoration:none;border-radius:15px}.bottom-nav a.active{background:linear-gradient(rgba(68,0,178,.92),rgba(50,0,132,.92));color:#fff}.nav-icon{font-size:23px}.bottom-nav a span{font-size:10px;font-weight:700}
+@media(max-width:640px){.portal-app{padding-left:22px;padding-right:22px}.header-logo{width:250px;max-width:47vw}.header-divider{height:62px}.header-title{font-size:19px}.logout-button{width:48px;height:48px;border-radius:15px}.page-heading{margin-top:34px}.page-heading h1{font-size:28px}.page-heading p{font-size:15px}.student-card{gap:15px;padding:18px 16px}.student-avatar{width:76px;height:76px;flex-basis:76px}.student-info h2{font-size:17px}.student-detail{font-size:13px}.ticket-summary{gap:8px}.ticket-summary-card{padding:14px 7px}.ticket-summary-card span{font-size:10px}.ticket-summary-card strong{font-size:22px}.ticket-status-card,.preview-section{padding:16px}.ticket-preview-card{grid-template-columns:48px 1fr}.ticket-preview-icon{width:48px;height:48px}.ticket-preview-status{grid-column:2;width:fit-content}}
+</style>
 </head>
-
 <body>
+<main class="portal-app">
+<header class="portal-header">
+<div class="header-brand">
+<img class="header-logo" src="/images/logo-itcc.png" alt="Universidad y Preparatoria ITCC">
+<div class="header-divider"></div>
+<div class="header-title">Portal del<br>estudiante</div>
+</div>
+<a class="logout-button" href="/portal/logout" aria-label="Cerrar sesión">
+<span class="notification-dot"></span>
+<svg viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 7-3 9h18c0-2-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 21h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+</a>
+</header>
 
-  <h1>Boletos de graduación</h1>
+<section class="page-heading">
+<div class="page-heading-top">
+<h1>Boletos de graduación</h1>
+<span class="test-badge">Modo pruebas</span>
+</div>
+<p>Consulta tus accesos incluidos y los boletos adicionales autorizados.</p>
+</section>
 
-  <p>
-    Esta será la pantalla de prueba para los boletos.
-  </p>
+<article class="student-card">
+<div class="student-avatar" aria-hidden="true">
+<svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="22" r="12" fill="currentColor"/><path d="M12 56C14.5 43.5 21 37 32 37C43 37 49.5 43.5 52 56" fill="currentColor"/></svg>
+</div>
+<div class="student-info">
+<h2><%= student.full_name || "" %></h2>
+<div class="student-detail"><span class="detail-icon">☎</span><span><%= student.phone_e164 || "" %></span></div>
+<div class="student-detail"><span class="detail-icon">🎓</span><span>Paquete: <%= student.package_name || "" %></span></div>
+<div class="student-detail"><span class="detail-icon">🏫</span><span>Campus: <%= student.campus_name || "" %></span></div>
+</div>
+</article>
 
+<div class="section-title"><h2>Resumen de boletos</h2></div>
+<section class="ticket-summary">
+<div class="ticket-summary-card"><span>Incluidos</span><strong>5</strong></div>
+<div class="ticket-summary-card"><span>Extras</span><strong>0</strong></div>
+<div class="ticket-summary-card total"><span>Total</span><strong>5</strong></div>
+</section>
+
+<section class="ticket-status-card">
+<div class="ticket-status-top"><h2>Estado de los boletos</h2><span class="status-pill">En preparación</span></div>
+<p>Los boletos aparecerán automáticamente cuando el paquete esté liquidado y se alcance la fecha de liberación establecida.</p>
+<div class="ticket-condition"><div class="ticket-condition-icon">💳</div><div><strong>Condición de pago</strong><span>El saldo del paquete debe ser de $0.00 para liberar los boletos.</span></div></div>
+<div class="ticket-condition"><div class="ticket-condition-icon">📅</div><div><strong>Fecha de liberación</strong><span>Los accesos se mostrarán durante los días previos definidos para la ceremonia.</span></div></div>
+<% if (Number(totals.balance || 0) > 0) { %>
+<div class="payment-warning">
+<strong>Tu paquete todavía tiene saldo pendiente</strong>
+<span>Saldo actual: $<%= Number(totals.balance || 0).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2}) %></span>
+<a href="/portal/payments">Ir a Mis pagos</a>
+</div>
+<% } %>
+</section>
+
+<section class="preview-section">
+<h2>Vista previa</h2>
+<p>Así se mostrarán los boletos cuando estén habilitados.</p>
+<% for (let index = 1; index <= 5; index += 1) { %>
+<article class="ticket-preview-card">
+<div class="ticket-preview-icon">🎫</div>
+<div class="ticket-preview-info"><strong>Boleto incluido <%= index %></strong><span>Folio pendiente de generación</span></div>
+<span class="ticket-preview-status">Próximamente</span>
+</article>
+<% } %>
+<div class="preview-note">Los folios, códigos QR y estados individuales se generarán en la siguiente etapa.</div>
+</section>
+
+<nav class="bottom-nav">
+<a href="/portal"><div class="nav-icon">🏠</div><span>Inicio</span></a>
+<a href="/portal/payments"><div class="nav-icon">💳</div><span>Mis pagos</span></a>
+<a href="/portal/tickets" class="active"><div class="nav-icon">🎫</div><span>Boletos</span></a>
+<a href="/portal/itinerary"><div class="nav-icon">📅</div><span>Itinerario</span></a>
+<a href="/portal/photos"><div class="nav-icon">🖼️</div><span>Fotos</span></a>
+</nav>
+</main>
 </body>
 </html>
