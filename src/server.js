@@ -3192,6 +3192,70 @@ app.get("/setup-expenses", requireAuth, async (req, res) => {
     res.status(500).send("Error al crear tablas de gastos");
   }
 });
+app.get("/setup-tickets", requireAuth, async (req, res) => {
+  try {
+
+    await q(`
+      CREATE TABLE IF NOT EXISTS graduation_tickets (
+        id SERIAL PRIMARY KEY,
+
+        student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+
+        folio VARCHAR(100) NOT NULL UNIQUE,
+        secure_token VARCHAR(180) NOT NULL UNIQUE,
+
+        ticket_type VARCHAR(30) NOT NULL DEFAULT 'INCLUDED',
+        status VARCHAR(30) NOT NULL DEFAULT 'AVAILABLE',
+
+        used_at TIMESTAMP,
+        used_by INTEGER REFERENCES users(id),
+
+        notes TEXT,
+
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await q(`
+      CREATE INDEX IF NOT EXISTS idx_graduation_tickets_student_id
+      ON graduation_tickets(student_id);
+    `);
+
+    await q(`
+      CREATE INDEX IF NOT EXISTS idx_graduation_tickets_status
+      ON graduation_tickets(status);
+    `);
+
+    await q(`
+      CREATE TABLE IF NOT EXISTS graduation_ticket_logs (
+        id SERIAL PRIMARY KEY,
+
+        ticket_id INTEGER REFERENCES graduation_tickets(id) ON DELETE CASCADE,
+
+        action VARCHAR(50) NOT NULL,
+
+        previous_status VARCHAR(30),
+        new_status VARCHAR(30),
+
+        scanned_token VARCHAR(180),
+
+        performed_by INTEGER REFERENCES users(id),
+
+        ip_address VARCHAR(100),
+        user_agent TEXT,
+
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    res.send("Tablas de boletos creadas correctamente");
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error al crear tablas de boletos");
+  }
+});
 app.get("/setup-student-status", requireAuth, requireRole("ADMIN"), async (req, res) => {
   try {
     await q(`
