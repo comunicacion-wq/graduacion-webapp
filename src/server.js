@@ -3584,7 +3584,6 @@ app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
     totals: info.totals,
     developmentMode: canUseDevelopmentModules(studentId)
   });
-
 });
 // PDF del historial de pagos del alumno
 app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, res) => {
