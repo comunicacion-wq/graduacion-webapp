@@ -3769,6 +3769,112 @@ app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
   });
 
 });
+app.get("/tickets/verify/:token", async (req, res) => {
+  try {
+    const token = String(req.params.token || "").trim();
+
+    if (!token) {
+      return res.status(400).send("Código QR no válido");
+    }
+
+    const result = await q(
+      `
+      SELECT
+        gt.id,
+        gt.folio,
+        gt.secure_token,
+        gt.ticket_type,
+        gt.status,
+        gt.used_at,
+        gt.created_at,
+        s.full_name AS student_name,
+        s.phone_e164,
+        c.name AS campus_name,
+        p.name AS package_name
+      FROM graduation_tickets gt
+      LEFT JOIN students s ON s.id = gt.student_id
+      LEFT JOIN campuses c ON c.id = s.campus_id
+      LEFT JOIN packages p ON p.id = s.package_id
+      WHERE gt.secure_token = $1
+      LIMIT 1
+      `,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send(`
+        <h2>❌ CÓDIGO QR NO VÁLIDO</h2>
+        <p>Este boleto no existe en el sistema.</p>
+      `);
+    }
+
+    const ticket = result.rows[0];
+
+    if (ticket.status === "USED") {
+      return res.send(`
+        <h2>❌ BOLETO YA UTILIZADO</h2>
+
+        <p><strong>Folio:</strong> ${ticket.folio}</p>
+        <p><strong>Alumno:</strong> ${ticket.student_name || ""}</p>
+        <p><strong>Campus:</strong> ${ticket.campus_name || ""}</p>
+
+        <p>
+          <strong>Utilizado:</strong>
+          ${ticket.used_at
+            ? dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")
+            : "Fecha no disponible"}
+        </p>
+      `);
+    }
+
+    if (ticket.status === "CANCELED") {
+      return res.send(`
+        <h2>❌ BOLETO CANCELADO</h2>
+
+        <p><strong>Folio:</strong> ${ticket.folio}</p>
+        <p><strong>Alumno:</strong> ${ticket.student_name || ""}</p>
+
+        <p>Este boleto fue cancelado y no puede utilizarse.</p>
+      `);
+    }
+
+    if (ticket.status !== "AVAILABLE") {
+      return res.send(`
+        <h2>⚠️ BOLETO NO DISPONIBLE</h2>
+
+        <p><strong>Folio:</strong> ${ticket.folio}</p>
+        <p><strong>Estado:</strong> ${ticket.status}</p>
+      `);
+    }
+
+    res.send(`
+      <h2>✅ BOLETO VÁLIDO</h2>
+
+      <p><strong>Folio:</strong> ${ticket.folio}</p>
+      <p><strong>Alumno:</strong> ${ticket.student_name || ""}</p>
+      <p><strong>Campus:</strong> ${ticket.campus_name || ""}</p>
+      <p><strong>Paquete:</strong> ${ticket.package_name || ""}</p>
+      <p>
+        <strong>Tipo:</strong>
+        ${ticket.ticket_type === "EXTRA"
+          ? "Boleto extra"
+          : "Boleto incluido"}
+      </p>
+
+      <p><strong>Estado:</strong> Disponible</p>
+
+      <hr>
+
+      <p>
+        El boleto es válido y puede acreditarse.
+      </p>
+    `);
+
+  } catch (err) {
+    console.error("Error al verificar boleto:", err);
+    res.status(500).send("Error al verificar boleto");
+  }
+});
 // PDF del historial de pagos del alumno
 app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, res) => {
   const isAdmin =
