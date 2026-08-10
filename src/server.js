@@ -3324,17 +3324,21 @@ app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
 
     const finalResult = await q(
       `
-      SELECT folio, status, ticket_type
-      FROM graduation_tickets
-      WHERE student_id = $1
-      ORDER BY id ASC
+     SELECT folio, status, ticket_type, secure_token
+FROM graduation_tickets
+WHERE student_id = $1
+ORDER BY id ASC
       `,
       [studentId]
     );
 
-    const folios = finalResult.rows
-      .map(ticket => `${ticket.folio} - ${ticket.status}`)
-      .join("<br>");
+const folios = finalResult.rows
+  .map(ticket => `
+    <strong>${ticket.folio}</strong><br>
+    Estado: ${ticket.status}<br>
+    Token: ${ticket.secure_token}<br><br>
+  `)
+  .join("");
 
     res.send(`
       <h2>Boletos de prueba generados correctamente</h2>
