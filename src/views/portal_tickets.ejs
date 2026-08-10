@@ -90,12 +90,57 @@ body{font-family:Arial,Helvetica,sans-serif;color:var(--white);background:linear
 <section class="preview-section">
 <h2>Vista previa</h2>
 <p>Así se mostrarán los boletos cuando estén habilitados.</p>
-<% for (let index = 1; index <= 5; index += 1) { %>
-<article class="ticket-preview-card">
-<div class="ticket-preview-icon">🎫</div>
-<div class="ticket-preview-info"><strong>Boleto incluido <%= index %></strong><span>Folio pendiente de generación</span></div>
-<span class="ticket-preview-status">Próximamente</span>
-</article>
+<% if (Array.isArray(tickets) && tickets.length > 0) { %>
+
+  <% tickets.forEach(function(ticket, index) { %>
+
+    <article class="ticket-preview-card">
+
+      <div class="ticket-preview-icon">
+        🎫
+      </div>
+
+      <div class="ticket-preview-info">
+
+        <strong>
+          <%= ticket.ticket_type === "EXTRA"
+            ? `Boleto extra ${index + 1}`
+            : `Boleto incluido ${index + 1}` %>
+        </strong>
+
+        <span>
+          Folio: <%= ticket.folio %>
+        </span>
+
+        <span>
+          Estado:
+          <%= ticket.status === "AVAILABLE"
+            ? "Disponible"
+            : ticket.status === "USED"
+            ? "Utilizado"
+            : ticket.status %>
+        </span>
+
+      </div>
+
+      <span class="ticket-preview-status">
+        <%= ticket.status === "AVAILABLE"
+          ? "Disponible"
+          : ticket.status === "USED"
+          ? "Utilizado"
+          : ticket.status %>
+      </span>
+
+    </article>
+
+  <% }) %>
+
+<% } else { %>
+
+  <div class="preview-note">
+    Aún no hay boletos generados para este alumno.
+  </div>
+
 <% } %>
 <div class="preview-note">Los folios, códigos QR y estados individuales se generarán en la siguiente etapa.</div>
 </section>
