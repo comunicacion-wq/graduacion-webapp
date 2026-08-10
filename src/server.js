@@ -3873,6 +3873,105 @@ app.get("/tickets/verify/:token", async (req, res) => {
     res.status(500).send("Error al verificar boleto");
   }
 });
+app.post("/tickets/accredit/:token", requireAuth, async (req, res) => {
+  try {
+    const token = String(req.params.token || "").trim();
+
+    if (!token) {
+      return res.status(400).send("Token no válido");
+    }
+
+    const result = await q(
+      `
+      UPDATE graduation_tickets
+      SET
+        status = 'USED',
+        used_at = NOW(),
+        used_by = $2,
+        updated_at = NOW()
+      WHERE secure_token = $1
+        AND status = 'AVAILABLE'
+      RETURNING id, folio, student_id, status, used_at
+      `,
+      [token, req.session.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      const check = await q(
+        `
+        SELECT folio, status, used_at
+        FROM graduation_tickets
+        WHERE secure_token = $1
+        LIMIT 1
+        `,
+        [token]
+      );
+
+      if (check.rows.length === 0) {
+        return res.status(404).send("Código QR no válido");
+      }
+
+      const ticket = check.rows[0];
+
+      if (ticket.status === "USED") {
+        return res.send(`
+          <h2>❌ BOLETO YA UTILIZADO</h2>
+          <p><strong>Folio:</strong> ${ticket.folio}</p>
+          <p><strong>Utilizado:</strong> ${
+            ticket.used_at
+              ? dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")
+              : "Fecha no disponible"
+          }</p>
+        `);
+      }
+
+      return res.send(`
+        <h2>⚠️ BOLETO NO DISPONIBLE</h2>
+        <p><strong>Folio:</strong> ${ticket.folio}</p>
+        <p><strong>Estado:</strong> ${ticket.status}</p>
+      `);
+    }
+
+    const ticket = result.rows[0];
+
+    await q(
+      `
+      INSERT INTO graduation_ticket_logs (
+        ticket_id,
+        action,
+        previous_status,
+        new_status,
+        scanned_token,
+        performed_by,
+        ip_address,
+        user_agent
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `,
+      [
+        ticket.id,
+        "ACCREDIT",
+        "AVAILABLE",
+        "USED",
+        token,
+        req.session.user.id,
+        req.ip || null,
+        req.get("user-agent") || null
+      ]
+    );
+
+    res.send(`
+      <h2>✅ INGRESO ACREDITADO</h2>
+      <p><strong>Folio:</strong> ${ticket.folio}</p>
+      <p><strong>Estado:</strong> UTILIZADO</p>
+      <p><strong>Fecha:</strong> ${dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")}</p>
+    `);
+
+  } catch (err) {
+    console.error("Error al acreditar boleto:", err);
+    res.status(500).send("Error al acreditar boleto");
+  }
+});
 // PDF del historial de pagos del alumno
 app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, res) => {
   const isAdmin =
