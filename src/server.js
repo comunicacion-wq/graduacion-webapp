@@ -3731,20 +3731,43 @@ app.get("/portal/payments", requireStudentPortal, async (req, res) => {
 app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
 
   const studentId = req.session.studentUser.student_id;
-if (!canUseDevelopmentModules(studentId)) {
-  return res.status(403).send("Módulo de boletos no disponible.");
-}
+
+  if (!canUseDevelopmentModules(studentId)) {
+    return res.status(403).send("Módulo de boletos no disponible.");
+  }
+
   const info = await getStudentTotals(studentId);
 
   if (!info) {
     return res.status(404).send("Alumno no encontrado");
   }
 
+  const ticketResult = await q(
+    `
+    SELECT
+      id,
+      folio,
+      secure_token,
+      ticket_type,
+      status,
+      used_at,
+      created_at
+    FROM graduation_tickets
+    WHERE student_id = $1
+    ORDER BY id ASC
+    `,
+    [studentId]
+  );
+
+  const tickets = ticketResult.rows;
+
   res.render("portal_tickets", {
     student: info.student,
     totals: info.totals,
+    tickets,
     developmentMode: canUseDevelopmentModules(studentId)
   });
+
 });
 // PDF del historial de pagos del alumno
 app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, res) => {
