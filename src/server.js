@@ -3846,27 +3846,182 @@ app.get("/tickets/verify/:token", async (req, res) => {
     }
 
     res.send(`
-      <h2>✅ BOLETO VÁLIDO</h2>
+  <!DOCTYPE html>
+  <html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    >
 
-      <p><strong>Folio:</strong> ${ticket.folio}</p>
-      <p><strong>Alumno:</strong> ${ticket.student_name || ""}</p>
-      <p><strong>Campus:</strong> ${ticket.campus_name || ""}</p>
-      <p><strong>Paquete:</strong> ${ticket.package_name || ""}</p>
-      <p>
+    <title>Verificación de boleto</title>
+
+    <style>
+      *{
+        box-sizing:border-box;
+      }
+
+      body{
+        margin:0;
+        min-height:100vh;
+        padding:24px;
+
+        display:flex;
+        align-items:center;
+        justify-content:center;
+
+        font-family:Arial,Helvetica,sans-serif;
+
+        background:#17003E;
+        color:#ffffff;
+      }
+
+      .verify-card{
+        width:100%;
+        max-width:520px;
+
+        padding:28px;
+
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.12);
+        border-radius:24px;
+      }
+
+      .valid-badge{
+        display:inline-block;
+
+        padding:8px 12px;
+
+        color:#07381f;
+        background:#50E391;
+
+        border-radius:999px;
+
+        font-size:13px;
+        font-weight:800;
+      }
+
+      h1{
+        margin:20px 0 22px;
+        font-size:30px;
+      }
+
+      .ticket-row{
+        margin-top:13px;
+
+        color:rgba(255,255,255,.78);
+        font-size:16px;
+        line-height:1.4;
+      }
+
+      .ticket-row strong{
+        color:#ffffff;
+      }
+
+      .accredit-form{
+        margin-top:28px;
+      }
+
+      .accredit-button{
+        width:100%;
+
+        padding:17px 20px;
+
+        border:0;
+        border-radius:16px;
+
+        background:#FFC400;
+        color:#17003E;
+
+        font-size:17px;
+        font-weight:800;
+
+        cursor:pointer;
+      }
+
+      .warning{
+        margin-top:15px;
+
+        color:rgba(255,255,255,.62);
+
+        text-align:center;
+        font-size:12px;
+        line-height:1.4;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <main class="verify-card">
+
+      <span class="valid-badge">
+        ✓ BOLETO VÁLIDO
+      </span>
+
+      <h1>
+        Verificación de acceso
+      </h1>
+
+      <div class="ticket-row">
+        <strong>Folio:</strong>
+        ${ticket.folio}
+      </div>
+
+      <div class="ticket-row">
+        <strong>Alumno:</strong>
+        ${ticket.student_name || ""}
+      </div>
+
+      <div class="ticket-row">
+        <strong>Campus:</strong>
+        ${ticket.campus_name || ""}
+      </div>
+
+      <div class="ticket-row">
+        <strong>Paquete:</strong>
+        ${ticket.package_name || ""}
+      </div>
+
+      <div class="ticket-row">
         <strong>Tipo:</strong>
-        ${ticket.ticket_type === "EXTRA"
-          ? "Boleto extra"
-          : "Boleto incluido"}
-      </p>
+        ${
+          ticket.ticket_type === "EXTRA"
+            ? "Boleto extra"
+            : "Boleto incluido"
+        }
+      </div>
 
-      <p><strong>Estado:</strong> Disponible</p>
+      <div class="ticket-row">
+        <strong>Estado:</strong>
+        Disponible
+      </div>
 
-      <hr>
+      <form
+        class="accredit-form"
+        method="POST"
+        action="/tickets/accredit/${encodeURIComponent(token)}"
+      >
 
-      <p>
-        El boleto es válido y puede acreditarse.
-      </p>
-    `);
+        <button
+          class="accredit-button"
+          type="submit"
+        >
+          ACREDITAR INGRESO
+        </button>
+
+      </form>
+
+      <div class="warning">
+        Una vez acreditado, este boleto no podrá volver a utilizarse.
+      </div>
+
+    </main>
+
+  </body>
+  </html>
+`);
 
   } catch (err) {
     console.error("Error al verificar boleto:", err);
