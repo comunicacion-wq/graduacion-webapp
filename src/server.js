@@ -3288,12 +3288,6 @@ app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
 
     const existingTickets = Number(existingResult.rows[0]?.total || 0);
 
-    if (existingTickets >= includedTickets) {
-      return res.send(
-        `El alumno ${studentId} ya tiene ${existingTickets} boletos incluidos. No se generaron duplicados.`
-      );
-    }
-
     const currentYear = new Date().getFullYear();
     const missingTickets = includedTickets - existingTickets;
 
