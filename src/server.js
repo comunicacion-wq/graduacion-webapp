@@ -3828,22 +3828,212 @@ app.get("/tickets/verify/:token", async (req, res) => {
 
     const ticket = result.rows[0];
 
-    if (ticket.status === "USED") {
-      return res.send(`
-        <h2>❌ BOLETO YA UTILIZADO</h2>
+if (ticket.status === "USED") {
+  return res.send(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
 
-        <p><strong>Folio:</strong> ${ticket.folio}</p>
-        <p><strong>Alumno:</strong> ${ticket.student_name || ""}</p>
-        <p><strong>Campus:</strong> ${ticket.campus_name || ""}</p>
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
+      >
 
-        <p>
-          <strong>Utilizado:</strong>
-          ${ticket.used_at
-            ? dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")
-            : "Fecha no disponible"}
-        </p>
-      `);
-    }
+      <title>Ingreso ya registrado</title>
+
+      <style>
+        *{
+          box-sizing:border-box;
+        }
+
+        body{
+          margin:0;
+          min-height:100vh;
+          padding:24px;
+
+          display:flex;
+          align-items:center;
+          justify-content:center;
+
+          font-family:Arial,Helvetica,sans-serif;
+
+          background:#17003E;
+          color:#ffffff;
+        }
+
+        .result-card{
+          width:100%;
+          max-width:520px;
+
+          padding:28px;
+
+          text-align:center;
+
+          background:rgba(255,255,255,.08);
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:24px;
+        }
+
+        .result-icon{
+          width:82px;
+          height:82px;
+
+          margin:0 auto 20px;
+
+          display:flex;
+          align-items:center;
+          justify-content:center;
+
+          border-radius:50%;
+
+          background:#FF6B6B;
+          color:#4A0C0C;
+
+          font-size:42px;
+          font-weight:800;
+        }
+
+        h1{
+          margin:0;
+
+          font-size:30px;
+          line-height:1.1;
+        }
+
+        .message{
+          margin-top:12px;
+
+          color:rgba(255,255,255,.72);
+
+          font-size:14px;
+          line-height:1.45;
+        }
+
+        .data{
+          margin-top:22px;
+
+          text-align:left;
+        }
+
+        .data-row{
+          margin-top:11px;
+
+          color:rgba(255,255,255,.76);
+
+          font-size:15px;
+          line-height:1.4;
+        }
+
+        .data-row strong{
+          color:#ffffff;
+        }
+
+        .next-button{
+          width:100%;
+
+          margin-top:28px;
+          padding:18px 20px;
+
+          display:block;
+
+          color:#17003E;
+          background:#FFC400;
+
+          border-radius:17px;
+
+          text-decoration:none;
+
+          font-size:17px;
+          font-weight:800;
+        }
+
+        .panel-button{
+          width:100%;
+
+          margin-top:12px;
+          padding:15px 20px;
+
+          display:block;
+
+          color:#ffffff;
+          background:rgba(255,255,255,.07);
+
+          border:1px solid rgba(255,255,255,.11);
+          border-radius:17px;
+
+          text-decoration:none;
+
+          font-size:14px;
+          font-weight:700;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <main class="result-card">
+
+        <div class="result-icon">
+          ✕
+        </div>
+
+        <h1>
+          INGRESO YA REGISTRADO
+        </h1>
+
+        <div class="message">
+          Este boleto ya fue utilizado anteriormente y no puede acreditarse nuevamente.
+        </div>
+
+        <div class="data">
+
+          <div class="data-row">
+            <strong>Folio:</strong>
+            ${ticket.folio}
+          </div>
+
+          <div class="data-row">
+            <strong>Alumno:</strong>
+            ${ticket.student_name || ""}
+          </div>
+
+          <div class="data-row">
+            <strong>Campus:</strong>
+            ${ticket.campus_name || ""}
+          </div>
+
+          <div class="data-row">
+            <strong>Registrado:</strong>
+            ${
+              ticket.used_at
+                ? dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")
+                : "Fecha no disponible"
+            }
+          </div>
+
+        </div>
+
+        <a
+          class="next-button"
+          href="/tickets/scan"
+        >
+          📷 ESCANEAR SIGUIENTE BOLETO
+        </a>
+
+        <a
+          class="panel-button"
+          href="/tickets/access-control"
+        >
+          Volver al Control de acceso
+        </a>
+
+      </main>
+
+    </body>
+    </html>
+  `);
+}
 
     if (ticket.status === "CANCELED") {
       return res.send(`
