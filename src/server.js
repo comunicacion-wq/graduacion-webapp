@@ -3768,6 +3768,7 @@ app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
 
 });
 app.get("/tickets/verify/:token", async (req, res) => {
+  
   try {
     const token = String(req.params.token || "").trim();
 
@@ -4027,6 +4028,188 @@ app.get("/tickets/verify/:token", async (req, res) => {
     console.error("Error al verificar boleto:", err);
     res.status(500).send("Error al verificar boleto");
   }
+});
+app.get("/tickets/scan", requireAuth, async (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+      >
+
+      <title>Escáner de boletos ITCC</title>
+
+      <style>
+        *{
+          box-sizing:border-box;
+        }
+
+        body{
+          margin:0;
+          min-height:100vh;
+          padding:24px;
+
+          display:flex;
+          align-items:center;
+          justify-content:center;
+
+          font-family:Arial,Helvetica,sans-serif;
+
+          background:#17003E;
+          color:#ffffff;
+        }
+
+        .scan-card{
+          width:100%;
+          max-width:520px;
+
+          padding:28px;
+
+          background:rgba(255,255,255,.08);
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:24px;
+        }
+
+        .scan-badge{
+          display:inline-block;
+
+          padding:8px 12px;
+
+          color:#17003E;
+          background:#FFC400;
+
+          border-radius:999px;
+
+          font-size:12px;
+          font-weight:800;
+        }
+
+        h1{
+          margin:20px 0 10px;
+
+          font-size:30px;
+          line-height:1.1;
+        }
+
+        .intro{
+          margin:0 0 24px;
+
+          color:rgba(255,255,255,.70);
+
+          font-size:14px;
+          line-height:1.5;
+        }
+
+        label{
+          display:block;
+
+          margin-bottom:8px;
+
+          font-size:14px;
+          font-weight:700;
+        }
+
+        input{
+          width:100%;
+
+          padding:16px;
+
+          border:1px solid rgba(255,255,255,.16);
+          border-radius:15px;
+
+          background:rgba(255,255,255,.08);
+          color:#ffffff;
+
+          font-size:16px;
+          outline:none;
+        }
+
+        input::placeholder{
+          color:rgba(255,255,255,.45);
+        }
+
+        button{
+          width:100%;
+
+          margin-top:14px;
+          padding:17px 20px;
+
+          border:0;
+          border-radius:16px;
+
+          background:#FFC400;
+          color:#17003E;
+
+          font-size:16px;
+          font-weight:800;
+
+          cursor:pointer;
+        }
+
+        .help{
+          margin-top:18px;
+
+          color:rgba(255,255,255,.58);
+
+          text-align:center;
+          font-size:12px;
+          line-height:1.45;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <main class="scan-card">
+
+        <span class="scan-badge">
+          CONTROL DE ACCESO
+        </span>
+
+        <h1>
+          Escáner de boletos
+        </h1>
+
+        <p class="intro">
+          Ingresa el token del boleto para verificar su estado.
+        </p>
+
+        <form
+          method="GET"
+          action="/tickets/scan/verify"
+        >
+
+          <label for="code">
+            Token del boleto
+          </label>
+
+          <input
+            id="code"
+            name="code"
+            type="text"
+            placeholder="Pega aquí el token"
+            autocomplete="off"
+            required
+          >
+
+          <button type="submit">
+            VERIFICAR BOLETO
+          </button>
+
+        </form>
+
+        <div class="help">
+          En la siguiente etapa este campo será reemplazado por el lector de cámara QR.
+        </div>
+
+      </main>
+
+    </body>
+    </html>
+  `);
 });
 app.post("/tickets/accredit/:token", requireAuth, async (req, res) => {
   try {
