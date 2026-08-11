@@ -4048,6 +4048,75 @@ app.get("/tickets/verify/:token", async (req, res) => {
     res.status(500).send("Error al verificar boleto");
   }
 });
+app.get("/tickets/access-control", requireAuth, async (req, res) => {
+  try {
+
+    // Total de boletos registrados
+    const totalResult = await q(`
+      SELECT COUNT(*)::int AS total
+      FROM graduation_tickets
+    `);
+
+    // Boletos todavía disponibles
+    const availableResult = await q(`
+      SELECT COUNT(*)::int AS total
+      FROM graduation_tickets
+      WHERE status = 'AVAILABLE'
+    `);
+
+    // Boletos ya acreditados
+    const usedResult = await q(`
+      SELECT COUNT(*)::int AS total
+      FROM graduation_tickets
+      WHERE status = 'USED'
+    `);
+
+    // Últimos accesos registrados
+    const recentResult = await q(`
+      SELECT
+        gt.folio,
+        gt.ticket_type,
+        gt.used_at,
+        s.full_name AS student_name
+      FROM graduation_tickets gt
+      LEFT JOIN students s
+        ON s.id = gt.student_id
+      WHERE gt.status = 'USED'
+      ORDER BY gt.used_at DESC NULLS LAST
+      LIMIT 10
+    `);
+
+    const stats = {
+      total: totalResult.rows[0]?.total || 0,
+      available: availableResult.rows[0]?.total || 0,
+      used: usedResult.rows[0]?.total || 0
+    };
+
+    const recentAccess = recentResult.rows.map(row => ({
+      ...row,
+      used_at_fmt: row.used_at
+        ? dayjs(row.used_at).format("DD/MM/YYYY HH:mm")
+        : "-"
+    }));
+
+    res.render("ticket_access_control", {
+      stats,
+      recentAccess
+    });
+
+  } catch (err) {
+
+    console.error(
+      "Error al cargar control de acceso:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al cargar el control de acceso"
+    );
+
+  }
+});
 app.get("/tickets/scan", requireAuth, async (req, res) => {
   res.send(`
     <!DOCTYPE html>
