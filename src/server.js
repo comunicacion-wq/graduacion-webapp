@@ -3261,7 +3261,10 @@ app.get("/setup-tickets", requireAuth, async (req, res) => {
 app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
   try {
     const studentId = 766;
-    const includedTickets = 5;
+
+    // Queremos 15 boletos incluidos en total:
+    // 5 originales + 10 nuevos de prueba
+    const includedTickets = 15;
 
     const studentResult = await q(
       `
@@ -3287,19 +3290,30 @@ app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
       [studentId]
     );
 
-    const existingTickets = Number(existingResult.rows[0]?.total || 0);
+    const existingTickets = Number(
+      existingResult.rows[0]?.total || 0
+    );
 
     const currentYear = new Date().getFullYear();
-    const missingTickets = includedTickets - existingTickets;
 
-    for (let index = 1; index <= missingTickets; index += 1) {
-      const ticketNumber = existingTickets + index;
+    const missingTickets =
+      Math.max(0, includedTickets - existingTickets);
 
-      const folio = `ITCC-${currentYear}-${studentId}-${String(
-        ticketNumber
-      ).padStart(3, "0")}`;
+    for (
+      let index = 1;
+      index <= missingTickets;
+      index += 1
+    ) {
+      const ticketNumber =
+        existingTickets + index;
 
-      const secureToken = crypto.randomUUID();
+      const folio =
+        `ITCC-${currentYear}-${studentId}-${String(
+          ticketNumber
+        ).padStart(3, "0")}`;
+
+      const secureToken =
+        crypto.randomUUID();
 
       await q(
         `
@@ -3313,39 +3327,71 @@ app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
         VALUES ($1, $2, $3, 'INCLUDED', 'AVAILABLE')
         ON CONFLICT (folio) DO NOTHING
         `,
-        [studentId, folio, secureToken]
+        [
+          studentId,
+          folio,
+          secureToken
+        ]
       );
     }
 
     const finalResult = await q(
       `
-     SELECT folio, status, ticket_type, secure_token
-FROM graduation_tickets
-WHERE student_id = $1
-ORDER BY id ASC
+      SELECT
+        folio,
+        status,
+        ticket_type,
+        secure_token
+      FROM graduation_tickets
+      WHERE student_id = $1
+      ORDER BY id ASC
       `,
       [studentId]
     );
 
-const folios = finalResult.rows
-  .map(ticket => `
-    <strong>${ticket.folio}</strong><br>
-    Estado: ${ticket.status}<br>
-    Token: ${ticket.secure_token}<br><br>
-  `)
-  .join("");
+    const folios = finalResult.rows
+      .map(ticket => `
+        <strong>${ticket.folio}</strong><br>
+        Estado: ${ticket.status}<br>
+        Token: ${ticket.secure_token}<br><br>
+      `)
+      .join("");
 
     res.send(`
-      <h2>Boletos de prueba generados correctamente</h2>
-      <p>Alumno: ${studentResult.rows[0].full_name}</p>
-      <p>Total de boletos: ${finalResult.rows.length}</p>
+      <h2>Boletos de prueba listos</h2>
+
+      <p>
+        Alumno:
+        ${studentResult.rows[0].full_name}
+      </p>
+
+      <p>
+        Total de boletos:
+        ${finalResult.rows.length}
+      </p>
+
+      <p>
+        Nuevos boletos creados:
+        ${missingTickets}
+      </p>
+
       <hr>
+
       ${folios}
     `);
 
   } catch (err) {
-    console.error("Error al generar boletos de prueba:", err);
-    res.status(500).send("Error al generar boletos de prueba");
+
+    console.error(
+      "Error al generar boletos de prueba:",
+      err
+    );
+
+    res
+      .status(500)
+      .send(
+        "Error al generar boletos de prueba"
+      );
   }
 });
 app.get("/setup-student-status", requireAuth, requireRole("ADMIN"), async (req, res) => {
