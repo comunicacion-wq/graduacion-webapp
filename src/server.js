@@ -3865,12 +3865,189 @@ app.get("/tickets/verify/:token", async (req, res) => {
       [token]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).send(`
-        <h2>❌ CÓDIGO QR NO VÁLIDO</h2>
-        <p>Este boleto no existe en el sistema.</p>
-      `);
-    }
+if (result.rows.length === 0) {
+  return res.status(404).send(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+
+      <meta charset="UTF-8">
+
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
+      >
+
+      <title>Boleto no válido</title>
+
+      <style>
+
+        *{
+          box-sizing:border-box;
+        }
+
+        body{
+          margin:0;
+          min-height:100vh;
+          padding:24px;
+
+          display:flex;
+          align-items:center;
+          justify-content:center;
+
+          font-family:Arial,Helvetica,sans-serif;
+
+          background:#17003E;
+          color:#ffffff;
+        }
+
+        .result-card{
+          width:100%;
+          max-width:520px;
+
+          padding:28px;
+
+          text-align:center;
+
+          background:rgba(255,255,255,.08);
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:24px;
+        }
+
+        .result-icon{
+          width:82px;
+          height:82px;
+
+          margin:0 auto 20px;
+
+          display:flex;
+          align-items:center;
+          justify-content:center;
+
+          border-radius:50%;
+
+          background:#FF6B6B;
+          color:#4A0C0C;
+
+          font-size:42px;
+          font-weight:800;
+        }
+
+        h1{
+          margin:0;
+
+          font-size:30px;
+          line-height:1.1;
+        }
+
+        .message{
+          margin:14px auto 0;
+
+          max-width:390px;
+
+          color:rgba(255,255,255,.72);
+
+          font-size:14px;
+          line-height:1.5;
+        }
+
+        .warning{
+          margin-top:22px;
+          padding:15px;
+
+          color:#ffffff;
+          background:rgba(255,107,107,.12);
+
+          border:1px solid rgba(255,107,107,.25);
+          border-radius:15px;
+
+          font-size:13px;
+          line-height:1.45;
+        }
+
+        .next-button{
+          width:100%;
+
+          margin-top:28px;
+          padding:18px 20px;
+
+          display:block;
+
+          color:#17003E;
+          background:#FFC400;
+
+          border-radius:17px;
+
+          text-decoration:none;
+
+          font-size:17px;
+          font-weight:800;
+        }
+
+        .panel-button{
+          width:100%;
+
+          margin-top:12px;
+          padding:15px 20px;
+
+          display:block;
+
+          color:#ffffff;
+          background:rgba(255,255,255,.07);
+
+          border:1px solid rgba(255,255,255,.11);
+          border-radius:17px;
+
+          text-decoration:none;
+
+          font-size:14px;
+          font-weight:700;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <main class="result-card">
+
+        <div class="result-icon">
+          ✕
+        </div>
+
+        <h1>
+          BOLETO NO VÁLIDO
+        </h1>
+
+        <div class="message">
+          El código presentado no corresponde a ningún boleto registrado en el sistema.
+        </div>
+
+        <div class="warning">
+          ⚠️ No permitas el ingreso con este código.
+        </div>
+
+        <a
+          class="next-button"
+          href="/tickets/scan"
+        >
+          📷 ESCANEAR SIGUIENTE BOLETO
+        </a>
+
+        <a
+          class="panel-button"
+          href="/tickets/access-control"
+        >
+          Volver al Control de acceso
+        </a>
+
+      </main>
+
+    </body>
+    </html>
+  `);
+}
 
     const ticket = result.rows[0];
 
