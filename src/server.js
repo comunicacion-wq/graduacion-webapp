@@ -4054,9 +4054,10 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
     <html lang="es">
     <head>
       <meta charset="UTF-8">
+
       <meta
         name="viewport"
-        content="width=device-width, initial-scale=1"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
       >
 
       <title>Escáner de boletos ITCC</title>
@@ -4069,11 +4070,10 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
         body{
           margin:0;
           min-height:100vh;
-          padding:24px;
-
-          display:flex;
-          align-items:center;
-          justify-content:center;
+          padding:
+            max(24px, env(safe-area-inset-top))
+            20px
+            max(30px, env(safe-area-inset-bottom));
 
           font-family:Arial,Helvetica,sans-serif;
 
@@ -4081,21 +4081,16 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
           color:#ffffff;
         }
 
-        .scan-card{
+        .scan-app{
           width:100%;
-          max-width:520px;
-
-          padding:28px;
-
-          background:rgba(255,255,255,.08);
-          border:1px solid rgba(255,255,255,.12);
-          border-radius:24px;
+          max-width:560px;
+          margin:0 auto;
         }
 
         .scan-badge{
           display:inline-block;
 
-          padding:8px 12px;
+          padding:8px 13px;
 
           color:#17003E;
           background:#FFC400;
@@ -4107,19 +4102,107 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
         }
 
         h1{
-          margin:20px 0 10px;
+          margin:20px 0 8px;
 
-          font-size:30px;
+          font-size:32px;
           line-height:1.1;
         }
 
         .intro{
-          margin:0 0 24px;
+          margin:0;
 
           color:rgba(255,255,255,.70);
 
           font-size:14px;
           line-height:1.5;
+        }
+
+        .camera-card,
+        .manual-card{
+          margin-top:24px;
+          padding:20px;
+
+          background:rgba(255,255,255,.08);
+
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:24px;
+        }
+
+        .camera-card h2,
+        .manual-card h2{
+          margin:0 0 14px;
+
+          font-size:20px;
+        }
+
+        #reader{
+          width:100%;
+
+          overflow:hidden;
+
+          background:#ffffff;
+
+          border-radius:18px;
+        }
+
+        #reader video{
+          border-radius:18px;
+        }
+
+        .camera-button{
+          width:100%;
+
+          margin-top:16px;
+          padding:16px;
+
+          border:0;
+          border-radius:16px;
+
+          background:#FFC400;
+          color:#17003E;
+
+          font-size:16px;
+          font-weight:800;
+
+          cursor:pointer;
+        }
+
+        .camera-button.stop{
+          color:#ffffff;
+          background:#8E2A2A;
+        }
+
+        .camera-status{
+          margin-top:14px;
+
+          color:rgba(255,255,255,.68);
+
+          text-align:center;
+          font-size:13px;
+          line-height:1.4;
+        }
+
+        .divider{
+          margin:26px 0 0;
+
+          display:flex;
+          align-items:center;
+          gap:12px;
+
+          color:rgba(255,255,255,.45);
+
+          font-size:12px;
+          font-weight:700;
+        }
+
+        .divider::before,
+        .divider::after{
+          content:"";
+
+          height:1px;
+          flex:1;
+
+          background:rgba(255,255,255,.15);
         }
 
         label{
@@ -4136,21 +4219,21 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
 
           padding:16px;
 
+          color:#ffffff;
+          background:rgba(255,255,255,.08);
+
           border:1px solid rgba(255,255,255,.16);
           border-radius:15px;
-
-          background:rgba(255,255,255,.08);
-          color:#ffffff;
 
           font-size:16px;
           outline:none;
         }
 
         input::placeholder{
-          color:rgba(255,255,255,.45);
+          color:rgba(255,255,255,.42);
         }
 
-        button{
+        .verify-button{
           width:100%;
 
           margin-top:14px;
@@ -4159,7 +4242,7 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
           border:0;
           border-radius:16px;
 
-          background:#FFC400;
+          background:#ffffff;
           color:#17003E;
 
           font-size:16px;
@@ -4168,21 +4251,44 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
           cursor:pointer;
         }
 
-        .help{
-          margin-top:18px;
+        .security-note{
+          margin-top:22px;
+          padding:14px 16px;
 
-          color:rgba(255,255,255,.58);
+          color:rgba(255,255,255,.65);
 
-          text-align:center;
+          background:rgba(255,255,255,.04);
+
+          border:1px solid rgba(255,255,255,.08);
+          border-radius:16px;
+
           font-size:12px;
           line-height:1.45;
         }
+
+        @media(max-width:480px){
+
+          h1{
+            font-size:28px;
+          }
+
+          .camera-card,
+          .manual-card{
+            padding:17px;
+          }
+
+        }
       </style>
+
+      <script
+        src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js">
+      </script>
+
     </head>
 
     <body>
 
-      <main class="scan-card">
+      <main class="scan-app">
 
         <span class="scan-badge">
           CONTROL DE ACCESO
@@ -4193,38 +4299,281 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
         </h1>
 
         <p class="intro">
-          Ingresa el token del boleto para verificar su estado.
+          Escanea el código QR presentado por el invitado.
         </p>
 
-        <form
-          method="GET"
-          action="/tickets/scan/verify"
-        >
+        <section class="camera-card">
 
-          <label for="code">
-            Token del boleto
-          </label>
+          <h2>
+            📷 Escanear código QR
+          </h2>
 
-          <input
-            id="code"
-            name="code"
-            type="text"
-            placeholder="Pega aquí el token"
-            autocomplete="off"
-            required
+          <div id="reader"></div>
+
+          <button
+            id="cameraButton"
+            class="camera-button"
+            type="button"
           >
-
-          <button type="submit">
-            VERIFICAR BOLETO
+            INICIAR CÁMARA
           </button>
 
-        </form>
+          <div
+            id="cameraStatus"
+            class="camera-status"
+          >
+            La cámara está desactivada.
+          </div>
 
-        <div class="help">
-          En la siguiente etapa este campo será reemplazado por el lector de cámara QR.
+        </section>
+
+        <div class="divider">
+          O VERIFICAR MANUALMENTE
+        </div>
+
+        <section class="manual-card">
+
+          <h2>
+            Ingresar folio
+          </h2>
+
+          <form
+            method="GET"
+            action="/tickets/scan/verify"
+          >
+
+            <label for="code">
+              Folio o token
+            </label>
+
+            <input
+              id="code"
+              name="code"
+              type="text"
+              placeholder="Ej. ITCC-2026-766-003"
+              autocomplete="off"
+              required
+            >
+
+            <button
+              class="verify-button"
+              type="submit"
+            >
+              VERIFICAR BOLETO
+            </button>
+
+          </form>
+
+        </section>
+
+        <div class="security-note">
+          Cada boleto puede acreditarse una sola vez. Si un QR ya fue utilizado,
+          el sistema mostrará automáticamente la fecha y hora del primer ingreso.
         </div>
 
       </main>
+
+      <script>
+
+        let scanner = null;
+        let cameraActive = false;
+        let processingCode = false;
+
+        const cameraButton =
+          document.getElementById("cameraButton");
+
+        const cameraStatus =
+          document.getElementById("cameraStatus");
+
+
+        function extractTicketCode(decodedText){
+
+          const value = String(decodedText || "").trim();
+
+          try{
+
+            const url = new URL(value);
+
+            const marker = "/tickets/verify/";
+
+            if(url.pathname.includes(marker)){
+
+              const token =
+                url.pathname.split(marker)[1];
+
+              return decodeURIComponent(token || "");
+
+            }
+
+          }catch(error){
+
+            // Si no es una URL, puede ser folio o token directo.
+
+          }
+
+          return value;
+
+        }
+
+
+        async function handleQrSuccess(
+          decodedText,
+          decodedResult
+        ){
+
+          if(processingCode){
+            return;
+          }
+
+          processingCode = true;
+
+          const code =
+            extractTicketCode(decodedText);
+
+          if(!code){
+
+            processingCode = false;
+            return;
+
+          }
+
+          cameraStatus.textContent =
+            "Código detectado. Verificando boleto...";
+
+          try{
+
+            if(scanner && cameraActive){
+
+              await scanner.stop();
+
+              cameraActive = false;
+
+            }
+
+          }catch(error){
+
+            console.log(
+              "No fue necesario detener la cámara.",
+              error
+            );
+
+          }
+
+          window.location.href =
+            "/tickets/scan/verify?code=" +
+            encodeURIComponent(code);
+
+        }
+
+
+        async function startCamera(){
+
+          if(cameraActive){
+            return;
+          }
+
+          cameraStatus.textContent =
+            "Solicitando acceso a la cámara...";
+
+          scanner =
+            new Html5Qrcode("reader");
+
+          try{
+
+            await scanner.start(
+              {
+                facingMode:"environment"
+              },
+              {
+                fps:10,
+                qrbox:{
+                  width:250,
+                  height:250
+                }
+              },
+              handleQrSuccess,
+              function(errorMessage){
+                // Los intentos normales de lectura no se muestran.
+              }
+            );
+
+            cameraActive = true;
+
+            cameraButton.textContent =
+              "DETENER CÁMARA";
+
+            cameraButton.classList.add("stop");
+
+            cameraStatus.textContent =
+              "Cámara activa. Coloca el QR dentro del recuadro.";
+
+          }catch(error){
+
+            console.error(
+              "Error al iniciar cámara:",
+              error
+            );
+
+            cameraStatus.textContent =
+              "No fue posible abrir la cámara. Revisa los permisos del navegador.";
+
+          }
+
+        }
+
+
+        async function stopCamera(){
+
+          if(!scanner || !cameraActive){
+            return;
+          }
+
+          try{
+
+            await scanner.stop();
+
+            cameraActive = false;
+
+            cameraButton.textContent =
+              "INICIAR CÁMARA";
+
+            cameraButton.classList.remove("stop");
+
+            cameraStatus.textContent =
+              "La cámara está desactivada.";
+
+          }catch(error){
+
+            console.error(
+              "Error al detener cámara:",
+              error
+            );
+
+          }
+
+        }
+
+
+        cameraButton.addEventListener(
+          "click",
+          async function(){
+
+            if(cameraActive){
+
+              await stopCamera();
+
+            }else{
+
+              processingCode = false;
+
+              await startCamera();
+
+            }
+
+          }
+        );
+
+      </script>
 
     </body>
     </html>
