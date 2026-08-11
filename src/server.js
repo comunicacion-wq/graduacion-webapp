@@ -4027,7 +4027,8 @@ app.get("/tickets/verify/:token", async (req, res) => {
     console.error("Error al verificar boleto:", err);
     res.status(500).send("Error al verificar boleto");
   }
-});app.get("/tickets/accredit/:token", requireAuth, async (req, res) => {
+});
+app.post("/tickets/accredit/:token", requireAuth, async (req, res) => {
   try {
     const token = String(req.params.token || "").trim();
 
