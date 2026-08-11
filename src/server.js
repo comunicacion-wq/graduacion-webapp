@@ -4211,6 +4211,56 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
     </html>
   `);
 });
+app.get("/tickets/scan/verify", requireAuth, async (req, res) => {
+  try {
+    const code = String(req.query.code || "").trim();
+
+    if (!code) {
+      return res.status(400).send("Código no válido");
+    }
+
+    const result = await q(
+      `
+      SELECT
+        gt.id,
+        gt.folio,
+        gt.secure_token,
+        gt.ticket_type,
+        gt.status,
+        gt.used_at,
+        s.full_name AS student_name,
+        c.name AS campus_name,
+        p.name AS package_name
+      FROM graduation_tickets gt
+      LEFT JOIN students s ON s.id = gt.student_id
+      LEFT JOIN campuses c ON c.id = s.campus_id
+      LEFT JOIN packages p ON p.id = s.package_id
+      WHERE gt.secure_token = $1
+         OR gt.folio = $1
+      LIMIT 1
+      `,
+      [code]
+    );
+
+    if (result.rows.length === 0) {
+      return res.send(`
+        <h2>❌ CÓDIGO NO VÁLIDO</h2>
+        <p>No existe ningún boleto con ese código o folio.</p>
+        <p><a href="/tickets/scan">Volver al escáner</a></p>
+      `);
+    }
+
+    const ticket = result.rows[0];
+
+    return res.redirect(
+      `/tickets/verify/${encodeURIComponent(ticket.secure_token)}`
+    );
+
+  } catch (err) {
+    console.error("Error al verificar desde escáner:", err);
+    res.status(500).send("Error al verificar boleto");
+  }
+});
 app.post("/tickets/accredit/:token", requireAuth, async (req, res) => {
   try {
     const token = String(req.params.token || "").trim();
