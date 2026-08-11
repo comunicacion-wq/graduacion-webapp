@@ -2,32 +2,198 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
-
-  <title>Control de acceso</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Control de acceso | ITCC</title>
+  <style>
+    :root{
+      --purple:#4400B2;
+      --purple-dark:#17003E;
+      --yellow:#FFC400;
+      --white:#FFFFFF;
+      --green:#2CCB71;
+      --soft:rgba(255,255,255,.72);
+      --glass:rgba(255,255,255,.07);
+      --border:rgba(255,255,255,.11);
+    }
+    *{box-sizing:border-box}
+    html,body{min-height:100%;margin:0}
+    body{
+      min-height:100vh;
+      color:var(--white);
+      font-family:Arial,Helvetica,sans-serif;
+      background:
+        linear-gradient(180deg,rgba(18,0,66,.30),rgba(23,0,62,.94)),
+        url("/images/leopardo-login.png") center top/cover fixed no-repeat;
+      background-color:var(--purple-dark);
+    }
+    .access-app{
+      width:100%;
+      max-width:760px;
+      margin:0 auto;
+      padding:max(28px,env(safe-area-inset-top)) 24px max(40px,env(safe-area-inset-bottom));
+    }
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:15px;min-width:0}
+    .logo{display:block;width:230px;max-width:48vw;height:auto}
+    .divider{width:1px;height:62px;flex-shrink:0;background:rgba(255,255,255,.55)}
+    .brand-title{font-size:22px;line-height:1.08;font-weight:800}
+    .access-badge{
+      flex-shrink:0;padding:8px 12px;color:var(--purple-dark);background:var(--yellow);
+      border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;
+    }
+    .hero{margin-top:38px}
+    .hero h1{margin:0;font-size:34px;line-height:1.08;font-weight:800}
+    .hero p{margin:9px 0 0;color:var(--soft);font-size:15px;line-height:1.5}
+    .scan-button{
+      width:100%;margin-top:24px;padding:18px 20px;display:flex;align-items:center;justify-content:center;gap:10px;
+      color:var(--purple-dark);background:var(--yellow);border:none;border-radius:18px;text-decoration:none;
+      font-size:17px;font-weight:800;box-shadow:0 14px 28px rgba(255,196,0,.18);
+    }
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:24px}
+    .stat-card{
+      min-width:0;padding:18px 12px;text-align:center;background:var(--glass);
+      border:1px solid var(--border);border-radius:20px;backdrop-filter:blur(14px);
+    }
+    .stat-card strong{display:block;font-size:27px;line-height:1;font-weight:800}
+    .stat-card span{display:block;margin-top:8px;color:var(--soft);font-size:11px;line-height:1.25}
+    .stat-card.used strong{color:var(--green)}
+    .stat-card.available strong{color:var(--yellow)}
+    .section{
+      margin-top:24px;padding:20px;background:var(--glass);border:1px solid var(--border);
+      border-radius:24px;backdrop-filter:blur(18px);
+    }
+    .section-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .section-header h2{margin:0;font-size:22px;font-weight:800}
+    .section-header span{color:var(--soft);font-size:12px}
+    .access-list{display:flex;flex-direction:column;gap:11px}
+    .access-row{
+      padding:15px;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:17px;
+    }
+    .access-icon{
+      width:42px;height:42px;display:flex;align-items:center;justify-content:center;
+      color:#07381f;background:var(--green);border-radius:13px;font-size:20px;font-weight:800;
+    }
+    .access-info{min-width:0}
+    .access-info strong{display:block;color:var(--white);font-size:14px;line-height:1.3}
+    .access-info span{display:block;margin-top:4px;color:rgba(255,255,255,.65);font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+    .access-time{color:var(--yellow);font-size:11px;font-weight:800;white-space:nowrap}
+    .empty{
+      padding:24px 16px;text-align:center;color:var(--soft);border:1px dashed rgba(255,255,255,.14);
+      border-radius:17px;font-size:13px;line-height:1.45;
+    }
+    .actions{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .secondary-button{
+      padding:14px 16px;color:var(--white);background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.11);border-radius:15px;text-align:center;
+      text-decoration:none;font-size:13px;font-weight:700;
+    }
+    @media(max-width:640px){
+      .access-app{padding-left:18px;padding-right:18px}
+      .logo{width:220px;max-width:43vw}
+      .divider{height:56px}
+      .brand-title{font-size:18px}
+      .hero{margin-top:30px}
+      .hero h1{font-size:28px}
+      .stats{gap:8px}
+      .stat-card{padding:15px 6px;border-radius:17px}
+      .stat-card strong{font-size:23px}
+      .stat-card span{font-size:9px}
+      .section{padding:16px;border-radius:21px}
+      .access-row{grid-template-columns:40px 1fr}
+      .access-time{grid-column:2}
+      .actions{grid-template-columns:1fr}
+    }
+  </style>
 </head>
-
 <body>
+  <main class="access-app">
 
-  <h1>Control de acceso</h1>
+    <header class="topbar">
+      <div class="brand">
+        <img class="logo" src="/images/logo-itcc.png" alt="Universidad y Preparatoria ITCC">
+        <div class="divider"></div>
+        <div class="brand-title">Control de<br>acceso</div>
+      </div>
+      <span class="access-badge">Boletos</span>
+    </header>
 
-  <p>
-    Total de boletos:
-    <%= stats.total %>
-  </p>
+    <section class="hero">
+      <h1>Control de acceso</h1>
+      <p>Consulta el avance de ingresos y escanea el siguiente boleto de graduación.</p>
 
-  <p>
-    Disponibles:
-    <%= stats.available %>
-  </p>
+      <a class="scan-button" href="/tickets/scan">
+        📷 ESCANEAR BOLETO
+      </a>
+    </section>
 
-  <p>
-    Acreditados:
-    <%= stats.used %>
-  </p>
+    <section class="stats">
+      <article class="stat-card">
+        <strong><%= stats.total %></strong>
+        <span>TOTAL DE BOLETOS</span>
+      </article>
 
+      <article class="stat-card available">
+        <strong><%= stats.available %></strong>
+        <span>DISPONIBLES</span>
+      </article>
+
+      <article class="stat-card used">
+        <strong><%= stats.used %></strong>
+        <span>ACREDITADOS</span>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <h2>Últimos accesos</h2>
+        </div>
+        <span>Últimos 10</span>
+      </div>
+
+      <div class="access-list">
+        <% if (Array.isArray(recentAccess) && recentAccess.length > 0) { %>
+
+          <% recentAccess.forEach(function(item) { %>
+            <article class="access-row">
+              <div class="access-icon">✓</div>
+
+              <div class="access-info">
+                <strong><%= item.student_name || "Alumno" %></strong>
+                <span>Folio: <%= item.folio || "" %></span>
+                <span>
+                  Tipo:
+                  <%= item.ticket_type === "EXTRA"
+                    ? "Boleto extra"
+                    : "Boleto incluido" %>
+                </span>
+              </div>
+
+              <div class="access-time">
+                <%= item.used_at_fmt || "" %>
+              </div>
+            </article>
+          <% }) %>
+
+        <% } else { %>
+          <div class="empty">
+            Todavía no hay accesos acreditados.
+          </div>
+        <% } %>
+      </div>
+
+      <div class="actions">
+        <a class="secondary-button" href="/tickets/scan">
+          Escanear siguiente
+        </a>
+
+        <a class="secondary-button" href="/tickets/access-control">
+          Actualizar panel
+        </a>
+      </div>
+    </section>
+
+  </main>
 </body>
 </html>
