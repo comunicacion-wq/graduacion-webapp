@@ -2,6 +2,7 @@ import express from "express";
 import session from "express-session";
 import path from "path";
 import crypto from "crypto";
+import QRCode from "qrcode";
 import PDFDocument from "pdfkit";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
