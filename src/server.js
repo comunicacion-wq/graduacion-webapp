@@ -3758,7 +3758,25 @@ app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
     [studentId]
   );
 
-  const tickets = ticketResult.rows;
+const tickets = await Promise.all(
+  ticketResult.rows.map(async (ticket) => {
+
+    const verifyUrl =
+      `${req.protocol}://${req.get("host")}/tickets/verify/${ticket.secure_token}`;
+
+    const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+      width: 320,
+      margin: 2
+    });
+
+    return {
+      ...ticket,
+      verify_url: verifyUrl,
+      qr_data_url: qrDataUrl
+    };
+
+  })
+);
 
   res.render("portal_tickets", {
     student: info.student,
