@@ -3832,7 +3832,7 @@ const tickets = await Promise.all(
   });
 
 });
-app.get("/tickets/verify/:token", async (req, res) => {
+app.get("/tickets/verify/:token", requireAuth, async (req, res) => {
   try {
     const token = String(req.params.token || "").trim();
 
