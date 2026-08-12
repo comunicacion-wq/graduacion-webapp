@@ -3833,7 +3833,6 @@ const tickets = await Promise.all(
 
 });
 app.get("/tickets/verify/:token", async (req, res) => {
-  
   try {
     const token = String(req.params.token || "").trim();
 
@@ -3865,758 +3864,903 @@ app.get("/tickets/verify/:token", async (req, res) => {
       [token]
     );
 
-if (result.rows.length === 0) {
-  return res.status(404).send(`
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
+    // ============================================
+    // CÓDIGO / QR NO VÁLIDO
+    // ============================================
 
-      <meta charset="UTF-8">
+    if (result.rows.length === 0) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
 
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover"
-      >
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+          >
 
-      <title>Boleto no válido</title>
+          <title>Boleto no válido</title>
 
-      <style>
+          <style>
+            *{
+              box-sizing:border-box;
+            }
 
-        *{
-          box-sizing:border-box;
-        }
+            body{
+              margin:0;
+              min-height:100vh;
+              padding:24px;
 
-        body{
-          margin:0;
-          min-height:100vh;
-          padding:24px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
 
-          display:flex;
-          align-items:center;
-          justify-content:center;
+              font-family:Arial,Helvetica,sans-serif;
 
-          font-family:Arial,Helvetica,sans-serif;
+              background:#17003E;
+              color:#ffffff;
+            }
 
-          background:#17003E;
-          color:#ffffff;
-        }
+            .result-card{
+              width:100%;
+              max-width:520px;
+              padding:28px;
 
-        .result-card{
-          width:100%;
-          max-width:520px;
+              text-align:center;
 
-          padding:28px;
+              background:rgba(255,255,255,.08);
+              border:1px solid rgba(255,255,255,.12);
+              border-radius:24px;
+            }
 
-          text-align:center;
+            .result-icon{
+              width:82px;
+              height:82px;
 
-          background:rgba(255,255,255,.08);
-          border:1px solid rgba(255,255,255,.12);
-          border-radius:24px;
-        }
+              margin:0 auto 20px;
 
-        .result-icon{
-          width:82px;
-          height:82px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
 
-          margin:0 auto 20px;
+              border-radius:50%;
 
-          display:flex;
-          align-items:center;
-          justify-content:center;
+              background:#FF6B6B;
+              color:#4A0C0C;
 
-          border-radius:50%;
+              font-size:42px;
+              font-weight:800;
+            }
 
-          background:#FF6B6B;
-          color:#4A0C0C;
+            h1{
+              margin:0;
+              font-size:30px;
+              line-height:1.1;
+            }
 
-          font-size:42px;
-          font-weight:800;
-        }
+            .message{
+              margin:14px auto 0;
+              max-width:390px;
 
-        h1{
-          margin:0;
+              color:rgba(255,255,255,.72);
 
-          font-size:30px;
-          line-height:1.1;
-        }
+              font-size:14px;
+              line-height:1.5;
+            }
 
-        .message{
-          margin:14px auto 0;
+            .warning{
+              margin-top:22px;
+              padding:15px;
 
-          max-width:390px;
+              color:#ffffff;
+              background:rgba(255,107,107,.12);
 
-          color:rgba(255,255,255,.72);
+              border:1px solid rgba(255,107,107,.25);
+              border-radius:15px;
 
-          font-size:14px;
-          line-height:1.5;
-        }
+              font-size:13px;
+              line-height:1.45;
+            }
 
-        .warning{
-          margin-top:22px;
-          padding:15px;
+            .next-button{
+              width:100%;
 
-          color:#ffffff;
-          background:rgba(255,107,107,.12);
+              margin-top:28px;
+              padding:18px 20px;
 
-          border:1px solid rgba(255,107,107,.25);
-          border-radius:15px;
+              display:block;
 
-          font-size:13px;
-          line-height:1.45;
-        }
+              color:#17003E;
+              background:#FFC400;
 
-        .next-button{
-          width:100%;
+              border-radius:17px;
 
-          margin-top:28px;
-          padding:18px 20px;
+              text-decoration:none;
 
-          display:block;
+              font-size:17px;
+              font-weight:800;
+            }
 
-          color:#17003E;
-          background:#FFC400;
+            .panel-button{
+              width:100%;
 
-          border-radius:17px;
+              margin-top:12px;
+              padding:15px 20px;
 
-          text-decoration:none;
+              display:block;
 
-          font-size:17px;
-          font-weight:800;
-        }
+              color:#ffffff;
+              background:rgba(255,255,255,.07);
 
-        .panel-button{
-          width:100%;
+              border:1px solid rgba(255,255,255,.11);
+              border-radius:17px;
 
-          margin-top:12px;
-          padding:15px 20px;
+              text-decoration:none;
 
-          display:block;
+              font-size:14px;
+              font-weight:700;
+            }
+          </style>
+        </head>
 
-          color:#ffffff;
-          background:rgba(255,255,255,.07);
+        <body>
 
-          border:1px solid rgba(255,255,255,.11);
-          border-radius:17px;
+          <main class="result-card">
 
-          text-decoration:none;
+            <div class="result-icon">
+              ✕
+            </div>
 
-          font-size:14px;
-          font-weight:700;
-        }
+            <h1>
+              BOLETO NO VÁLIDO
+            </h1>
 
-      </style>
+            <div class="message">
+              El código presentado no corresponde a ningún boleto registrado en el sistema.
+            </div>
 
-    </head>
+            <div class="warning">
+              ⚠️ No permitas el ingreso con este código.
+            </div>
 
-    <body>
+            <a
+              class="next-button"
+              href="/tickets/scan"
+            >
+              📷 ESCANEAR SIGUIENTE BOLETO
+            </a>
 
-      <main class="result-card">
+            <a
+              class="panel-button"
+              href="/tickets/access-control"
+            >
+              Volver al Control de acceso
+            </a>
 
-        <div class="result-icon">
-          ✕
-        </div>
+          </main>
 
-        <h1>
-          BOLETO NO VÁLIDO
-        </h1>
-
-        <div class="message">
-          El código presentado no corresponde a ningún boleto registrado en el sistema.
-        </div>
-
-        <div class="warning">
-          ⚠️ No permitas el ingreso con este código.
-        </div>
-
-        <a
-          class="next-button"
-          href="/tickets/scan"
-        >
-          📷 ESCANEAR SIGUIENTE BOLETO
-        </a>
-
-        <a
-          class="panel-button"
-          href="/tickets/access-control"
-        >
-          Volver al Control de acceso
-        </a>
-
-      </main>
-
-    </body>
-    </html>
-  `);
-}
-        body{
-          margin:0;
-          min-height:100vh;
-          padding:24px;
-
-          display:flex;
-          align-items:center;
-          justify-content:center;
-
-          font-family:Arial,Helvetica,sans-serif;
-
-          background:#17003E;
-          color:#ffffff;
-        }
-
-        .result-card{
-          width:100%;
-          max-width:520px;
-
-          padding:28px;
-
-          text-align:center;
-
-          background:rgba(255,255,255,.08);
-          border:1px solid rgba(255,255,255,.12);
-          border-radius:24px;
-        }
-
-        .result-icon{
-          width:82px;
-          height:82px;
-
-          margin:0 auto 20px;
-
-          display:flex;
-          align-items:center;
-          justify-content:center;
-
-          border-radius:50%;
-
-          background:#FF6B6B;
-          color:#4A0C0C;
-
-          font-size:42px;
-          font-weight:800;
-        }
-
-        h1{
-          margin:0;
-
-          font-size:30px;
-          line-height:1.1;
-        }
-
-        .message{
-          margin:14px auto 0;
-
-          max-width:390px;
-
-          color:rgba(255,255,255,.72);
-
-          font-size:14px;
-          line-height:1.5;
-        }
-
-        .warning{
-          margin-top:22px;
-          padding:15px;
-
-          color:#ffffff;
-          background:rgba(255,107,107,.12);
-
-          border:1px solid rgba(255,107,107,.25);
-          border-radius:15px;
-
-          font-size:13px;
-          line-height:1.45;
-        }
-
-        .next-button{
-          width:100%;
-
-          margin-top:28px;
-          padding:18px 20px;
-
-          display:block;
-
-          color:#17003E;
-          background:#FFC400;
-
-          border-radius:17px;
-
-          text-decoration:none;
-
-          font-size:17px;
-          font-weight:800;
-        }
-
-        .panel-button{
-          width:100%;
-
-          margin-top:12px;
-          padding:15px 20px;
-
-          display:block;
-
-          color:#ffffff;
-          background:rgba(255,255,255,.07);
-
-          border:1px solid rgba(255,255,255,.11);
-          border-radius:17px;
-
-          text-decoration:none;
-
-          font-size:14px;
-          font-weight:700;
-        }
-
-      </style>
-
-    </head>
-
-    <body>
-
-      <main class="result-card">
-
-        <div class="result-icon">
-          ✕
-        </div>
-
-        <h1>
-          BOLETO NO VÁLIDO
-        </h1>
-
-        <div class="message">
-          El código presentado no corresponde a ningún boleto registrado en el sistema.
-        </div>
-
-        <div class="warning">
-          ⚠️ No permitas el ingreso con este código.
-        </div>
-
-        <a
-          class="next-button"
-          href="/tickets/scan"
-        >
-          📷 ESCANEAR SIGUIENTE BOLETO
-        </a>
-
-        <a
-          class="panel-button"
-          href="/tickets/access-control"
-        >
-          Volver al Control de acceso
-        </a>
-
-      </main>
-
-    </body>
-    </html>
-  `);
-}
+        </body>
+        </html>
+      `);
+    }
 
     const ticket = result.rows[0];
 
-if (ticket.status === "USED") {
-  return res.send(`
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
+    // ============================================
+    // BOLETO YA UTILIZADO
+    // ============================================
 
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover"
-      >
+    if (ticket.status === "USED") {
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
 
-      <title>Ingreso ya registrado</title>
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+          >
 
-      <style>
-        *{
-          box-sizing:border-box;
-        }
+          <title>Ingreso ya registrado</title>
 
-        body{
-          margin:0;
-          min-height:100vh;
-          padding:24px;
+          <style>
+            *{
+              box-sizing:border-box;
+            }
 
-          display:flex;
-          align-items:center;
-          justify-content:center;
+            body{
+              margin:0;
+              min-height:100vh;
+              padding:24px;
 
-          font-family:Arial,Helvetica,sans-serif;
+              display:flex;
+              align-items:center;
+              justify-content:center;
 
-          background:#17003E;
-          color:#ffffff;
-        }
+              font-family:Arial,Helvetica,sans-serif;
 
-        .result-card{
-          width:100%;
-          max-width:520px;
+              background:#17003E;
+              color:#ffffff;
+            }
 
-          padding:28px;
+            .result-card{
+              width:100%;
+              max-width:520px;
+              padding:28px;
 
-          text-align:center;
+              text-align:center;
 
-          background:rgba(255,255,255,.08);
-          border:1px solid rgba(255,255,255,.12);
-          border-radius:24px;
-        }
+              background:rgba(255,255,255,.08);
+              border:1px solid rgba(255,255,255,.12);
+              border-radius:24px;
+            }
 
-        .result-icon{
-          width:82px;
-          height:82px;
+            .result-icon{
+              width:82px;
+              height:82px;
 
-          margin:0 auto 20px;
+              margin:0 auto 20px;
 
-          display:flex;
-          align-items:center;
-          justify-content:center;
+              display:flex;
+              align-items:center;
+              justify-content:center;
 
-          border-radius:50%;
+              border-radius:50%;
 
-          background:#FF6B6B;
-          color:#4A0C0C;
+              background:#FF6B6B;
+              color:#4A0C0C;
 
-          font-size:42px;
-          font-weight:800;
-        }
+              font-size:42px;
+              font-weight:800;
+            }
 
-        h1{
-          margin:0;
+            h1{
+              margin:0;
+              font-size:30px;
+              line-height:1.1;
+            }
 
-          font-size:30px;
-          line-height:1.1;
-        }
+            .message{
+              margin-top:12px;
 
-        .message{
-          margin-top:12px;
+              color:rgba(255,255,255,.72);
 
-          color:rgba(255,255,255,.72);
+              font-size:14px;
+              line-height:1.45;
+            }
 
-          font-size:14px;
-          line-height:1.45;
-        }
+            .data{
+              margin-top:22px;
+              text-align:left;
+            }
 
-        .data{
-          margin-top:22px;
+            .data-row{
+              margin-top:11px;
 
-          text-align:left;
-        }
+              color:rgba(255,255,255,.76);
 
-        .data-row{
-          margin-top:11px;
+              font-size:15px;
+              line-height:1.4;
+            }
 
-          color:rgba(255,255,255,.76);
+            .data-row strong{
+              color:#ffffff;
+            }
 
-          font-size:15px;
-          line-height:1.4;
-        }
+            .next-button{
+              width:100%;
 
-        .data-row strong{
-          color:#ffffff;
-        }
+              margin-top:28px;
+              padding:18px 20px;
 
-        .next-button{
-          width:100%;
+              display:block;
 
-          margin-top:28px;
-          padding:18px 20px;
+              color:#17003E;
+              background:#FFC400;
 
-          display:block;
+              border-radius:17px;
 
-          color:#17003E;
-          background:#FFC400;
+              text-decoration:none;
 
-          border-radius:17px;
+              font-size:17px;
+              font-weight:800;
+            }
 
-          text-decoration:none;
+            .panel-button{
+              width:100%;
 
-          font-size:17px;
-          font-weight:800;
-        }
+              margin-top:12px;
+              padding:15px 20px;
 
-        .panel-button{
-          width:100%;
+              display:block;
 
-          margin-top:12px;
-          padding:15px 20px;
+              color:#ffffff;
+              background:rgba(255,255,255,.07);
 
-          display:block;
+              border:1px solid rgba(255,255,255,.11);
+              border-radius:17px;
 
-          color:#ffffff;
-          background:rgba(255,255,255,.07);
+              text-decoration:none;
 
-          border:1px solid rgba(255,255,255,.11);
-          border-radius:17px;
+              font-size:14px;
+              font-weight:700;
+            }
+          </style>
+        </head>
 
-          text-decoration:none;
+        <body>
 
-          font-size:14px;
-          font-weight:700;
-        }
-      </style>
-    </head>
+          <main class="result-card">
 
-    <body>
+            <div class="result-icon">
+              ✕
+            </div>
 
-      <main class="result-card">
+            <h1>
+              INGRESO YA REGISTRADO
+            </h1>
 
-        <div class="result-icon">
-          ✕
-        </div>
+            <div class="message">
+              Este boleto ya fue utilizado anteriormente y no puede acreditarse nuevamente.
+            </div>
 
-        <h1>
-          INGRESO YA REGISTRADO
-        </h1>
+            <div class="data">
 
-        <div class="message">
-          Este boleto ya fue utilizado anteriormente y no puede acreditarse nuevamente.
-        </div>
+              <div class="data-row">
+                <strong>Folio:</strong>
+                ${ticket.folio}
+              </div>
 
-        <div class="data">
+              <div class="data-row">
+                <strong>Alumno:</strong>
+                ${ticket.student_name || ""}
+              </div>
 
-          <div class="data-row">
+              <div class="data-row">
+                <strong>Campus:</strong>
+                ${ticket.campus_name || ""}
+              </div>
+
+              <div class="data-row">
+                <strong>Registrado:</strong>
+                ${
+                  ticket.used_at
+                    ? dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")
+                    : "Fecha no disponible"
+                }
+              </div>
+
+            </div>
+
+            <a
+              class="next-button"
+              href="/tickets/scan"
+            >
+              📷 ESCANEAR SIGUIENTE BOLETO
+            </a>
+
+            <a
+              class="panel-button"
+              href="/tickets/access-control"
+            >
+              Volver al Control de acceso
+            </a>
+
+          </main>
+
+        </body>
+        </html>
+      `);
+    }
+
+    // ============================================
+    // BOLETO CANCELADO
+    // ============================================
+
+    if (ticket.status === "CANCELED") {
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+          >
+
+          <title>Boleto cancelado</title>
+
+          <style>
+            *{
+              box-sizing:border-box;
+            }
+
+            body{
+              margin:0;
+              min-height:100vh;
+              padding:24px;
+
+              display:flex;
+              align-items:center;
+              justify-content:center;
+
+              font-family:Arial,Helvetica,sans-serif;
+
+              background:#17003E;
+              color:#ffffff;
+            }
+
+            .result-card{
+              width:100%;
+              max-width:520px;
+              padding:28px;
+
+              text-align:center;
+
+              background:rgba(255,255,255,.08);
+              border:1px solid rgba(255,255,255,.12);
+              border-radius:24px;
+            }
+
+            .result-icon{
+              width:82px;
+              height:82px;
+
+              margin:0 auto 20px;
+
+              display:flex;
+              align-items:center;
+              justify-content:center;
+
+              border-radius:50%;
+
+              background:#FF6B6B;
+              color:#4A0C0C;
+
+              font-size:42px;
+              font-weight:800;
+            }
+
+            h1{
+              margin:0;
+              font-size:30px;
+            }
+
+            .message{
+              margin-top:14px;
+
+              color:rgba(255,255,255,.72);
+
+              font-size:14px;
+              line-height:1.5;
+            }
+
+            .data{
+              margin-top:22px;
+              text-align:left;
+            }
+
+            .data-row{
+              margin-top:11px;
+              color:rgba(255,255,255,.76);
+            }
+
+            .data-row strong{
+              color:#ffffff;
+            }
+
+            .next-button{
+              width:100%;
+
+              margin-top:28px;
+              padding:18px 20px;
+
+              display:block;
+
+              color:#17003E;
+              background:#FFC400;
+
+              border-radius:17px;
+
+              text-decoration:none;
+
+              font-size:17px;
+              font-weight:800;
+            }
+          </style>
+        </head>
+
+        <body>
+
+          <main class="result-card">
+
+            <div class="result-icon">
+              ✕
+            </div>
+
+            <h1>
+              BOLETO CANCELADO
+            </h1>
+
+            <div class="message">
+              Este boleto fue cancelado y no puede utilizarse para ingresar.
+            </div>
+
+            <div class="data">
+
+              <div class="data-row">
+                <strong>Folio:</strong>
+                ${ticket.folio}
+              </div>
+
+              <div class="data-row">
+                <strong>Alumno:</strong>
+                ${ticket.student_name || ""}
+              </div>
+
+            </div>
+
+            <a
+              class="next-button"
+              href="/tickets/scan"
+            >
+              📷 ESCANEAR SIGUIENTE BOLETO
+            </a>
+
+          </main>
+
+        </body>
+        </html>
+      `);
+    }
+
+    // ============================================
+    // OTRO ESTADO NO DISPONIBLE
+    // ============================================
+
+    if (ticket.status !== "AVAILABLE") {
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+          >
+
+          <title>Boleto no disponible</title>
+
+          <style>
+            *{
+              box-sizing:border-box;
+            }
+
+            body{
+              margin:0;
+              min-height:100vh;
+              padding:24px;
+
+              display:flex;
+              align-items:center;
+              justify-content:center;
+
+              font-family:Arial,Helvetica,sans-serif;
+
+              background:#17003E;
+              color:#ffffff;
+            }
+
+            .result-card{
+              width:100%;
+              max-width:520px;
+              padding:28px;
+
+              text-align:center;
+
+              background:rgba(255,255,255,.08);
+              border:1px solid rgba(255,255,255,.12);
+              border-radius:24px;
+            }
+
+            .result-icon{
+              width:82px;
+              height:82px;
+
+              margin:0 auto 20px;
+
+              display:flex;
+              align-items:center;
+              justify-content:center;
+
+              border-radius:50%;
+
+              background:#FFC400;
+              color:#17003E;
+
+              font-size:42px;
+              font-weight:800;
+            }
+
+            h1{
+              margin:0;
+              font-size:30px;
+            }
+
+            .message{
+              margin-top:14px;
+
+              color:rgba(255,255,255,.72);
+
+              font-size:14px;
+              line-height:1.5;
+            }
+
+            .next-button{
+              width:100%;
+
+              margin-top:28px;
+              padding:18px 20px;
+
+              display:block;
+
+              color:#17003E;
+              background:#FFC400;
+
+              border-radius:17px;
+
+              text-decoration:none;
+
+              font-size:17px;
+              font-weight:800;
+            }
+          </style>
+        </head>
+
+        <body>
+
+          <main class="result-card">
+
+            <div class="result-icon">
+              !
+            </div>
+
+            <h1>
+              BOLETO NO DISPONIBLE
+            </h1>
+
+            <div class="message">
+              Estado actual: ${ticket.status}
+            </div>
+
+            <a
+              class="next-button"
+              href="/tickets/scan"
+            >
+              📷 ESCANEAR SIGUIENTE BOLETO
+            </a>
+
+          </main>
+
+        </body>
+        </html>
+      `);
+    }
+
+    // ============================================
+    // BOLETO VÁLIDO / DISPONIBLE
+    // ============================================
+
+    return res.send(`
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        >
+
+        <title>Verificación de boleto</title>
+
+        <style>
+          *{
+            box-sizing:border-box;
+          }
+
+          body{
+            margin:0;
+            min-height:100vh;
+            padding:24px;
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            font-family:Arial,Helvetica,sans-serif;
+
+            background:#17003E;
+            color:#ffffff;
+          }
+
+          .verify-card{
+            width:100%;
+            max-width:520px;
+            padding:28px;
+
+            background:rgba(255,255,255,.08);
+            border:1px solid rgba(255,255,255,.12);
+            border-radius:24px;
+          }
+
+          .valid-badge{
+            display:inline-block;
+
+            padding:8px 12px;
+
+            color:#07381F;
+            background:#50E391;
+
+            border-radius:999px;
+
+            font-size:13px;
+            font-weight:800;
+          }
+
+          h1{
+            margin:20px 0 22px;
+            font-size:30px;
+          }
+
+          .ticket-row{
+            margin-top:13px;
+
+            color:rgba(255,255,255,.78);
+
+            font-size:16px;
+            line-height:1.4;
+          }
+
+          .ticket-row strong{
+            color:#ffffff;
+          }
+
+          .accredit-form{
+            margin-top:28px;
+          }
+
+          .accredit-button{
+            width:100%;
+            padding:17px 20px;
+
+            border:0;
+            border-radius:16px;
+
+            background:#FFC400;
+            color:#17003E;
+
+            font-size:17px;
+            font-weight:800;
+
+            cursor:pointer;
+          }
+
+          .warning{
+            margin-top:15px;
+
+            color:rgba(255,255,255,.62);
+
+            text-align:center;
+
+            font-size:12px;
+            line-height:1.4;
+          }
+
+          .scan-button{
+            width:100%;
+
+            margin-top:12px;
+            padding:15px 20px;
+
+            display:block;
+
+            color:#ffffff;
+            background:rgba(255,255,255,.07);
+
+            border:1px solid rgba(255,255,255,.11);
+            border-radius:16px;
+
+            text-align:center;
+            text-decoration:none;
+
+            font-size:14px;
+            font-weight:700;
+          }
+        </style>
+      </head>
+
+      <body>
+
+        <main class="verify-card">
+
+          <span class="valid-badge">
+            ✓ BOLETO VÁLIDO
+          </span>
+
+          <h1>
+            Verificación de acceso
+          </h1>
+
+          <div class="ticket-row">
             <strong>Folio:</strong>
             ${ticket.folio}
           </div>
 
-          <div class="data-row">
+          <div class="ticket-row">
             <strong>Alumno:</strong>
             ${ticket.student_name || ""}
           </div>
 
-          <div class="data-row">
+          <div class="ticket-row">
             <strong>Campus:</strong>
             ${ticket.campus_name || ""}
           </div>
 
-          <div class="data-row">
-            <strong>Registrado:</strong>
+          <div class="ticket-row">
+            <strong>Paquete:</strong>
+            ${ticket.package_name || ""}
+          </div>
+
+          <div class="ticket-row">
+            <strong>Tipo:</strong>
             ${
-              ticket.used_at
-                ? dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")
-                : "Fecha no disponible"
+              ticket.ticket_type === "EXTRA"
+                ? "Boleto extra"
+                : "Boleto incluido"
             }
           </div>
 
-        </div>
+          <div class="ticket-row">
+            <strong>Estado:</strong>
+            Disponible
+          </div>
 
-        <a
-          class="next-button"
-          href="/tickets/scan"
-        >
-          📷 ESCANEAR SIGUIENTE BOLETO
-        </a>
+          <form
+            class="accredit-form"
+            method="POST"
+            action="/tickets/accredit/${encodeURIComponent(token)}"
+          >
 
-        <a
-          class="panel-button"
-          href="/tickets/access-control"
-        >
-          Volver al Control de acceso
-        </a>
+            <button
+              class="accredit-button"
+              type="submit"
+            >
+              ACREDITAR INGRESO
+            </button>
 
-      </main>
+          </form>
 
-    </body>
-    </html>
-  `);
-}
+          <a
+            class="scan-button"
+            href="/tickets/scan"
+          >
+            Volver al escáner
+          </a>
 
-    if (ticket.status === "CANCELED") {
-      return res.send(`
-        <h2>❌ BOLETO CANCELADO</h2>
+          <div class="warning">
+            Una vez acreditado, este boleto no podrá volver a utilizarse.
+          </div>
 
-        <p><strong>Folio:</strong> ${ticket.folio}</p>
-        <p><strong>Alumno:</strong> ${ticket.student_name || ""}</p>
+        </main>
 
-        <p>Este boleto fue cancelado y no puede utilizarse.</p>
-      `);
-    }
-
-    if (ticket.status !== "AVAILABLE") {
-      return res.send(`
-        <h2>⚠️ BOLETO NO DISPONIBLE</h2>
-
-        <p><strong>Folio:</strong> ${ticket.folio}</p>
-        <p><strong>Estado:</strong> ${ticket.status}</p>
-      `);
-    }
-
-    res.send(`
-  <!DOCTYPE html>
-  <html lang="es">
-  <head>
-    <meta charset="UTF-8">
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    >
-
-    <title>Verificación de boleto</title>
-
-    <style>
-      *{
-        box-sizing:border-box;
-      }
-
-      body{
-        margin:0;
-        min-height:100vh;
-        padding:24px;
-
-        display:flex;
-        align-items:center;
-        justify-content:center;
-
-        font-family:Arial,Helvetica,sans-serif;
-
-        background:#17003E;
-        color:#ffffff;
-      }
-
-      .verify-card{
-        width:100%;
-        max-width:520px;
-
-        padding:28px;
-
-        background:rgba(255,255,255,.08);
-        border:1px solid rgba(255,255,255,.12);
-        border-radius:24px;
-      }
-
-      .valid-badge{
-        display:inline-block;
-
-        padding:8px 12px;
-
-        color:#07381f;
-        background:#50E391;
-
-        border-radius:999px;
-
-        font-size:13px;
-        font-weight:800;
-      }
-
-      h1{
-        margin:20px 0 22px;
-        font-size:30px;
-      }
-
-      .ticket-row{
-        margin-top:13px;
-
-        color:rgba(255,255,255,.78);
-        font-size:16px;
-        line-height:1.4;
-      }
-
-      .ticket-row strong{
-        color:#ffffff;
-      }
-
-      .accredit-form{
-        margin-top:28px;
-      }
-
-      .accredit-button{
-        width:100%;
-
-        padding:17px 20px;
-
-        border:0;
-        border-radius:16px;
-
-        background:#FFC400;
-        color:#17003E;
-
-        font-size:17px;
-        font-weight:800;
-
-        cursor:pointer;
-      }
-
-      .warning{
-        margin-top:15px;
-
-        color:rgba(255,255,255,.62);
-
-        text-align:center;
-        font-size:12px;
-        line-height:1.4;
-      }
-    </style>
-  </head>
-
-  <body>
-
-    <main class="verify-card">
-
-      <span class="valid-badge">
-        ✓ BOLETO VÁLIDO
-      </span>
-
-      <h1>
-        Verificación de acceso
-      </h1>
-
-      <div class="ticket-row">
-        <strong>Folio:</strong>
-        ${ticket.folio}
-      </div>
-
-      <div class="ticket-row">
-        <strong>Alumno:</strong>
-        ${ticket.student_name || ""}
-      </div>
-
-      <div class="ticket-row">
-        <strong>Campus:</strong>
-        ${ticket.campus_name || ""}
-      </div>
-
-      <div class="ticket-row">
-        <strong>Paquete:</strong>
-        ${ticket.package_name || ""}
-      </div>
-
-      <div class="ticket-row">
-        <strong>Tipo:</strong>
-        ${
-          ticket.ticket_type === "EXTRA"
-            ? "Boleto extra"
-            : "Boleto incluido"
-        }
-      </div>
-
-      <div class="ticket-row">
-        <strong>Estado:</strong>
-        Disponible
-      </div>
-
-      <form
-        class="accredit-form"
-        method="POST"
-        action="/tickets/accredit/${encodeURIComponent(token)}"
-      >
-
-        <button
-          class="accredit-button"
-          type="submit"
-        >
-          ACREDITAR INGRESO
-        </button>
-
-      </form>
-
-      <div class="warning">
-        Una vez acreditado, este boleto no podrá volver a utilizarse.
-      </div>
-
-    </main>
-
-  </body>
-  </html>
-`);
+      </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error("Error al verificar boleto:", err);
