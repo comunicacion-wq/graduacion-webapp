@@ -6038,11 +6038,6 @@ app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, 
     req.session.user &&
     req.session.user.role === "ADMIN";
 
- const isAdmin =
-  req.session &&
-  req.session.user &&
-  req.session.user.role === "ADMIN";
-
 const portalStudentId = Number(
   req.session &&
   req.session.studentUser &&
