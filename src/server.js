@@ -3472,8 +3472,7 @@ app.get("/setup-payment-history-folios",
           payment_history_folio_created_at =
             COALESCE(s.payment_history_folio_created_at, NOW()),
 
-          payment_history_status =
-            COALESCE(s.payment_history_status, 'ACTIVE')
+       payment_history_status = 'ACTIVE'
 
         WHERE
           s.payment_history_folio IS NULL
@@ -6039,13 +6038,36 @@ app.get("/portal/payment-history.pdf", requireStudentPortalOrAdmin, async (req, 
     req.session.user &&
     req.session.user.role === "ADMIN";
 
-  const studentId = isAdmin
-    ? Number(req.query.student_id)
-    : Number(req.session.studentUser.student_id);
+ const isAdmin =
+  req.session &&
+  req.session.user &&
+  req.session.user.role === "ADMIN";
 
-  if (!Number.isInteger(studentId) || studentId <= 0) {
-    return res.status(400).send("El alumno seleccionado no es válido.");
-  }
+const portalStudentId = Number(
+  req.session &&
+  req.session.studentUser &&
+  req.session.studentUser.student_id
+);
+
+const requestedStudentId = Number(req.query.student_id);
+
+/*
+  Si el administrador envía un alumno válido, usa ese ID.
+  Si no hay un ID enviado, utiliza automáticamente el alumno
+  que inició sesión en el portal.
+*/
+const studentId =
+  isAdmin &&
+  Number.isInteger(requestedStudentId) &&
+  requestedStudentId > 0
+    ? requestedStudentId
+    : portalStudentId;
+
+if (!Number.isInteger(studentId) || studentId <= 0) {
+  return res
+    .status(400)
+    .send("El alumno seleccionado no es válido.");
+}
 
   const info = await getStudentTotals(studentId);
 
