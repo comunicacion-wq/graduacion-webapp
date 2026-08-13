@@ -3258,6 +3258,50 @@ app.get("/setup-tickets", requireAuth, async (req, res) => {
     res.status(500).send("Error al crear tablas de boletos");
   }
 });
+app.get("/setup-ticket-operators", requireAuth, async (req, res) => {
+  try {
+
+    await q(`
+      CREATE TABLE IF NOT EXISTS ticket_operators (
+        id SERIAL PRIMARY KEY,
+
+        full_name VARCHAR(150) NOT NULL,
+
+        pin_hash TEXT NOT NULL,
+
+        active BOOLEAN NOT NULL DEFAULT TRUE,
+
+        failed_attempts INTEGER NOT NULL DEFAULT 0,
+
+        locked_until TIMESTAMP,
+
+        created_by INTEGER REFERENCES users(id),
+
+        created_at TIMESTAMP DEFAULT NOW(),
+
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await q(`
+      CREATE INDEX IF NOT EXISTS idx_ticket_operators_active
+      ON ticket_operators(active);
+    `);
+
+    res.send("Tabla de operadores de acceso creada correctamente");
+
+  } catch (err) {
+
+    console.error(
+      "Error al crear tabla de operadores:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al crear tabla de operadores"
+    );
+  }
+});
 app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
   try {
     const studentId = 766;
