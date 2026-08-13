@@ -3302,6 +3302,78 @@ app.get("/setup-ticket-operators", requireAuth, async (req, res) => {
     );
   }
 });
+app.get("/setup-first-ticket-operator", requireAuth, async (req, res) => {
+  try {
+
+    const fullName = "Operador Acceso 1";
+
+    // PIN temporal para pruebas
+    const pin = "4821";
+
+    const existingOperator = await q(
+      `
+      SELECT id
+      FROM ticket_operators
+      WHERE full_name = $1
+      LIMIT 1
+      `,
+      [fullName]
+    );
+
+    if (existingOperator.rows.length > 0) {
+      return res.send(`
+        <h2>Operador ya existente</h2>
+        <p>${fullName} ya está registrado.</p>
+      `);
+    }
+
+    const pinHash = await bcrypt.hash(pin, 10);
+
+    await q(
+      `
+      INSERT INTO ticket_operators (
+        full_name,
+        pin_hash,
+        active
+      )
+      VALUES ($1, $2, TRUE)
+      `,
+      [
+        fullName,
+        pinHash
+      ]
+    );
+
+    res.send(`
+      <h2>Operador creado correctamente</h2>
+
+      <p>
+        <strong>Nombre:</strong>
+        ${fullName}
+      </p>
+
+      <p>
+        <strong>PIN temporal:</strong>
+        ${pin}
+      </p>
+
+      <p>
+        El PIN fue almacenado de forma protegida.
+      </p>
+    `);
+
+  } catch (err) {
+
+    console.error(
+      "Error al crear operador de acceso:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al crear operador de acceso"
+    );
+  }
+});
 app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
   try {
     const studentId = 766;
