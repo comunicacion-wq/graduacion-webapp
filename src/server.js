@@ -90,6 +90,48 @@ function canUseDevelopmentModules(studentId) {
 
 }
 // flash messages (simple)
+// ===================================
+// CONTROL DE ACCESO - OPERADORES
+// ===================================
+
+function requireTicketOperator(req, res, next) {
+
+  const operator = req.session.ticketOperator;
+
+  // Si nunca inició sesión con PIN
+  if (!operator) {
+    return res.redirect("/tickets/access-login");
+  }
+
+  const now = Date.now();
+
+  // 5 minutos de inactividad
+  const MAX_INACTIVITY = 5 * 60 * 1000;
+
+  const lastActivity = Number(
+    operator.last_activity || 0
+  );
+
+  // Si pasaron más de 5 minutos sin actividad
+  if (
+    !lastActivity ||
+    (now - lastActivity) > MAX_INACTIVITY
+  ) {
+
+    delete req.session.ticketOperator;
+
+    return req.session.save(() => {
+      res.redirect("/tickets/access-login?expired=1");
+    });
+  }
+
+  // Cada acción renueva los 5 minutos
+  req.session.ticketOperator.last_activity = now;
+
+  req.session.touch();
+
+  next();
+}
 app.use((req, res, next) => {
   res.locals.flash = req.session.flash || [];
   req.session.flash = [];
@@ -5133,7 +5175,7 @@ app.get("/tickets/verify/:token", requireAuth, async (req, res) => {
     res.status(500).send("Error al verificar boleto");
   }
 });
-app.get("/tickets/access-control", requireAuth, async (req, res) => {
+app.get("/tickets/access-control", requireTicketOperator, async (req, res) => {
   try {
 
     // Total de boletos registrados
