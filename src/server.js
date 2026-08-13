@@ -3374,6 +3374,257 @@ app.get("/setup-first-ticket-operator", requireAuth, async (req, res) => {
     );
   }
 });
+app.get("/tickets/access-login", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
+      >
+
+      <title>Acceso por PIN | ITCC</title>
+
+      <style>
+        *{
+          box-sizing:border-box;
+        }
+
+        body{
+          margin:0;
+          min-height:100vh;
+          padding:24px;
+
+          display:flex;
+          align-items:center;
+          justify-content:center;
+
+          font-family:Arial,Helvetica,sans-serif;
+
+          background:#17003E;
+          color:#ffffff;
+        }
+
+        .login-card{
+          width:100%;
+          max-width:420px;
+
+          padding:28px;
+
+          text-align:center;
+
+          background:rgba(255,255,255,.08);
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:24px;
+        }
+
+        .badge{
+          display:inline-block;
+
+          padding:8px 12px;
+
+          color:#17003E;
+          background:#FFC400;
+
+          border-radius:999px;
+
+          font-size:12px;
+          font-weight:800;
+        }
+
+        h1{
+          margin:20px 0 8px;
+
+          font-size:30px;
+        }
+
+        p{
+          margin:0 0 24px;
+
+          color:rgba(255,255,255,.70);
+
+          font-size:14px;
+          line-height:1.5;
+        }
+
+        input{
+          width:100%;
+
+          padding:18px;
+
+          text-align:center;
+
+          color:#ffffff;
+          background:rgba(255,255,255,.08);
+
+          border:1px solid rgba(255,255,255,.16);
+          border-radius:16px;
+
+          font-size:28px;
+          font-weight:800;
+          letter-spacing:12px;
+
+          outline:none;
+        }
+
+        input::placeholder{
+          color:rgba(255,255,255,.35);
+        }
+
+        button{
+          width:100%;
+
+          margin-top:16px;
+          padding:17px;
+
+          border:0;
+          border-radius:16px;
+
+          background:#FFC400;
+          color:#17003E;
+
+          font-size:17px;
+          font-weight:800;
+
+          cursor:pointer;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <main class="login-card">
+
+        <span class="badge">
+          CONTROL DE ACCESO
+        </span>
+
+        <h1>
+          Ingresa tu PIN
+        </h1>
+
+        <p>
+          Acceso exclusivo para personal autorizado de boletos.
+        </p>
+
+        <form
+          method="POST"
+          action="/tickets/access-login"
+        >
+
+          <input
+            name="pin"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            pattern="[0-9]{4}"
+            placeholder="••••"
+            autocomplete="off"
+            required
+          >
+
+          <button type="submit">
+            INGRESAR
+          </button>
+
+        </form>
+
+      </main>
+
+    </body>
+    </html>
+  `);
+});
+app.post("/tickets/access-login", async (req, res) => {
+  try {
+    const pin = String(req.body.pin || "").trim();
+
+    if (!/^[0-9]{4}$/.test(pin)) {
+      return res.status(400).send("PIN no válido");
+    }
+
+    const operatorsResult = await q(
+      `
+      SELECT
+        id,
+        full_name,
+        pin_hash,
+        active,
+        failed_attempts,
+        locked_until
+      FROM ticket_operators
+      WHERE active = TRUE
+      `
+    );
+
+    let matchedOperator = null;
+
+    for (const operator of operatorsResult.rows) {
+
+      if (
+        operator.locked_until &&
+        dayjs(operator.locked_until).isAfter(dayjs())
+      ) {
+        continue;
+      }
+
+      const matches = await bcrypt.compare(
+        pin,
+        operator.pin_hash
+      );
+
+      if (matches) {
+        matchedOperator = operator;
+        break;
+      }
+    }
+
+    if (!matchedOperator) {
+      return res.status(401).send(`
+        <h2>PIN incorrecto</h2>
+        <p>El PIN ingresado no corresponde a un operador autorizado.</p>
+        <p>
+          <a href="/tickets/access-login">
+            Intentar nuevamente
+          </a>
+        </p>
+      `);
+    }
+
+    req.session.ticketOperator = {
+      id: matchedOperator.id,
+      full_name: matchedOperator.full_name,
+      last_activity: Date.now()
+    };
+
+    await q(
+      `
+      UPDATE ticket_operators
+      SET
+        failed_attempts = 0,
+        locked_until = NULL,
+        updated_at = NOW()
+      WHERE id = $1
+      `,
+      [matchedOperator.id]
+    );
+
+    res.redirect("/tickets/access-control");
+
+  } catch (err) {
+
+    console.error(
+      "Error en login de operador:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al iniciar sesión de operador"
+    );
+  }
+});
 app.get("/setup-demo-tickets", requireAuth, async (req, res) => {
   try {
     const studentId = 766;
