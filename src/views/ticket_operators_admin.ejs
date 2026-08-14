@@ -446,6 +446,55 @@
 
 </form>
 
+<!-- AQUÍ PEGAS EL FORMULARIO DE CAMBIAR PIN -->
+
+<form
+  method="POST"
+  action="/admin/ticket-operators/<%= operator.id %>/change-pin"
+  style="margin-top:10px;"
+>
+
+  <input
+    name="pin"
+    type="password"
+    inputmode="numeric"
+    maxlength="4"
+    pattern="[0-9]{4}"
+    placeholder="Nuevo PIN"
+    required
+    style="
+      width:100%;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:12px;
+      background:rgba(255,255,255,.07);
+      color:#ffffff;
+      text-align:center;
+      font-weight:800;
+      letter-spacing:5px;
+    "
+  >
+
+  <button
+    type="submit"
+    style="
+      width:100%;
+      margin-top:8px;
+      padding:10px 13px;
+      border:0;
+      border-radius:12px;
+      background:#FFC400;
+      color:#17003E;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+    "
+  >
+    CAMBIAR PIN
+  </button>
+
+</form>
+
               </div>
 
             </article>
