@@ -3392,6 +3392,105 @@ app.get("/admin/ticket-operators", requireAuth, async (req, res) => {
     );
   }
 });
+app.post("/admin/ticket-operators/create", requireAuth, async (req, res) => {
+  try {
+
+    const fullName = String(
+      req.body.full_name || ""
+    ).trim();
+
+    const pin = String(
+      req.body.pin || ""
+    ).trim();
+
+    // Validar nombre
+    if (!fullName) {
+      return res.status(400).send(
+        "El nombre del operador es obligatorio"
+      );
+    }
+
+    // El PIN debe tener exactamente 4 números
+    if (!/^[0-9]{4}$/.test(pin)) {
+      return res.status(400).send(
+        "El PIN debe contener exactamente 4 números"
+      );
+    }
+
+    // Revisar operadores activos
+    const operatorsResult = await q(`
+      SELECT
+        id,
+        full_name,
+        pin_hash
+      FROM ticket_operators
+      WHERE active = TRUE
+    `);
+
+    // Evitar que dos operadores tengan el mismo PIN
+    for (const operator of operatorsResult.rows) {
+
+      const samePin = await bcrypt.compare(
+        pin,
+        operator.pin_hash
+      );
+
+      if (samePin) {
+        return res.status(400).send(
+          "Ese PIN ya pertenece a otro operador. Utiliza uno diferente."
+        );
+      }
+    }
+
+    // Proteger PIN
+    const pinHash = await bcrypt.hash(
+      pin,
+      10
+    );
+
+    // Crear operador
+    await q(
+      `
+      INSERT INTO ticket_operators (
+        full_name,
+        pin_hash,
+        active,
+        failed_attempts,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        $1,
+        $2,
+        TRUE,
+        0,
+        NOW(),
+        NOW()
+      )
+      `,
+      [
+        fullName,
+        pinHash
+      ]
+    );
+
+    // Regresar al panel
+    res.redirect(
+      "/admin/ticket-operators?created=1"
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Error al crear operador de acceso:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al crear operador de acceso"
+    );
+  }
+});
 app.get("/setup-first-ticket-operator", requireAuth, async (req, res) => {
   try {
 
