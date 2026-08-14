@@ -3376,10 +3376,10 @@ app.get("/admin/ticket-operators", requireAuth, async (req, res) => {
         : ""
     }));
 
-    res.render("ticket_operators_admin", {
-      operators
-    });
-
+res.render("ticket_operators_admin", {
+  operators,
+  queryCreated: req.query.created || ""
+});
   } catch (err) {
 
     console.error(
