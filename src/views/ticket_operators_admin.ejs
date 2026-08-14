@@ -405,19 +405,46 @@
 
               <div>
 
-                <% if (operator.active) { %>
+               <% if (operator.active) { %>
 
-                  <span class="status active">
-                    ACTIVO
-                  </span>
+  <span class="status active">
+    ACTIVO
+  </span>
 
-                <% } else { %>
+<% } else { %>
 
-                  <span class="status inactive">
-                    INACTIVO
-                  </span>
+  <span class="status inactive">
+    INACTIVO
+  </span>
 
-                <% } %>
+<% } %>
+
+<form
+  method="POST"
+  action="/admin/ticket-operators/<%= operator.id %>/toggle"
+  style="margin-top:10px;"
+>
+
+  <button
+    type="submit"
+    style="
+      width:100%;
+      padding:10px 13px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:12px;
+      background:rgba(255,255,255,.08);
+      color:#ffffff;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+    "
+  >
+    <%= operator.active
+      ? "DESACTIVAR"
+      : "ACTIVAR" %>
+  </button>
+
+</form>
 
               </div>
 
