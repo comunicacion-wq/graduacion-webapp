@@ -3491,6 +3491,72 @@ app.post("/admin/ticket-operators/create", requireAuth, async (req, res) => {
     );
   }
 });
+app.post("/admin/ticket-operators/:id/toggle", requireAuth, async (req, res) => {
+  try {
+
+    const operatorId = Number(req.params.id);
+
+    if (!Number.isInteger(operatorId) || operatorId <= 0) {
+      return res.status(400).send(
+        "Operador no válido"
+      );
+    }
+
+    const operatorResult = await q(
+      `
+      SELECT
+        id,
+        full_name,
+        active
+      FROM ticket_operators
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [operatorId]
+    );
+
+    if (operatorResult.rows.length === 0) {
+      return res.status(404).send(
+        "Operador no encontrado"
+      );
+    }
+
+    const operator = operatorResult.rows[0];
+
+    const newStatus = !operator.active;
+
+    await q(
+      `
+      UPDATE ticket_operators
+      SET
+        active = $1,
+        failed_attempts = 0,
+        locked_until = NULL,
+        updated_at = NOW()
+      WHERE id = $2
+      `,
+      [
+        newStatus,
+        operatorId
+      ]
+    );
+
+    res.redirect(
+      "/admin/ticket-operators"
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Error al cambiar estado del operador:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al cambiar estado del operador"
+    );
+  }
+});
 app.get("/setup-first-ticket-operator", requireAuth, async (req, res) => {
   try {
 
