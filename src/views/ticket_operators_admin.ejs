@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Operadores de acceso</title>
+</head>
+
+<body>
+
+  <h1>Operadores de acceso</h1>
+
+  <% if (Array.isArray(operators) && operators.length > 0) { %>
+
+    <% operators.forEach(function(operator) { %>
+
+      <div style="margin-bottom:20px;">
+
+        <strong>
+          <%= operator.full_name %>
+        </strong>
+
+        <div>
+          Estado:
+          <%= operator.active ? "Activo" : "Inactivo" %>
+        </div>
+
+        <div>
+          Intentos fallidos:
+          <%= operator.failed_attempts || 0 %>
+        </div>
+
+        <div>
+          Creado:
+          <%= operator.created_at_fmt || "" %>
+        </div>
+
+      </div>
+
+    <% }) %>
+
+  <% } else { %>
+
+    <p>
+      No hay operadores registrados.
+    </p>
+
+  <% } %>
+
+</body>
+</html>
