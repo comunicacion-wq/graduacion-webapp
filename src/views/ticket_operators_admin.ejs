@@ -2,51 +2,442 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Operadores de acceso</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <title>Operadores de acceso | ITCC</title>
+
+  <style>
+    :root{
+      --purple:#4400B2;
+      --dark:#17003E;
+      --yellow:#FFC400;
+      --green:#2CCB71;
+      --red:#FF6B6B;
+      --white:#FFFFFF;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      padding:30px 20px;
+
+      font-family:Arial,Helvetica,sans-serif;
+
+      background:#17003E;
+      color:#ffffff;
+    }
+
+    .container{
+      width:100%;
+      max-width:900px;
+      margin:0 auto;
+    }
+
+    .badge{
+      display:inline-block;
+
+      padding:8px 13px;
+
+      color:#17003E;
+      background:#FFC400;
+
+      border-radius:999px;
+
+      font-size:11px;
+      font-weight:800;
+    }
+
+    h1{
+      margin:18px 0 6px;
+
+      font-size:32px;
+    }
+
+    .subtitle{
+      margin:0;
+
+      color:rgba(255,255,255,.68);
+
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .success{
+      margin-top:22px;
+      padding:15px 17px;
+
+      color:#ffffff;
+      background:rgba(44,203,113,.15);
+
+      border:1px solid rgba(44,203,113,.35);
+      border-radius:16px;
+
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .card{
+      margin-top:24px;
+      padding:22px;
+
+      background:rgba(255,255,255,.07);
+
+      border:1px solid rgba(255,255,255,.11);
+      border-radius:22px;
+    }
+
+    .card h2{
+      margin:0 0 18px;
+
+      font-size:21px;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:1fr 180px;
+      gap:14px;
+    }
+
+    label{
+      display:block;
+
+      margin-bottom:7px;
+
+      color:rgba(255,255,255,.80);
+
+      font-size:13px;
+      font-weight:700;
+    }
+
+    input{
+      width:100%;
+
+      padding:15px 16px;
+
+      color:#ffffff;
+      background:rgba(255,255,255,.07);
+
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+
+      font-size:16px;
+      outline:none;
+    }
+
+    input:focus{
+      border-color:#FFC400;
+    }
+
+    input::placeholder{
+      color:rgba(255,255,255,.35);
+    }
+
+    .pin-input{
+      text-align:center;
+
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:7px;
+    }
+
+    .create-button{
+      width:100%;
+
+      margin-top:16px;
+      padding:16px 20px;
+
+      border:0;
+      border-radius:15px;
+
+      color:#17003E;
+      background:#FFC400;
+
+      font-size:15px;
+      font-weight:800;
+
+      cursor:pointer;
+    }
+
+    .operators{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .operator{
+      padding:17px;
+
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:15px;
+
+      background:rgba(255,255,255,.05);
+
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:17px;
+    }
+
+    .operator-name{
+      font-size:16px;
+      font-weight:800;
+    }
+
+    .operator-data{
+      margin-top:6px;
+
+      color:rgba(255,255,255,.58);
+
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .status{
+      display:inline-block;
+
+      padding:7px 11px;
+
+      border-radius:999px;
+
+      font-size:11px;
+      font-weight:800;
+    }
+
+    .status.active{
+      color:#07381F;
+      background:#50E391;
+    }
+
+    .status.inactive{
+      color:#ffffff;
+      background:#8E2A2A;
+    }
+
+    .empty{
+      padding:24px;
+
+      text-align:center;
+
+      color:rgba(255,255,255,.55);
+
+      border:1px dashed rgba(255,255,255,.15);
+      border-radius:16px;
+    }
+
+    .security{
+      margin-top:18px;
+      padding:14px 16px;
+
+      color:rgba(255,255,255,.58);
+      background:rgba(255,255,255,.035);
+
+      border-radius:14px;
+
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    @media(max-width:650px){
+
+      .form-grid{
+        grid-template-columns:1fr;
+      }
+
+      .operator{
+        grid-template-columns:1fr;
+      }
+
+      h1{
+        font-size:28px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-  <h1>Operadores de acceso</h1>
+  <main class="container">
 
-  <% if (Array.isArray(operators) && operators.length > 0) { %>
+    <span class="badge">
+      AJUSTES · CONTROL DE ACCESO
+    </span>
 
-    <% operators.forEach(function(operator) { %>
+    <h1>
+      Operadores de acceso
+    </h1>
 
-      <div style="margin-bottom:20px;">
+    <p class="subtitle">
+      Administra las personas autorizadas para escanear y acreditar
+      boletos durante las graduaciones.
+    </p>
 
-        <strong>
-          <%= operator.full_name %>
-        </strong>
 
-        <div>
-          Estado:
-          <%= operator.active ? "Activo" : "Inactivo" %>
+    <% if (String(queryCreated || "") === "1") { %>
+
+      <div class="success">
+        ✓ Operador creado correctamente.
+      </div>
+
+    <% } %>
+
+
+    <section class="card">
+
+      <h2>
+        + Crear operador
+      </h2>
+
+      <form
+        method="POST"
+        action="/admin/ticket-operators/create"
+      >
+
+        <div class="form-grid">
+
+          <div>
+
+            <label for="full_name">
+              Nombre del operador
+            </label>
+
+            <input
+              id="full_name"
+              name="full_name"
+              type="text"
+              placeholder="Ej. María López"
+              maxlength="150"
+              autocomplete="off"
+              required
+            >
+
+          </div>
+
+          <div>
+
+            <label for="pin">
+              PIN de 4 números
+            </label>
+
+            <input
+              id="pin"
+              class="pin-input"
+              name="pin"
+              type="password"
+              inputmode="numeric"
+              maxlength="4"
+              pattern="[0-9]{4}"
+              placeholder="••••"
+              autocomplete="new-password"
+              required
+            >
+
+          </div>
+
         </div>
 
-        <div>
-          Intentos fallidos:
-          <%= operator.failed_attempts || 0 %>
-        </div>
+        <button
+          class="create-button"
+          type="submit"
+        >
+          CREAR OPERADOR
+        </button>
 
-        <div>
-          Creado:
-          <%= operator.created_at_fmt || "" %>
-        </div>
+      </form>
+
+      <div class="security">
+        🔒 El PIN se almacena de forma protegida. Cada operador debe
+        utilizar un PIN diferente.
+      </div>
+
+    </section>
+
+
+    <section class="card">
+
+      <h2>
+        Operadores registrados
+      </h2>
+
+      <div class="operators">
+
+        <% if (Array.isArray(operators) && operators.length > 0) { %>
+
+          <% operators.forEach(function(operator) { %>
+
+            <article class="operator">
+
+              <div>
+
+                <div class="operator-name">
+                  <%= operator.full_name %>
+                </div>
+
+                <div class="operator-data">
+
+                  Creado:
+                  <%= operator.created_at_fmt || "-" %>
+
+                  <br>
+
+                  Intentos fallidos:
+                  <%= operator.failed_attempts || 0 %>
+
+                  <% if (operator.locked_until_fmt) { %>
+
+                    <br>
+
+                    Bloqueado hasta:
+                    <%= operator.locked_until_fmt %>
+
+                  <% } %>
+
+                </div>
+
+              </div>
+
+              <div>
+
+                <% if (operator.active) { %>
+
+                  <span class="status active">
+                    ACTIVO
+                  </span>
+
+                <% } else { %>
+
+                  <span class="status inactive">
+                    INACTIVO
+                  </span>
+
+                <% } %>
+
+              </div>
+
+            </article>
+
+          <% }) %>
+
+        <% } else { %>
+
+          <div class="empty">
+            No hay operadores registrados.
+          </div>
+
+        <% } %>
 
       </div>
 
-    <% }) %>
+    </section>
 
-  <% } else { %>
-
-    <p>
-      No hay operadores registrados.
-    </p>
-
-  <% } %>
+  </main>
 
 </body>
 </html>
