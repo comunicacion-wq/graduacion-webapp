@@ -4240,7 +4240,7 @@ const tickets = await Promise.all(
   });
 
 });
-app.get("/tickets/verify/:token", requireAuth, async (req, res) => {
+app.get("/tickets/verify/:token", requireTicketOperator, async (req, res) => {
   try {
     const token = String(req.params.token || "").trim();
 
@@ -5244,7 +5244,7 @@ app.get("/tickets/access-control", requireTicketOperator, async (req, res) => {
 
   }
 });
-app.get("/tickets/scan", requireAuth, async (req, res) => {
+app.get("/tickets/scan", requireTicketOperator, async (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html lang="es">
@@ -5775,7 +5775,7 @@ app.get("/tickets/scan", requireAuth, async (req, res) => {
     </html>
   `);
 });
-app.get("/tickets/scan/verify", requireAuth, async (req, res) => {
+app.get("/tickets/scan/verify", requireTicketOperator, async (req, res) => {
   try {
     const code = String(req.query.code || "").trim();
 
@@ -6175,7 +6175,7 @@ app.get("/tickets/scan/verify", requireAuth, async (req, res) => {
     );
   }
 });
-app.post("/tickets/accredit/:token", requireAuth, async (req, res) => {
+app.post("/tickets/accredit/:token", requireTicketOperator, async (req, res) => {
   try {
     const token = String(req.params.token || "").trim();
 
