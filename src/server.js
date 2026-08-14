@@ -3557,6 +3557,104 @@ app.post("/admin/ticket-operators/:id/toggle", requireAuth, async (req, res) => 
     );
   }
 });
+app.post("/admin/ticket-operators/:id/change-pin", requireAuth, async (req, res) => {
+  try {
+
+    const operatorId = Number(req.params.id);
+    const newPin = String(req.body.pin || "").trim();
+
+    if (!Number.isInteger(operatorId) || operatorId <= 0) {
+      return res.status(400).send("Operador no válido");
+    }
+
+    if (!/^[0-9]{4}$/.test(newPin)) {
+      return res.status(400).send(
+        "El PIN debe contener exactamente 4 números"
+      );
+    }
+
+    const operatorResult = await q(
+      `
+      SELECT
+        id,
+        full_name
+      FROM ticket_operators
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [operatorId]
+    );
+
+    if (operatorResult.rows.length === 0) {
+      return res.status(404).send(
+        "Operador no encontrado"
+      );
+    }
+
+    // Evitar PIN duplicado entre operadores activos
+    const activeOperators = await q(
+      `
+      SELECT
+        id,
+        pin_hash
+      FROM ticket_operators
+      WHERE active = TRUE
+        AND id <> $1
+      `,
+      [operatorId]
+    );
+
+    for (const operator of activeOperators.rows) {
+
+      const samePin = await bcrypt.compare(
+        newPin,
+        operator.pin_hash
+      );
+
+      if (samePin) {
+        return res.status(400).send(
+          "Ese PIN ya pertenece a otro operador activo"
+        );
+      }
+    }
+
+    const newPinHash = await bcrypt.hash(
+      newPin,
+      10
+    );
+
+    await q(
+      `
+      UPDATE ticket_operators
+      SET
+        pin_hash = $1,
+        failed_attempts = 0,
+        locked_until = NULL,
+        updated_at = NOW()
+      WHERE id = $2
+      `,
+      [
+        newPinHash,
+        operatorId
+      ]
+    );
+
+    res.redirect(
+      "/admin/ticket-operators?pinChanged=1"
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Error al cambiar PIN del operador:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al cambiar PIN del operador"
+    );
+  }
+});
 app.get("/setup-first-ticket-operator", requireAuth, async (req, res) => {
   try {
 
