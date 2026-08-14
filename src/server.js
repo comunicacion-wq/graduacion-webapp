@@ -3344,6 +3344,54 @@ app.get("/setup-ticket-operators", requireAuth, async (req, res) => {
     );
   }
 });
+app.get("/admin/ticket-operators", requireAuth, async (req, res) => {
+  try {
+
+    const operatorsResult = await q(`
+      SELECT
+        id,
+        full_name,
+        active,
+        failed_attempts,
+        locked_until,
+        created_at,
+        updated_at
+      FROM ticket_operators
+      ORDER BY full_name ASC
+    `);
+
+    const operators = operatorsResult.rows.map(operator => ({
+      ...operator,
+
+      created_at_fmt: operator.created_at
+        ? dayjs(operator.created_at).format("DD/MM/YYYY HH:mm")
+        : "",
+
+      updated_at_fmt: operator.updated_at
+        ? dayjs(operator.updated_at).format("DD/MM/YYYY HH:mm")
+        : "",
+
+      locked_until_fmt: operator.locked_until
+        ? dayjs(operator.locked_until).format("DD/MM/YYYY HH:mm")
+        : ""
+    }));
+
+    res.render("ticket_operators_admin", {
+      operators
+    });
+
+  } catch (err) {
+
+    console.error(
+      "Error al cargar operadores de acceso:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al cargar operadores de acceso"
+    );
+  }
+});
 app.get("/setup-first-ticket-operator", requireAuth, async (req, res) => {
   try {
 
