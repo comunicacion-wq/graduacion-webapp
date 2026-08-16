@@ -320,7 +320,101 @@ app.get("/", requireAuth, async (req,res) => {
   });
   render(req,res,"layout", { title:"Dashboard", active:"dashboard", body });
 });
+app.get("/reports/packages", requireAuth, async (req, res) => {
+  try {
 
+    const campusId = req.query.campus_id || "";
+
+    const params = [];
+    let campusFilter = "";
+
+    if (campusId) {
+      params.push(campusId);
+      campusFilter = `WHERE s.campus_id = $${params.length}`;
+    }
+
+    const detailResult = await q(
+      `
+      SELECT
+        c.id AS campus_id,
+        c.name AS campus_name,
+        p.id AS package_id,
+        p.name AS package_name,
+        COUNT(s.id)::int AS total_students
+      FROM students s
+      LEFT JOIN campuses c
+        ON c.id = s.campus_id
+      LEFT JOIN packages p
+        ON p.id = s.package_id
+      ${campusFilter}
+      GROUP BY
+        c.id,
+        c.name,
+        p.id,
+        p.name
+      ORDER BY
+        c.name ASC,
+        p.name ASC
+      `,
+      params
+    );
+
+    const campusesResult = await q(`
+      SELECT id, name
+      FROM campuses
+      ORDER BY name ASC
+    `);
+
+    const totalResult = await q(
+      `
+      SELECT COUNT(*)::int AS total
+      FROM students s
+      ${campusFilter}
+      `,
+      params
+    );
+
+    const body = await new Promise((resolve, reject) => {
+
+      res.render(
+        "report_packages",
+        {
+          rows: detailResult.rows,
+          campuses: campusesResult.rows,
+          selectedCampus: campusId,
+          totalStudents: totalResult.rows[0]?.total || 0
+        },
+        (err, html) => {
+          if (err) return reject(err);
+          resolve(html);
+        }
+      );
+
+    });
+
+    render(
+      req,
+      res,
+      "layout",
+      {
+        title: "Reporte de paquetes",
+        active: "reports",
+        body
+      }
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Error al generar reporte de paquetes:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al generar reporte de paquetes"
+    );
+  }
+});
 // Students list
 app.get("/students", requireAuth, async (req,res) => {
 const filters = {
