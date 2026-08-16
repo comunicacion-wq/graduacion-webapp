@@ -471,17 +471,64 @@ const groups = await q(`
     `,
     params
   );
-const activeBillingStudents = s.rows.filter(student => student.billing_active === true);
+const summaryResult = await q(
+  `
+  SELECT
+    COUNT(*)::int AS total_filtered,
 
-const totalFiltered = s.rows.length;
+    COUNT(*) FILTER (
+      WHERE COALESCE(s.billing_active, false) = true
+    )::int AS total_billing_active
 
-const totalBillingActive = activeBillingStudents.length;
+  FROM students s
+  LEFT JOIN campuses c ON c.id = s.campus_id
+  LEFT JOIN shifts sh ON sh.id = s.shift_id
+  LEFT JOIN graduation_periods gp ON gp.id = s.period_id
+  LEFT JOIN graduation_years gy ON gy.id = s.year_id
+  LEFT JOIN packages p ON p.id = s.package_id
+  ${where}
+  `,
+  params
+);
 
-const packageSummary = cats.packages.map(pkg => ({
-  id: pkg.id,
-  name: pkg.name,
-  total: activeBillingStudents.filter(student => Number(student.package_id) === Number(pkg.id)).length
-}));
+const totalFiltered =
+  summaryResult.rows[0]?.total_filtered || 0;
+
+const totalBillingActive =
+  summaryResult.rows[0]?.total_billing_active || 0;
+
+
+const packageResult = await q(
+  `
+  SELECT
+    s.package_id,
+    COUNT(*)::int AS total
+  FROM students s
+  LEFT JOIN campuses c ON c.id = s.campus_id
+  LEFT JOIN shifts sh ON sh.id = s.shift_id
+  LEFT JOIN graduation_periods gp ON gp.id = s.period_id
+  LEFT JOIN graduation_years gy ON gy.id = s.year_id
+  LEFT JOIN packages p ON p.id = s.package_id
+  ${where}
+  AND COALESCE(s.billing_active, false) = true
+  GROUP BY s.package_id
+  `,
+  params
+);
+
+const packageSummary = cats.packages.map(pkg => {
+
+  const found = packageResult.rows.find(
+    row => Number(row.package_id) === Number(pkg.id)
+  );
+
+  return {
+    id: pkg.id,
+    name: pkg.name,
+    total: found ? Number(found.total) : 0
+  };
+
+});
   const body = await new Promise((resolve, reject) => {
 res.render("students_list", {
   ...cats,
