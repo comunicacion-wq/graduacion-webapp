@@ -1324,6 +1324,45 @@ app.post("/students/:id/toggle-billing", requireAuth, async (req, res) => {
 
   res.redirect("/students");
 });
+app.post("/students/activate-billing-with-payments", requireAuth, requireRole("ADMIN", "CAJERO"), async (req, res) => {
+  try {
+
+    const result = await q(`
+      UPDATE students s
+      SET billing_active = TRUE
+      WHERE COALESCE(s.billing_active, FALSE) = FALSE
+        AND EXISTS (
+          SELECT 1
+          FROM payments p
+          WHERE p.student_id = s.id
+        )
+      RETURNING
+        s.id,
+        s.full_name
+    `);
+
+    const updatedStudents = result.rows;
+
+    console.log(
+      `Cobranza activada automáticamente para ${updatedStudents.length} alumnos con pagos registrados`
+    );
+
+    res.redirect(
+      `/students?billingActivated=${updatedStudents.length}`
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Error al activar cobranza de alumnos con pagos:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al activar cobranza de alumnos con pagos registrados"
+    );
+  }
+});
 app.get("/students/:id/edit", requireAuth, requireRole("ADMIN","CAJERO"), async (req,res) => {
   const studentId = Number(req.params.id);
   const cats = await catalogs();
