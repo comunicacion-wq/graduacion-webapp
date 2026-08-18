@@ -3,7 +3,7 @@
 </h3>
 
 <p class="text-muted">
-  Concentrado de alumnos por campus y paquete de graduación.
+  Concentrado de alumnos por campus, periodo, año y paquete de graduación.
 </p>
 
 <form
@@ -12,7 +12,7 @@
   class="row g-2 mb-4"
 >
 
-  <div class="col-12 col-md-5">
+  <div class="col-12 col-md-4">
 
     <label class="form-label">
       Campus
@@ -31,7 +31,7 @@
 
         <option
           value="<%= campus.id %>"
-          <%= String(selectedCampus) === String(campus.id)
+          <%= String(filters.campus_id) === String(campus.id)
             ? "selected"
             : "" %>
         >
@@ -44,6 +44,73 @@
 
   </div>
 
+
+  <div class="col-12 col-md-4">
+
+    <label class="form-label">
+      Periodo
+    </label>
+
+    <select
+      name="period_id"
+      class="form-select"
+    >
+
+      <option value="">
+        Todos los periodos
+      </option>
+
+      <% periods.forEach(function(period) { %>
+
+        <option
+          value="<%= period.id %>"
+          <%= String(filters.period_id) === String(period.id)
+            ? "selected"
+            : "" %>
+        >
+          <%= period.name %>
+        </option>
+
+      <% }) %>
+
+    </select>
+
+  </div>
+
+
+  <div class="col-12 col-md-4">
+
+    <label class="form-label">
+      Año
+    </label>
+
+    <select
+      name="year_id"
+      class="form-select"
+    >
+
+      <option value="">
+        Todos los años
+      </option>
+
+      <% years.forEach(function(year) { %>
+
+        <option
+          value="<%= year.id %>"
+          <%= String(filters.year_id) === String(year.id)
+            ? "selected"
+            : "" %>
+        >
+          <%= year.year %>
+        </option>
+
+      <% }) %>
+
+    </select>
+
+  </div>
+
+
   <div class="col-12 col-md-auto d-flex align-items-end">
 
     <button
@@ -54,6 +121,7 @@
     </button>
 
   </div>
+
 
   <div class="col-12 col-md-auto d-flex align-items-end">
 
@@ -67,6 +135,7 @@
   </div>
 
 </form>
+
 
 <div class="card mb-4">
 
@@ -88,6 +157,7 @@
   </div>
 
 </div>
+
 
 <div class="card">
 
@@ -130,9 +200,11 @@
                 </td>
 
                 <td class="text-end">
+
                   <strong>
                     <%= row.total_students %>
                   </strong>
+
                 </td>
 
               </tr>
@@ -147,7 +219,7 @@
                 colspan="3"
                 class="text-center text-muted py-4"
               >
-                No hay alumnos para mostrar.
+                No hay alumnos para mostrar con los filtros seleccionados.
               </td>
 
             </tr>
