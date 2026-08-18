@@ -330,10 +330,14 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
     };
 
     const params = [];
-    const conditions = [];
+
+    const conditions = [
+      `COALESCE(s.billing_active, false) = true`
+    ];
 
     if (filters.campus_id) {
       params.push(filters.campus_id);
+
       conditions.push(
         `s.campus_id = $${params.length}`
       );
@@ -341,6 +345,7 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
 
     if (filters.period_id) {
       params.push(filters.period_id);
+
       conditions.push(
         `s.period_id = $${params.length}`
       );
@@ -348,19 +353,19 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
 
     if (filters.year_id) {
       params.push(filters.year_id);
+
       conditions.push(
         `s.year_id = $${params.length}`
       );
     }
 
-    const where =
-      conditions.length > 0
-        ? `WHERE ${conditions.join(" AND ")}`
-        : "";
+    const where = `
+      WHERE ${conditions.join(" AND ")}
+    `;
 
 
     // ==========================================
-    // CONCENTRADO POR CAMPUS Y PAQUETE
+    // RESUMEN POR CAMPUS Y PAQUETE
     // ==========================================
 
     const detailResult = await q(
@@ -372,7 +377,48 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
         p.id AS package_id,
         p.name AS package_name,
 
-        COUNT(s.id)::int AS total_students
+        COUNT(s.id)::int AS total_students,
+
+        SUM(
+          GREATEST(
+            0,
+            COALESCE(p.cost, 0)
+            - COALESCE(s.discount_amount, 0)
+          )
+        )::numeric AS total_contracted,
+
+        SUM(
+          COALESCE(pay.total_paid, 0)
+        )::numeric AS total_paid,
+
+        SUM(
+          GREATEST(
+            0,
+            COALESCE(p.cost, 0)
+            - COALESCE(s.discount_amount, 0)
+            - COALESCE(pay.total_paid, 0)
+          )
+        )::numeric AS total_balance,
+
+        COUNT(*) FILTER (
+          WHERE
+            GREATEST(
+              0,
+              COALESCE(p.cost, 0)
+              - COALESCE(s.discount_amount, 0)
+              - COALESCE(pay.total_paid, 0)
+            ) <= 0
+        )::int AS paid_students,
+
+        COUNT(*) FILTER (
+          WHERE
+            GREATEST(
+              0,
+              COALESCE(p.cost, 0)
+              - COALESCE(s.discount_amount, 0)
+              - COALESCE(pay.total_paid, 0)
+            ) > 0
+        )::int AS students_with_balance
 
       FROM students s
 
@@ -381,6 +427,16 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
 
       LEFT JOIN packages p
         ON p.id = s.package_id
+
+      LEFT JOIN (
+        SELECT
+          student_id,
+          COALESCE(SUM(amount), 0) AS total_paid
+        FROM payments
+        WHERE status = 'CONFIRMED'
+        GROUP BY student_id
+      ) pay
+        ON pay.student_id = s.id
 
       ${where}
 
@@ -399,14 +455,150 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
 
 
     // ==========================================
-    // TOTAL DE ALUMNOS DEL REPORTE
+    // DETALLE DE ALUMNOS
     // ==========================================
 
-    const totalResult = await q(
+    const studentsResult = await q(
       `
       SELECT
-        COUNT(*)::int AS total
+        s.id,
+        s.full_name,
+        s.phone_e164,
+        s.grade,
+        s."group",
+
+        c.name AS campus_name,
+
+        sh.name AS shift_name,
+
+        gp.name AS period_name,
+
+        gy.year AS grad_year,
+
+        p.name AS package_name,
+
+        COALESCE(p.cost, 0)::numeric AS package_cost,
+
+        COALESCE(
+          s.discount_amount,
+          0
+        )::numeric AS discount_amount,
+
+        COALESCE(
+          pay.total_paid,
+          0
+        )::numeric AS total_paid,
+
+        GREATEST(
+          0,
+          COALESCE(p.cost, 0)
+          - COALESCE(s.discount_amount, 0)
+          - COALESCE(pay.total_paid, 0)
+        )::numeric AS balance
+
       FROM students s
+
+      LEFT JOIN campuses c
+        ON c.id = s.campus_id
+
+      LEFT JOIN shifts sh
+        ON sh.id = s.shift_id
+
+      LEFT JOIN graduation_periods gp
+        ON gp.id = s.period_id
+
+      LEFT JOIN graduation_years gy
+        ON gy.id = s.year_id
+
+      LEFT JOIN packages p
+        ON p.id = s.package_id
+
+      LEFT JOIN (
+        SELECT
+          student_id,
+          COALESCE(SUM(amount), 0) AS total_paid
+        FROM payments
+        WHERE status = 'CONFIRMED'
+        GROUP BY student_id
+      ) pay
+        ON pay.student_id = s.id
+
+      ${where}
+
+      ORDER BY
+        c.name ASC,
+        p.name ASC,
+        s.full_name ASC
+      `,
+      params
+    );
+
+
+    // ==========================================
+    // TOTALES GENERALES
+    // ==========================================
+
+    const totalsResult = await q(
+      `
+      SELECT
+        COUNT(*)::int AS total_students,
+
+        SUM(
+          GREATEST(
+            0,
+            COALESCE(p.cost, 0)
+            - COALESCE(s.discount_amount, 0)
+          )
+        )::numeric AS total_contracted,
+
+        SUM(
+          COALESCE(pay.total_paid, 0)
+        )::numeric AS total_paid,
+
+        SUM(
+          GREATEST(
+            0,
+            COALESCE(p.cost, 0)
+            - COALESCE(s.discount_amount, 0)
+            - COALESCE(pay.total_paid, 0)
+          )
+        )::numeric AS total_balance,
+
+        COUNT(*) FILTER (
+          WHERE
+            GREATEST(
+              0,
+              COALESCE(p.cost, 0)
+              - COALESCE(s.discount_amount, 0)
+              - COALESCE(pay.total_paid, 0)
+            ) <= 0
+        )::int AS paid_students,
+
+        COUNT(*) FILTER (
+          WHERE
+            GREATEST(
+              0,
+              COALESCE(p.cost, 0)
+              - COALESCE(s.discount_amount, 0)
+              - COALESCE(pay.total_paid, 0)
+            ) > 0
+        )::int AS students_with_balance
+
+      FROM students s
+
+      LEFT JOIN packages p
+        ON p.id = s.package_id
+
+      LEFT JOIN (
+        SELECT
+          student_id,
+          COALESCE(SUM(amount), 0) AS total_paid
+        FROM payments
+        WHERE status = 'CONFIRMED'
+        GROUP BY student_id
+      ) pay
+        ON pay.student_id = s.id
+
       ${where}
       `,
       params
@@ -414,7 +606,7 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
 
 
     // ==========================================
-    // CAMPUS
+    // CATÁLOGOS
     // ==========================================
 
     const campusesResult = await q(`
@@ -425,11 +617,6 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
       ORDER BY name ASC
     `);
 
-
-    // ==========================================
-    // PERIODOS
-    // ==========================================
-
     const periodsResult = await q(`
       SELECT
         id,
@@ -437,11 +624,6 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
       FROM graduation_periods
       ORDER BY id ASC
     `);
-
-
-    // ==========================================
-    // AÑOS
-    // ==========================================
 
     const yearsResult = await q(`
       SELECT
@@ -453,7 +635,61 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
 
 
     // ==========================================
-    // VISTA
+    // PREPARAR DETALLE PARA LA VISTA
+    // ==========================================
+
+    const studentsDetail =
+      studentsResult.rows.map(student => ({
+        ...student,
+
+        package_cost:
+          Number(student.package_cost || 0),
+
+        discount_amount:
+          Number(student.discount_amount || 0),
+
+        total_paid:
+          Number(student.total_paid || 0),
+
+        balance:
+          Number(student.balance || 0),
+
+        payment_status:
+          Number(student.balance || 0) <= 0
+            ? "PAGADO"
+            : "CON SALDO"
+      }));
+
+
+    const totals = {
+      total_students:
+        totalsResult.rows[0]?.total_students || 0,
+
+      total_contracted:
+        Number(
+          totalsResult.rows[0]?.total_contracted || 0
+        ),
+
+      total_paid:
+        Number(
+          totalsResult.rows[0]?.total_paid || 0
+        ),
+
+      total_balance:
+        Number(
+          totalsResult.rows[0]?.total_balance || 0
+        ),
+
+      paid_students:
+        totalsResult.rows[0]?.paid_students || 0,
+
+      students_with_balance:
+        totalsResult.rows[0]?.students_with_balance || 0
+    };
+
+
+    // ==========================================
+    // RENDER
     // ==========================================
 
     const body = await new Promise(
@@ -464,14 +700,21 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
           {
             rows: detailResult.rows,
 
+            studentsDetail,
+
+            totals,
+
             totalStudents:
-              totalResult.rows[0]?.total || 0,
+              totals.total_students,
 
-            campuses: campusesResult.rows,
+            campuses:
+              campusesResult.rows,
 
-            periods: periodsResult.rows,
+            periods:
+              periodsResult.rows,
 
-            years: yearsResult.rows,
+            years:
+              yearsResult.rows,
 
             filters
           },
