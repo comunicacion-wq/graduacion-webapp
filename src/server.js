@@ -323,35 +323,73 @@ app.get("/", requireAuth, async (req,res) => {
 app.get("/reports/packages", requireAuth, async (req, res) => {
   try {
 
-    const campusId = req.query.campus_id || "";
+    const filters = {
+      campus_id: req.query.campus_id || "",
+      period_id: req.query.period_id || "",
+      year_id: req.query.year_id || ""
+    };
 
     const params = [];
-    let campusFilter = "";
+    const conditions = [];
 
-    if (campusId) {
-      params.push(campusId);
-      campusFilter = `WHERE s.campus_id = $${params.length}`;
+    if (filters.campus_id) {
+      params.push(filters.campus_id);
+      conditions.push(
+        `s.campus_id = $${params.length}`
+      );
     }
+
+    if (filters.period_id) {
+      params.push(filters.period_id);
+      conditions.push(
+        `s.period_id = $${params.length}`
+      );
+    }
+
+    if (filters.year_id) {
+      params.push(filters.year_id);
+      conditions.push(
+        `s.year_id = $${params.length}`
+      );
+    }
+
+    const where =
+      conditions.length > 0
+        ? `WHERE ${conditions.join(" AND ")}`
+        : "";
+
+
+    // ==========================================
+    // CONCENTRADO POR CAMPUS Y PAQUETE
+    // ==========================================
 
     const detailResult = await q(
       `
       SELECT
         c.id AS campus_id,
         c.name AS campus_name,
+
         p.id AS package_id,
         p.name AS package_name,
+
         COUNT(s.id)::int AS total_students
+
       FROM students s
+
       LEFT JOIN campuses c
         ON c.id = s.campus_id
+
       LEFT JOIN packages p
         ON p.id = s.package_id
-      ${campusFilter}
+
+      ${where}
+
       GROUP BY
         c.id,
         c.name,
         p.id,
         p.name
+
       ORDER BY
         c.name ASC,
         p.name ASC
@@ -359,38 +397,98 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
       params
     );
 
-    const campusesResult = await q(`
-      SELECT id, name
-      FROM campuses
-      ORDER BY name ASC
-    `);
+
+    // ==========================================
+    // TOTAL DE ALUMNOS DEL REPORTE
+    // ==========================================
 
     const totalResult = await q(
       `
-      SELECT COUNT(*)::int AS total
+      SELECT
+        COUNT(*)::int AS total
       FROM students s
-      ${campusFilter}
+      ${where}
       `,
       params
     );
 
-    const body = await new Promise((resolve, reject) => {
 
-      res.render(
-        "report_packages",
-        {
-          rows: detailResult.rows,
-          campuses: campusesResult.rows,
-          selectedCampus: campusId,
-          totalStudents: totalResult.rows[0]?.total || 0
-        },
-        (err, html) => {
-          if (err) return reject(err);
-          resolve(html);
-        }
-      );
+    // ==========================================
+    // CAMPUS
+    // ==========================================
 
-    });
+    const campusesResult = await q(`
+      SELECT
+        id,
+        name
+      FROM campuses
+      ORDER BY name ASC
+    `);
+
+
+    // ==========================================
+    // PERIODOS
+    // ==========================================
+
+    const periodsResult = await q(`
+      SELECT
+        id,
+        name
+      FROM graduation_periods
+      ORDER BY id ASC
+    `);
+
+
+    // ==========================================
+    // AÑOS
+    // ==========================================
+
+    const yearsResult = await q(`
+      SELECT
+        id,
+        year
+      FROM graduation_years
+      ORDER BY year DESC
+    `);
+
+
+    // ==========================================
+    // VISTA
+    // ==========================================
+
+    const body = await new Promise(
+      (resolve, reject) => {
+
+        res.render(
+          "report_packages",
+          {
+            rows: detailResult.rows,
+
+            totalStudents:
+              totalResult.rows[0]?.total || 0,
+
+            campuses: campusesResult.rows,
+
+            periods: periodsResult.rows,
+
+            years: yearsResult.rows,
+
+            filters
+          },
+
+          (err, html) => {
+
+            if (err) {
+              return reject(err);
+            }
+
+            resolve(html);
+          }
+        );
+
+      }
+    );
+
 
     render(
       req,
