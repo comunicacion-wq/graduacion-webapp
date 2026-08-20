@@ -9,6 +9,7 @@
     "start": "node src/seed.js && node src/server.js"
   },
   "dependencies": {
+    "exceljs": "^4.4.0",K
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "dayjs": "^1.11.13",
