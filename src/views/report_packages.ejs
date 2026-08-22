@@ -108,28 +108,38 @@
 
   </div>
 
-  <div class="col-12 col-md-auto d-flex align-items-end">
+<div class="col-12 col-md-auto d-flex align-items-end">
 
-    <button
-      type="submit"
-      class="btn btn-primary w-100"
-    >
-      Filtrar
-    </button>
+  <button
+    type="submit"
+    class="btn btn-primary w-100"
+  >
+    Filtrar
+  </button>
 
-  </div>
+</div>
 
-  <div class="col-12 col-md-auto d-flex align-items-end">
+<div class="col-12 col-md-auto d-flex align-items-end">
 
-    <a
-      href="/reports/packages"
-      class="btn btn-outline-secondary w-100"
-    >
-      Limpiar
-    </a>
+  <a
+    href="/reports/packages"
+    class="btn btn-outline-secondary w-100"
+  >
+    Limpiar
+  </a>
 
-  </div>
+</div>
 
+<div class="col-12 col-md-auto d-flex align-items-end">
+
+  <a
+    href="/reports/packages.xlsx?campus_id=<%= encodeURIComponent(filters.campus_id || '') %>&period_id=<%= encodeURIComponent(filters.period_id || '') %>&year_id=<%= encodeURIComponent(filters.year_id || '') %>"
+    class="btn btn-success w-100"
+  >
+    📊 Descargar Excel
+  </a>
+
+</div>
 </form>
 
 
