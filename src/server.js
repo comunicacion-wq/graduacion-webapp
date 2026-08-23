@@ -757,6 +757,308 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
   }
 });
 // Students list
+app.get("/reports/packages.xlsx", requireAuth, async (req, res) => {
+  try {
+
+    const filters = {
+      campus_id: req.query.campus_id || "",
+      period_id: req.query.period_id || "",
+      year_id: req.query.year_id || ""
+    };
+
+    const params = [];
+
+    const conditions = [
+      `COALESCE(s.billing_active, false) = true`
+    ];
+
+    if (filters.campus_id) {
+      params.push(filters.campus_id);
+      conditions.push(
+        `s.campus_id = $${params.length}`
+      );
+    }
+
+    if (filters.period_id) {
+      params.push(filters.period_id);
+      conditions.push(
+        `s.period_id = $${params.length}`
+      );
+    }
+
+    if (filters.year_id) {
+      params.push(filters.year_id);
+      conditions.push(
+        `s.year_id = $${params.length}`
+      );
+    }
+
+    const where = `
+      WHERE ${conditions.join(" AND ")}
+    `;
+
+    const summaryResult = await q(
+      `
+      SELECT
+        c.name AS campus_name,
+        p.name AS package_name,
+        COUNT(s.id)::int AS total_students,
+
+        COUNT(*) FILTER (
+          WHERE
+            GREATEST(
+              0,
+              COALESCE(p.cost, 0)
+              - COALESCE(s.discount_amount, 0)
+              - COALESCE(pay.total_paid, 0)
+            ) <= 0
+        )::int AS paid_students,
+
+        COUNT(*) FILTER (
+          WHERE
+            GREATEST(
+              0,
+              COALESCE(p.cost, 0)
+              - COALESCE(s.discount_amount, 0)
+              - COALESCE(pay.total_paid, 0)
+            ) > 0
+        )::int AS students_with_balance,
+
+        SUM(
+          COALESCE(pay.total_paid, 0)
+        )::numeric AS total_paid,
+
+        SUM(
+          GREATEST(
+            0,
+            COALESCE(p.cost, 0)
+            - COALESCE(s.discount_amount, 0)
+            - COALESCE(pay.total_paid, 0)
+          )
+        )::numeric AS total_balance
+
+      FROM students s
+
+      LEFT JOIN campuses c
+        ON c.id = s.campus_id
+
+      LEFT JOIN packages p
+        ON p.id = s.package_id
+
+      LEFT JOIN (
+        SELECT
+          student_id,
+          COALESCE(SUM(amount), 0) AS total_paid
+        FROM payments
+        WHERE status = 'CONFIRMED'
+        GROUP BY student_id
+      ) pay
+        ON pay.student_id = s.id
+
+      ${where}
+
+      GROUP BY
+        c.name,
+        p.name
+
+      ORDER BY
+        c.name ASC,
+        p.name ASC
+      `,
+      params
+    );
+
+    const detailResult = await q(
+      `
+      SELECT
+        s.full_name,
+        s.phone_e164,
+        s.grade,
+        s."group",
+
+        c.name AS campus_name,
+        sh.name AS shift_name,
+        gp.name AS period_name,
+        gy.year AS grad_year,
+        p.name AS package_name,
+
+        COALESCE(p.cost, 0)::numeric AS package_cost,
+        COALESCE(s.discount_amount, 0)::numeric AS discount_amount,
+        COALESCE(pay.total_paid, 0)::numeric AS total_paid,
+
+        GREATEST(
+          0,
+          COALESCE(p.cost, 0)
+          - COALESCE(s.discount_amount, 0)
+          - COALESCE(pay.total_paid, 0)
+        )::numeric AS balance
+
+      FROM students s
+
+      LEFT JOIN campuses c
+        ON c.id = s.campus_id
+
+      LEFT JOIN shifts sh
+        ON sh.id = s.shift_id
+
+      LEFT JOIN graduation_periods gp
+        ON gp.id = s.period_id
+
+      LEFT JOIN graduation_years gy
+        ON gy.id = s.year_id
+
+      LEFT JOIN packages p
+        ON p.id = s.package_id
+
+      LEFT JOIN (
+        SELECT
+          student_id,
+          COALESCE(SUM(amount), 0) AS total_paid
+        FROM payments
+        WHERE status = 'CONFIRMED'
+        GROUP BY student_id
+      ) pay
+        ON pay.student_id = s.id
+
+      ${where}
+
+      ORDER BY
+        c.name ASC,
+        p.name ASC,
+        s.full_name ASC
+      `,
+      params
+    );
+
+    const workbook = new ExcelJS.Workbook();
+
+    workbook.creator = "GIA - ITCC";
+    workbook.created = new Date();
+
+    const summarySheet =
+      workbook.addWorksheet("Resumen");
+
+    summarySheet.columns = [
+      { header: "Campus", key: "campus", width: 28 },
+      { header: "Paquete", key: "package", width: 24 },
+      { header: "Alumnos", key: "students", width: 14 },
+      { header: "Pagados", key: "paid", width: 14 },
+      { header: "Con saldo", key: "balance_students", width: 14 },
+      { header: "Total pagado", key: "total_paid", width: 18 },
+      { header: "Saldo pendiente", key: "total_balance", width: 18 }
+    ];
+
+    summaryResult.rows.forEach(row => {
+      summarySheet.addRow({
+        campus: row.campus_name || "Sin campus",
+        package: row.package_name || "Sin paquete",
+        students: Number(row.total_students || 0),
+        paid: Number(row.paid_students || 0),
+        balance_students: Number(row.students_with_balance || 0),
+        total_paid: Number(row.total_paid || 0),
+        total_balance: Number(row.total_balance || 0)
+      });
+    });
+
+    summarySheet.getRow(1).font = {
+      bold: true
+    };
+
+    summarySheet.getColumn("total_paid").numFmt =
+      '$#,##0.00';
+
+    summarySheet.getColumn("total_balance").numFmt =
+      '$#,##0.00';
+
+    const detailSheet =
+      workbook.addWorksheet("Detalle de alumnos");
+
+    detailSheet.columns = [
+      { header: "Alumno", key: "student", width: 35 },
+      { header: "Teléfono", key: "phone", width: 18 },
+      { header: "Campus", key: "campus", width: 25 },
+      { header: "Turno", key: "shift", width: 18 },
+      { header: "Grado", key: "grade", width: 12 },
+      { header: "Grupo", key: "group", width: 12 },
+      { header: "Periodo", key: "period", width: 22 },
+      { header: "Año", key: "year", width: 12 },
+      { header: "Paquete", key: "package", width: 22 },
+      { header: "Costo", key: "cost", width: 16 },
+      { header: "Descuento", key: "discount", width: 16 },
+      { header: "Pagado", key: "paid", width: 16 },
+      { header: "Saldo", key: "balance", width: 16 },
+      { header: "Estado", key: "status", width: 16 }
+    ];
+
+    detailResult.rows.forEach(student => {
+
+      const balance =
+        Number(student.balance || 0);
+
+      detailSheet.addRow({
+        student: student.full_name || "",
+        phone: student.phone_e164 || "",
+        campus: student.campus_name || "",
+        shift: student.shift_name || "",
+        grade: student.grade || "",
+        group: student.group || "",
+        period: student.period_name || "",
+        year: student.grad_year || "",
+        package: student.package_name || "",
+        cost: Number(student.package_cost || 0),
+        discount: Number(student.discount_amount || 0),
+        paid: Number(student.total_paid || 0),
+        balance,
+        status:
+          balance <= 0
+            ? "PAGADO"
+            : "CON SALDO"
+      });
+
+    });
+
+    detailSheet.getRow(1).font = {
+      bold: true
+    };
+
+    ["cost", "discount", "paid", "balance"]
+      .forEach(column => {
+
+        detailSheet
+          .getColumn(column)
+          .numFmt = '$#,##0.00';
+
+      });
+
+    const fileName =
+      `reporte_paquetes_${dayjs().format("YYYY-MM-DD_HHmm")}.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+
+    await workbook.xlsx.write(res);
+
+    res.end();
+
+  } catch (err) {
+
+    console.error(
+      "Error al generar Excel de paquetes:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al generar Excel del reporte"
+    );
+  }
+});
 app.get("/students", requireAuth, async (req,res) => {
 const filters = {
   campus_id: req.query.campus_id || "",
