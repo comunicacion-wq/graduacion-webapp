@@ -139,19 +139,18 @@ function getGraduationEventInfo(campusName = "") {
 
 
   return {
+
     ...baseInfo,
+
     campus_label:
+
       campusName || "Campus ITCC",
 
     event_time_text:
-      "Por confirmar"
-  };
-}
-  if (!DEVELOPMENT_MODE) {
-    return false;
-  }
 
-  return DEVELOPMENT_STUDENTS.includes(studentId);
+      "Por confirmar"
+
+  };
 
 }
 // flash messages (simple)
