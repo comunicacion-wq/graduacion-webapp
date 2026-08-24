@@ -108,7 +108,30 @@
     </option>
   </select>
 </div>
-  <div class="col-12 col-md-3">
+  <div class="col-12 col-md-2">
+  <select class="form-select" name="refund_status">
+
+    <option value="">
+      Devoluciones (Todas)
+    </option>
+
+    <option
+      value="WITH_REFUND"
+      <%= filters.refund_status === "WITH_REFUND" ? "selected" : "" %>
+    >
+      Con devolución
+    </option>
+
+    <option
+      value="WITHOUT_REFUND"
+      <%= filters.refund_status === "WITHOUT_REFUND" ? "selected" : "" %>
+    >
+      Sin devolución
+    </option>
+
+  </select>
+</div>
+<div class="col-12 col-md-3">
     <input class="form-control" name="q" placeholder="Buscar (nombre/teléfono)" value="<%= filters.q || '' %>">
   </div>
 
