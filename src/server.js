@@ -2268,6 +2268,155 @@ app.get("/students/:id/extra-tickets", requireAuth, requireRole("ADMIN"), async 
     );
   }
 });
+app.post("/students/:id/extra-tickets", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+
+    const studentId = Number(req.params.id);
+
+    const quantity =
+      Number(req.body.quantity || 0);
+
+    const unitPrice =
+      Number(req.body.unit_price || 0);
+
+    const notes =
+      String(req.body.notes || "").trim();
+
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).send(
+        "Alumno no válido"
+      );
+    }
+
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      return res.status(400).send(
+        "La cantidad de boletos no es válida"
+      );
+    }
+
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+      return res.status(400).send(
+        "El precio por boleto no es válido"
+      );
+    }
+
+
+    // ==========================================
+    // CONFIRMAR QUE EL ALUMNO EXISTE
+    // ==========================================
+
+    const studentResult = await q(
+      `
+      SELECT
+        id,
+        full_name
+      FROM students
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [studentId]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).send(
+        "Alumno no encontrado"
+      );
+    }
+
+
+    // ==========================================
+    // CALCULAR TOTAL
+    // ==========================================
+
+    const totalAmount =
+      quantity * unitPrice;
+
+
+    // ==========================================
+    // REGISTRAR VENTA
+    // ==========================================
+
+    const saleResult = await q(
+      `
+      INSERT INTO extra_ticket_sales (
+        student_id,
+        quantity,
+        unit_price,
+        total_amount,
+        payment_status,
+        notes,
+        created_by,
+        created_at
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        'PAID',
+        $5,
+        $6,
+        NOW()
+      )
+      RETURNING id
+      `,
+      [
+        studentId,
+        quantity,
+        unitPrice,
+        totalAmount,
+        notes || null,
+        req.session.user?.id || null
+      ]
+    );
+
+
+    // ==========================================
+    // AUDITORÍA
+    // ==========================================
+
+    await audit(
+      req,
+      "CREATE_EXTRA_TICKET_SALE",
+      "student",
+      studentId,
+      {
+        sale_id:
+          saleResult.rows[0]?.id || null,
+
+        quantity,
+        unit_price:
+          unitPrice,
+
+        total_amount:
+          totalAmount,
+
+        notes
+      }
+    );
+
+
+    // ==========================================
+    // REGRESAR A LA PANTALLA DEL ALUMNO
+    // ==========================================
+
+    return res.redirect(
+      `/students/${studentId}/extra-tickets?created=1`
+    );
+
+
+  } catch (err) {
+
+    console.error(
+      "Error al registrar boletos extra:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al registrar boletos extra"
+    );
+  }
+});
 app.post("/students/:id/refund", requireAuth, requireRole("ADMIN"), async (req, res) => {
   try {
 
