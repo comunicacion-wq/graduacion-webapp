@@ -6591,270 +6591,207 @@ app.get("/portal/tickets/:ticketId/download", requireStudentPortal, async (req, 
     );
 
     const doc = new PDFDocument({
-      size: "A4",
-      margin: 0
-    });
+  size: [543, 724],
+  margin: 0
+});
 
-    doc.pipe(res);
+doc.pipe(res);
 
-    // Fondo general
-    doc.rect(0, 0, 595, 842).fill("#17003E");
 
-    // Tarjeta principal
-    doc.roundedRect(28, 28, 539, 786, 24).fill("#FFFFFF");
+// ==========================================
+// PLANTILLA GRÁFICA DEL BOLETO
+// ==========================================
 
-    // Encabezado
-    doc.roundedRect(28, 28, 539, 130, 24).fill("#4400B2");
+const ticketTemplatePath = path.join(
+  __dirname,
+  "public",
+  "images",
+  "boleto-graduacion-base.jpg"
+);
 
-    doc
-      .fillColor("#FFFFFF")
-      .font("Helvetica-Bold")
-      .fontSize(26)
-      .text("BOLETO DE GRADUACIÓN", 48, 60, {
-        width: 320
-      });
 
-    doc
-      .font("Helvetica")
-      .fontSize(14)
-      .text("Universidad y Preparatoria ITCC", 48, 98, {
-        width: 280
-      });
+// Colocar la plantilla completa como fondo
+doc.image(
+  ticketTemplatePath,
+  0,
+  0,
+  {
+    width: 543,
+    height: 724
+  }
+);
 
-    doc
-      .roundedRect(410, 56, 125, 42, 14)
-      .fill("#FFC400");
 
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text(
-        ticket.ticket_type === "EXTRA"
-          ? "EXTRA"
-          : "INCLUIDO",
-        410,
-        69,
-        {
-          width: 125,
-          align: "center"
-        }
-      );
+// ==========================================
+// TIPO DE BOLETO
+// INCLUIDO / EXTRA
+// ==========================================
 
-    // Título de sección
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica-Bold")
-      .fontSize(18)
-      .text("Información del evento", 48, 188);
+doc
+  .fillColor("#17003E")
+  .font("Helvetica-Bold")
+  .fontSize(13)
+  .text(
+    ticket.ticket_type === "EXTRA"
+      ? "EXTRA"
+      : "INCLUIDO",
+    373,
+    78,
+    {
+      width: 126,
+      align: "center"
+    }
+  );
 
-    // Datos evento izquierda
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .fillColor("#4400B2")
-      .text("CEREMONIA", 48, 220);
 
-    doc
-      .font("Helvetica")
-      .fontSize(14)
-      .fillColor("#17003E")
-      .text(eventInfo.event_name, 48, 236);
+// ==========================================
+// CEREMONIA
+// ==========================================
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .fillColor("#4400B2")
-      .text("CAMPUS", 48, 272);
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(10)
+  .text(
+    eventInfo.event_name,
+    88,
+    361,
+    {
+      width: 170
+    }
+  );
 
-    doc
-      .font("Helvetica")
-      .fontSize(14)
-      .fillColor("#17003E")
-      .text(eventInfo.campus_label, 48, 288);
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .fillColor("#4400B2")
-      .text("FECHA", 48, 324);
+// ==========================================
+// CAMPUS
+// ==========================================
 
-    doc
-      .font("Helvetica")
-      .fontSize(14)
-      .fillColor("#17003E")
-      .text(eventInfo.event_date_text, 48, 340);
+doc
+  .fillColor("#17003E")
+  .font("Helvetica-Bold")
+  .fontSize(10)
+  .text(
+    eventInfo.campus_label,
+    88,
+    427,
+    {
+      width: 170
+    }
+  );
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .fillColor("#4400B2")
-      .text("HORA", 48, 376);
 
-    doc
-      .font("Helvetica")
-      .fontSize(14)
-      .fillColor("#17003E")
-      .text(eventInfo.event_time_text, 48, 392);
+// ==========================================
+// FECHA
+// ==========================================
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .fillColor("#4400B2")
-      .text("SEDE", 48, 428);
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(10)
+  .text(
+    eventInfo.event_date_text,
+    88,
+    491,
+    {
+      width: 170
+    }
+  );
 
-    doc
-      .font("Helvetica")
-      .fontSize(14)
-      .fillColor("#17003E")
-      .text(eventInfo.venue, 48, 444, {
-        width: 220
-      });
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .fillColor("#4400B2")
-      .text("DIRECCIÓN", 48, 492);
+// ==========================================
+// HORA
+// ==========================================
 
-    doc
-      .font("Helvetica")
-      .fontSize(13)
-      .fillColor("#17003E")
-      .text(eventInfo.address_line, 48, 508, {
-        width: 220
-      });
+doc
+  .fillColor("#17003E")
+  .font("Helvetica-Bold")
+  .fontSize(11)
+  .text(
+    eventInfo.event_time_text,
+    88,
+    556,
+    {
+      width: 170
+    }
+  );
 
-    // QR box
-    doc
-      .roundedRect(320, 210, 200, 220, 18)
-      .fill("#F5F1FF");
 
-    doc
-      .fillColor("#4400B2")
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .text("ACCESO / CÓDIGO QR", 348, 228);
+// ==========================================
+// SEDE
+// ==========================================
 
-    doc.image(qrImageBuffer, 350, 252, {
-      fit: [140, 140],
-      align: "center",
-      valign: "center"
-    });
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(9)
+  .text(
+    eventInfo.venue,
+    88,
+    620,
+    {
+      width: 170
+    }
+  );
 
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica")
-      .fontSize(10)
-      .text("Presenta este código al ingresar", 338, 402, {
-        width: 164,
-        align: "center"
-      });
 
-    // Información alumno
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica-Bold")
-      .fontSize(18)
-      .text("Datos del boleto", 48, 580);
+// ==========================================
+// DIRECCIÓN
+// ==========================================
 
-    doc
-      .roundedRect(48, 614, 470, 142, 18)
-      .fill("#F8F7FC");
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(8)
+  .text(
+    eventInfo.address_line,
+    88,
+    682,
+    {
+      width: 170,
+      lineGap: 2
+    }
+  );
 
-    doc
-      .fillColor("#4400B2")
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .text("ALUMNO", 66, 635);
 
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica")
-      .fontSize(15)
-      .text(ticket.student_name || "", 66, 651, {
-        width: 420
-      });
+// ==========================================
+// CÓDIGO QR REAL
+// ==========================================
 
-    doc
-      .fillColor("#4400B2")
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .text("FOLIO", 66, 690);
+doc.image(
+  qrImageBuffer,
+  320,
+  374,
+  {
+    width: 150,
+    height: 150
+  }
+);
 
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica")
-      .fontSize(14)
-      .text(ticket.folio || "", 66, 706);
 
-    doc
-      .fillColor("#4400B2")
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .text("PAQUETE", 250, 690);
+// ==========================================
+// FOLIO REAL
+// ==========================================
 
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica")
-      .fontSize(14)
-      .text(ticket.package_name || "", 250, 706, {
-        width: 180
-      });
+doc
+  .fillColor("#17003E")
+  .font("Helvetica-Bold")
+  .fontSize(10)
+  .text(
+    ticket.folio || "",
+    307,
+    596,
+    {
+      width: 178,
+      align: "center"
+    }
+  );
 
-    doc
-      .fillColor("#4400B2")
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .text("TIPO DE BOLETO", 66, 730);
 
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica")
-      .fontSize(14)
-      .text(
-        ticket.ticket_type === "EXTRA"
-          ? "Boleto adicional"
-          : "Boleto incluido",
-        66,
-        746
-      );
+// ==========================================
+// FINALIZAR PDF
+// ==========================================
 
-    doc
-      .fillColor("#4400B2")
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .text("ESTATUS", 250, 730);
-
-    doc
-      .fillColor("#17003E")
-      .font("Helvetica")
-      .fontSize(14)
-      .text(
-        ticket.status === "AVAILABLE"
-          ? "Disponible"
-          : ticket.status === "USED"
-          ? "Utilizado"
-          : ticket.status,
-        250,
-        746
-      );
-
-    // Pie
-    doc
-      .font("Helvetica")
-      .fontSize(10)
-      .fillColor("#5C5470")
-      .text(
-        eventInfo.recommendation,
-        48,
-        778,
-        {
-          width: 470
-        }
-      );
-
-    doc.end();
+doc.end();
 
   } catch (err) {
     console.error("Error al descargar boleto:", err);
