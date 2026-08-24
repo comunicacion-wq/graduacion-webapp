@@ -223,6 +223,27 @@
             </td>
             <td>
               <%= s.full_name %>
+<% if (s.has_refund) { %>
+
+  <div style="margin-top:5px;">
+
+    <span
+      class="badge bg-danger"
+      title="Este alumno tiene una devolución registrada"
+    >
+      ↩ DEVOLUCIÓN GENERADA
+    </span>
+
+    <span class="text-danger small ms-1">
+      $<%= Number(s.total_refunded || 0).toLocaleString("es-MX", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) %>
+    </span>
+
+  </div>
+
+<% } %>
               <div class="text-muted small"><%= s.phone_e164 %></div>
             </td>
             <td><%= s.campus_name || '' %></td>
