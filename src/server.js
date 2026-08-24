@@ -6520,175 +6520,368 @@ const tickets = await Promise.all(
 });
 
 // ==========================================
-// CEREMONIA
+// DESCARGAR BOLETO DE GRADUACIÓN EN PDF
 // ==========================================
 
-doc
-  .fillColor("#17003E")
-  .font("Helvetica")
-  .fontSize(10)
-  .text(
-    eventInfo.event_name,
-    118,
-    372,
-    {
-      width: 150,
-      align: "left"
+app.get("/portal/tickets/:ticketId/download",
+  requireStudentPortal,
+  async (req, res) => {
+    try {
+
+      const studentId =
+        req.session.studentUser.student_id;
+
+      if (!canUseDevelopmentModules(studentId)) {
+        return res
+          .status(403)
+          .send("Módulo de boletos no disponible.");
+      }
+
+      const ticketId =
+        Number(req.params.ticketId);
+
+      if (!Number.isInteger(ticketId) || ticketId <= 0) {
+        return res
+          .status(400)
+          .send("Boleto no válido");
+      }
+
+
+      // ==========================================
+      // OBTENER INFORMACIÓN DEL BOLETO
+      // ==========================================
+
+      const ticketResult = await q(
+        `
+        SELECT
+          gt.id,
+          gt.folio,
+          gt.secure_token,
+          gt.ticket_type,
+          gt.status,
+          gt.used_at,
+          gt.created_at,
+
+          s.full_name AS student_name,
+          s.phone_e164,
+
+          c.name AS campus_name,
+
+          p.name AS package_name
+
+        FROM graduation_tickets gt
+
+        LEFT JOIN students s
+          ON s.id = gt.student_id
+
+        LEFT JOIN campuses c
+          ON c.id = s.campus_id
+
+        LEFT JOIN packages p
+          ON p.id = s.package_id
+
+        WHERE gt.id = $1
+          AND gt.student_id = $2
+
+        LIMIT 1
+        `,
+        [
+          ticketId,
+          studentId
+        ]
+      );
+
+
+      if (ticketResult.rows.length === 0) {
+        return res
+          .status(404)
+          .send("Boleto no encontrado");
+      }
+
+
+      const ticket =
+        ticketResult.rows[0];
+
+
+      // ==========================================
+      // INFORMACIÓN DEL EVENTO
+      // ==========================================
+
+      const eventInfo =
+        getGraduationEventInfo(
+          ticket.campus_name
+        );
+
+
+      // ==========================================
+      // GENERAR QR REAL
+      // ==========================================
+
+      const verifyUrl =
+        `${req.protocol}://${req.get("host")}/tickets/verify/${ticket.secure_token}`;
+
+      const qrDataUrl =
+        await QRCode.toDataURL(
+          verifyUrl,
+          {
+            width: 500,
+            margin: 1
+          }
+        );
+
+      const qrImageBuffer =
+        Buffer.from(
+          qrDataUrl.replace(
+            /^data:image\/png;base64,/,
+            ""
+          ),
+          "base64"
+        );
+
+
+      // ==========================================
+      // NOMBRE DEL ARCHIVO
+      // ==========================================
+
+      const safeFileName =
+        `boleto-${ticket.folio}`
+          .replace(
+            /[^a-zA-Z0-9-_]/g,
+            "-"
+          );
+
+      res.setHeader(
+        "Content-Type",
+        "application/pdf"
+      );
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${safeFileName}.pdf"`
+      );
+
+
+      // ==========================================
+      // CREAR PDF
+      // ==========================================
+
+      const doc =
+        new PDFDocument({
+          size: [543, 724],
+          margin: 0
+        });
+
+      doc.pipe(res);
+
+
+      // ==========================================
+      // PLANTILLA GRÁFICA
+      // ==========================================
+
+      const ticketTemplatePath =
+        path.join(
+          __dirname,
+          "public",
+          "images",
+          "boleto-graduacion-base.jpg"
+        );
+
+      doc.image(
+        ticketTemplatePath,
+        0,
+        0,
+        {
+          width: 543,
+          height: 724
+        }
+      );
+
+
+      // ==========================================
+      // INCLUIDO / EXTRA
+      // ==========================================
+
+      doc
+        .fillColor("#17003E")
+        .font("Helvetica-Bold")
+        .fontSize(13)
+        .text(
+          ticket.ticket_type === "EXTRA"
+            ? "EXTRA"
+            : "INCLUIDO",
+          373,
+          78,
+          {
+            width: 126,
+            align: "center"
+          }
+        );
+
+
+      // ==========================================
+      // CEREMONIA
+      // ==========================================
+
+      doc
+        .fillColor("#17003E")
+        .font("Helvetica")
+        .fontSize(10)
+        .text(
+          eventInfo.event_name,
+          118,
+          372,
+          {
+            width: 150
+          }
+        );
+
+
+      // ==========================================
+      // CAMPUS
+      // ==========================================
+
+      doc
+        .fillColor("#17003E")
+        .font("Helvetica")
+        .fontSize(10)
+        .text(
+          eventInfo.campus_label,
+          118,
+          438,
+          {
+            width: 150
+          }
+        );
+
+
+      // ==========================================
+      // FECHA
+      // ==========================================
+
+      doc
+        .fillColor("#17003E")
+        .font("Helvetica")
+        .fontSize(10)
+        .text(
+          eventInfo.event_date_text,
+          118,
+          503,
+          {
+            width: 150
+          }
+        );
+
+
+      // ==========================================
+      // HORA
+      // ==========================================
+
+      doc
+        .fillColor("#17003E")
+        .font("Helvetica-Bold")
+        .fontSize(11)
+        .text(
+          eventInfo.event_time_text,
+          118,
+          568,
+          {
+            width: 150
+          }
+        );
+
+
+      // ==========================================
+      // SEDE
+      // ==========================================
+
+      doc
+        .fillColor("#17003E")
+        .font("Helvetica")
+        .fontSize(9)
+        .text(
+          eventInfo.venue,
+          118,
+          633,
+          {
+            width: 150
+          }
+        );
+
+
+      // ==========================================
+      // DIRECCIÓN
+      // ==========================================
+
+      doc
+        .fillColor("#17003E")
+        .font("Helvetica")
+        .fontSize(8)
+        .text(
+          eventInfo.address_line,
+          118,
+          694,
+          {
+            width: 150,
+            lineGap: 1
+          }
+        );
+
+
+      // ==========================================
+      // CÓDIGO QR REAL
+      // ==========================================
+
+      doc.image(
+        qrImageBuffer,
+        335,
+        385,
+        {
+          width: 135,
+          height: 135
+        }
+      );
+
+
+      // ==========================================
+      // FOLIO REAL
+      // ==========================================
+
+      doc
+        .fillColor("#17003E")
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .text(
+          ticket.folio || "",
+          320,
+          607,
+          {
+            width: 155,
+            align: "center"
+          }
+        );
+
+
+      // ==========================================
+      // FINALIZAR PDF
+      // ==========================================
+
+      doc.end();
+
+    } catch (err) {
+
+      console.error(
+        "Error al descargar boleto:",
+        err
+      );
+
+      res
+        .status(500)
+        .send(
+          "Error al descargar boleto"
+        );
     }
-  );
-
-
-// ==========================================
-// CAMPUS
-// ==========================================
-
-doc
-  .fillColor("#17003E")
-  .font("Helvetica")
-  .fontSize(10)
-  .text(
-    eventInfo.campus_label,
-    118,
-    438,
-    {
-      width: 150,
-      align: "left"
-    }
-  );
-
-
-// ==========================================
-// FECHA
-// ==========================================
-
-doc
-  .fillColor("#17003E")
-  .font("Helvetica")
-  .fontSize(10)
-  .text(
-    eventInfo.event_date_text,
-    118,
-    503,
-    {
-      width: 150,
-      align: "left"
-    }
-  );
-
-
-// ==========================================
-// HORA
-// ==========================================
-
-doc
-  .fillColor("#17003E")
-  .font("Helvetica-Bold")
-  .fontSize(11)
-  .text(
-    eventInfo.event_time_text,
-    118,
-    568,
-    {
-      width: 150,
-      align: "left"
-    }
-  );
-
-
-// ==========================================
-// SEDE
-// ==========================================
-
-doc
-  .fillColor("#17003E")
-  .font("Helvetica")
-  .fontSize(9)
-  .text(
-    eventInfo.venue,
-    118,
-    633,
-    {
-      width: 150,
-      align: "left"
-    }
-  );
-
-
-// ==========================================
-// DIRECCIÓN
-// ==========================================
-
-doc
-  .fillColor("#17003E")
-  .font("Helvetica")
-  .fontSize(8)
-  .text(
-    eventInfo.address_line,
-    118,
-    694,
-    {
-      width: 150,
-      align: "left",
-      lineGap: 1
-    }
-  );
-
-
-// ==========================================
-// CÓDIGO QR REAL
-// ==========================================
-
-doc.image(
-  qrImageBuffer,
-  335,
-  385,
-  {
-    width: 135,
-    height: 135
   }
 );
-
-
-// ==========================================
-// FOLIO REAL
-// ==========================================
-
-doc
-  .fillColor("#17003E")
-  .font("Helvetica-Bold")
-  .fontSize(10)
-  .text(
-    ticket.folio || "",
-    320,
-    607,
-    {
-      width: 155,
-      align: "center"
-    }
-  );
-
-
-// ==========================================
-// FINALIZAR PDF
-// ==========================================
-
-doc.end();
-
-} catch (err) {
-
-  console.error(
-    "Error al descargar boleto:",
-    err
-  );
-
-  res
-    .status(500)
-    .send(
-      "Error al descargar boleto"
-    );
-}
-});
-
 app.get("/tickets/verify/:token", requireTicketOperator, async (req, res) => {
   try {
     const token = String(req.params.token || "").trim();
