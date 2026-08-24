@@ -2371,7 +2371,60 @@ app.post("/students/:id/extra-tickets", requireAuth, requireRole("ADMIN"), async
       ]
     );
 
+// ==========================================
+// GENERAR BOLETOS EXTRA REALES
+// ==========================================
 
+const currentYear = new Date().getFullYear();
+
+const existingTicketsResult = await q(
+  `
+  SELECT COUNT(*)::int AS total
+  FROM graduation_tickets
+  WHERE student_id = $1
+  `,
+  [studentId]
+);
+
+const existingTickets =
+  Number(existingTicketsResult.rows[0]?.total || 0);
+
+for (let index = 1; index <= quantity; index += 1) {
+
+  const ticketNumber =
+    existingTickets + index;
+
+  const folio =
+    `ITCC-${currentYear}-${studentId}-${String(ticketNumber).padStart(3, "0")}`;
+
+  const secureToken =
+    crypto.randomUUID();
+
+  await q(
+    `
+    INSERT INTO graduation_tickets (
+      student_id,
+      folio,
+      secure_token,
+      ticket_type,
+      status
+    )
+    VALUES (
+      $1,
+      $2,
+      $3,
+      'EXTRA',
+      'AVAILABLE'
+    )
+    `,
+    [
+      studentId,
+      folio,
+      secureToken
+    ]
+  );
+
+}
     // ==========================================
     // AUDITORÍA
     // ==========================================
