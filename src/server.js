@@ -4060,6 +4060,52 @@ app.get("/setup-expenses", requireAuth, async (req, res) => {
     res.status(500).send("Error al crear tablas de gastos");
   }
 });
+app.get("/setup-refunds", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+
+    await q(`
+      CREATE TABLE IF NOT EXISTS graduation_refunds (
+        id SERIAL PRIMARY KEY,
+
+        student_id INTEGER NOT NULL REFERENCES students(id),
+
+        amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+
+        reason TEXT NOT NULL,
+
+        notes TEXT,
+
+        refund_date DATE NOT NULL DEFAULT CURRENT_DATE,
+
+        created_by INTEGER REFERENCES users(id),
+
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await q(`
+      ALTER TABLE students
+      ADD COLUMN IF NOT EXISTS graduation_status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE';
+    `);
+
+    res.send(`
+      Tabla de devoluciones creada correctamente
+      <br>
+      Campo graduation_status agregado correctamente
+    `);
+
+  } catch (err) {
+
+    console.error(
+      "Error al crear estructura de devoluciones:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al crear estructura de devoluciones"
+    );
+  }
+});
 app.get("/setup-tickets", requireAuth, async (req, res) => {
   try {
 
