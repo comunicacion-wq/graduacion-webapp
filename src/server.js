@@ -8398,19 +8398,29 @@ app.post("/tickets/accredit/:token", requireTicketOperator, async (req, res) => 
       return res.status(400).send("Token no válido");
     }
 
+    const operatorId = Number(
+      req.session.ticketOperator?.id || 0
+    );
+
+    if (!operatorId) {
+      return res.status(401).send(
+        "Operador de acceso no válido"
+      );
+    }
+
     const result = await q(
       `
       UPDATE graduation_tickets
       SET
         status = 'USED',
         used_at = NOW(),
-        used_by = $2,
+        used_by_operator = $2,
         updated_at = NOW()
       WHERE secure_token = $1
         AND status = 'AVAILABLE'
       RETURNING id, folio, student_id, status, used_at
       `,
-      [token, req.session.user.id]
+      [token, operatorId]
     );
 
     if (result.rows.length === 0) {
@@ -8459,7 +8469,7 @@ app.post("/tickets/accredit/:token", requireTicketOperator, async (req, res) => 
         previous_status,
         new_status,
         scanned_token,
-        performed_by,
+        performed_by_operator,
         ip_address,
         user_agent
       )
@@ -8471,185 +8481,185 @@ app.post("/tickets/accredit/:token", requireTicketOperator, async (req, res) => 
         "AVAILABLE",
         "USED",
         token,
-        req.session.user.id,
+        operatorId,
         req.ip || null,
         req.get("user-agent") || null
       ]
     );
 
-res.send(`
-  <!DOCTYPE html>
-  <html lang="es">
-  <head>
-    <meta charset="UTF-8">
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
 
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    >
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        >
 
-    <title>Ingreso acreditado</title>
+        <title>Ingreso acreditado</title>
 
-    <style>
-      *{
-        box-sizing:border-box;
-      }
+        <style>
+          *{
+            box-sizing:border-box;
+          }
 
-      body{
-        margin:0;
-        min-height:100vh;
-        padding:24px;
+          body{
+            margin:0;
+            min-height:100vh;
+            padding:24px;
 
-        display:flex;
-        align-items:center;
-        justify-content:center;
+            display:flex;
+            align-items:center;
+            justify-content:center;
 
-        font-family:Arial,Helvetica,sans-serif;
+            font-family:Arial,Helvetica,sans-serif;
 
-        background:#17003E;
-        color:#ffffff;
-      }
+            background:#17003E;
+            color:#ffffff;
+          }
 
-      .result-card{
-        width:100%;
-        max-width:520px;
+          .result-card{
+            width:100%;
+            max-width:520px;
 
-        padding:28px;
+            padding:28px;
 
-        text-align:center;
+            text-align:center;
 
-        background:rgba(255,255,255,.08);
-        border:1px solid rgba(255,255,255,.12);
-        border-radius:24px;
-      }
+            background:rgba(255,255,255,.08);
+            border:1px solid rgba(255,255,255,.12);
+            border-radius:24px;
+          }
 
-      .result-icon{
-        width:82px;
-        height:82px;
+          .result-icon{
+            width:82px;
+            height:82px;
 
-        margin:0 auto 20px;
+            margin:0 auto 20px;
 
-        display:flex;
-        align-items:center;
-        justify-content:center;
+            display:flex;
+            align-items:center;
+            justify-content:center;
 
-        border-radius:50%;
+            border-radius:50%;
 
-        background:#2CCB71;
-        color:#07381F;
+            background:#2CCB71;
+            color:#07381F;
 
-        font-size:44px;
-        font-weight:800;
-      }
+            font-size:44px;
+            font-weight:800;
+          }
 
-      h1{
-        margin:0;
+          h1{
+            margin:0;
 
-        font-size:30px;
-        line-height:1.1;
-      }
+            font-size:30px;
+            line-height:1.1;
+          }
 
-      .folio{
-        margin-top:20px;
+          .folio{
+            margin-top:20px;
 
-        color:rgba(255,255,255,.80);
+            color:rgba(255,255,255,.80);
 
-        font-size:16px;
-      }
+            font-size:16px;
+          }
 
-      .folio strong{
-        color:#ffffff;
-      }
+          .folio strong{
+            color:#ffffff;
+          }
 
-      .date{
-        margin-top:10px;
+          .date{
+            margin-top:10px;
 
-        color:rgba(255,255,255,.68);
+            color:rgba(255,255,255,.68);
 
-        font-size:14px;
-      }
+            font-size:14px;
+          }
 
-      .next-button{
-        width:100%;
+          .next-button{
+            width:100%;
 
-        margin-top:28px;
-        padding:18px 20px;
+            margin-top:28px;
+            padding:18px 20px;
 
-        display:block;
+            display:block;
 
-        color:#17003E;
-        background:#FFC400;
+            color:#17003E;
+            background:#FFC400;
 
-        border-radius:17px;
+            border-radius:17px;
 
-        text-decoration:none;
+            text-decoration:none;
 
-        font-size:17px;
-        font-weight:800;
-      }
+            font-size:17px;
+            font-weight:800;
+          }
 
-      .panel-button{
-        width:100%;
+          .panel-button{
+            width:100%;
 
-        margin-top:12px;
-        padding:15px 20px;
+            margin-top:12px;
+            padding:15px 20px;
 
-        display:block;
+            display:block;
 
-        color:#ffffff;
-        background:rgba(255,255,255,.07);
+            color:#ffffff;
+            background:rgba(255,255,255,.07);
 
-        border:1px solid rgba(255,255,255,.11);
-        border-radius:17px;
+            border:1px solid rgba(255,255,255,.11);
+            border-radius:17px;
 
-        text-decoration:none;
+            text-decoration:none;
 
-        font-size:14px;
-        font-weight:700;
-      }
-    </style>
-  </head>
+            font-size:14px;
+            font-weight:700;
+          }
+        </style>
+      </head>
 
-  <body>
+      <body>
 
-    <main class="result-card">
+        <main class="result-card">
 
-      <div class="result-icon">
-        ✓
-      </div>
+          <div class="result-icon">
+            ✓
+          </div>
 
-      <h1>
-        INGRESO ACREDITADO
-      </h1>
+          <h1>
+            INGRESO ACREDITADO
+          </h1>
 
-      <div class="folio">
-        <strong>Folio:</strong>
-        ${ticket.folio}
-      </div>
+          <div class="folio">
+            <strong>Folio:</strong>
+            ${ticket.folio}
+          </div>
 
-      <div class="date">
-        ${dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")}
-      </div>
+          <div class="date">
+            ${dayjs(ticket.used_at).format("DD/MM/YYYY HH:mm")}
+          </div>
 
-      <a
-        class="next-button"
-        href="/tickets/scan"
-      >
-        📷 ESCANEAR SIGUIENTE BOLETO
-      </a>
+          <a
+            class="next-button"
+            href="/tickets/scan"
+          >
+            📷 ESCANEAR SIGUIENTE BOLETO
+          </a>
 
-      <a
-        class="panel-button"
-        href="/tickets/access-control"
-      >
-        Volver al Control de acceso
-      </a>
+          <a
+            class="panel-button"
+            href="/tickets/access-control"
+          >
+            Volver al Control de acceso
+          </a>
 
-    </main>
+        </main>
 
-  </body>
-  </html>
-`);
+      </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error("Error al acreditar boleto:", err);
