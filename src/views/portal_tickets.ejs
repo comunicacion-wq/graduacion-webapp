@@ -68,9 +68,30 @@ body{font-family:Arial,Helvetica,sans-serif;color:var(--white);background:linear
 
 <div class="section-title"><h2>Resumen de boletos</h2></div>
 <section class="ticket-summary">
-<div class="ticket-summary-card"><span>Incluidos</span><strong>5</strong></div>
-<div class="ticket-summary-card"><span>Extras</span><strong>0</strong></div>
-<div class="ticket-summary-card total"><span>Total</span><strong>5</strong></div>
+<%
+  const includedCount = 5;
+
+  const extraCount = Array.isArray(tickets)
+    ? tickets.filter(ticket => ticket.ticket_type === "EXTRA").length
+    : 0;
+
+  const totalCount = includedCount + extraCount;
+%>
+
+<div class="ticket-summary-card">
+  <span>Incluidos</span>
+  <strong><%= includedCount %></strong>
+</div>
+
+<div class="ticket-summary-card">
+  <span>Extras</span>
+  <strong><%= extraCount %></strong>
+</div>
+
+<div class="ticket-summary-card total">
+  <span>Total</span>
+  <strong><%= totalCount %></strong>
+</div>
 </section>
 
 <section class="ticket-status-card">
