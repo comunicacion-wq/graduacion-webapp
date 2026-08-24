@@ -59,9 +59,23 @@
       <a class="list-group-item list-group-item-action <%= active==='expense_contacts'?'active':'' %>" href="/settings/expense-contacts">Proveedores</a>
     <% } %>
 
-    <% if (can('view_reports')) { %>
-      <a class="list-group-item list-group-item-action <%= active==='reports'?'active':'' %>" href="/reports">Reportes</a>
-    <% } %>
+<% if (can('view_reports')) { %>
+
+  <a
+    class="list-group-item list-group-item-action <%= active==='reports'?'active':'' %>"
+    href="/reports"
+  >
+    Reportes
+  </a>
+
+  <a
+    class="list-group-item list-group-item-action ps-4 <%= active==='report_packages'?'active':'' %>"
+    href="/reports/packages"
+  >
+    ↳ Reporte de paquetes
+  </a>
+
+<% } %>
 
     <a class="list-group-item list-group-item-action <%= active==='requests'?'active':'' %>" href="/requests">Solicitudes</a>
 
