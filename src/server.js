@@ -4949,7 +4949,17 @@ app.get("/setup-ticket-operators", requireAuth, async (req, res) => {
       CREATE INDEX IF NOT EXISTS idx_ticket_operators_active
       ON ticket_operators(active);
     `);
+await q(`
+  ALTER TABLE graduation_tickets
+  ADD COLUMN IF NOT EXISTS used_by_operator
+  INTEGER REFERENCES ticket_operators(id);
+`);
 
+await q(`
+  ALTER TABLE graduation_ticket_logs
+  ADD COLUMN IF NOT EXISTS performed_by_operator
+  INTEGER REFERENCES ticket_operators(id);
+`);
     res.send("Tabla de operadores de acceso creada correctamente");
 
   } catch (err) {
