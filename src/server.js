@@ -82,7 +82,20 @@ app.use(session({
 // ===================================
 
 function canUseDevelopmentModules(studentId) {
+  if (!DEVELOPMENT_MODE) {
+    return false;
+  }
+
+  return DEVELOPMENT_STUDENTS.includes(studentId);
+}
+
+
+// ==========================================
+// INFORMACIÓN DE GRADUACIÓN POR CAMPUS
+// ==========================================
+
 function getGraduationEventInfo(campusName = "") {
+
   const normalizedCampus =
     String(campusName || "")
       .trim()
@@ -92,9 +105,11 @@ function getGraduationEventInfo(campusName = "") {
     event_name: "Graduación ITCC 2026",
     event_date_text: "30 de agosto de 2026",
     venue: "Centro de Convenciones Reynosa",
-    address_line: "Centro de Convenciones Reynosa",
-    recommendation: "Presenta este boleto en digital o impreso junto con una identificación al ingresar."
+    address_line: "Centro de Convenciones Reynosa, Reynosa, Tamaulipas",
+    recommendation:
+      "Presenta este boleto en formato digital o impreso al ingresar."
   };
+
 
   if (normalizedCampus.includes("DOCTORES")) {
     return {
@@ -104,6 +119,7 @@ function getGraduationEventInfo(campusName = "") {
     };
   }
 
+
   if (normalizedCampus.includes("CUMBRES")) {
     return {
       ...baseInfo,
@@ -111,6 +127,7 @@ function getGraduationEventInfo(campusName = "") {
       event_time_text: "9:00 A.M."
     };
   }
+
 
   if (normalizedCampus.includes("CAMPESTRE")) {
     return {
@@ -120,10 +137,14 @@ function getGraduationEventInfo(campusName = "") {
     };
   }
 
+
   return {
     ...baseInfo,
-    campus_label: campusName || "Campus ITCC",
-    event_time_text: "Por confirmar"
+    campus_label:
+      campusName || "Campus ITCC",
+
+    event_time_text:
+      "Por confirmar"
   };
 }
   if (!DEVELOPMENT_MODE) {
@@ -6498,6 +6519,7 @@ const tickets = await Promise.all(
   });
 
 });
+
 app.get("/portal/tickets/:ticketId/download", requireStudentPortal, async (req, res) => {
   try {
     const studentId = req.session.studentUser.student_id;
