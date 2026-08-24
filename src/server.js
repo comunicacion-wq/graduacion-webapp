@@ -2160,6 +2160,114 @@ app.get("/students/:id/refund", requireAuth, requireRole("ADMIN"), async (req, r
     );
   }
 });
+app.get("/students/:id/extra-tickets", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+
+    const studentId = Number(req.params.id);
+
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).send("Alumno no válido");
+    }
+
+    const studentResult = await q(
+      `
+      SELECT
+        s.id,
+        s.full_name,
+        s.phone_e164,
+        c.name AS campus_name,
+        p.name AS package_name
+      FROM students s
+      LEFT JOIN campuses c
+        ON c.id = s.campus_id
+      LEFT JOIN packages p
+        ON p.id = s.package_id
+      WHERE s.id = $1
+      LIMIT 1
+      `,
+      [studentId]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).send("Alumno no encontrado");
+    }
+
+    const student = studentResult.rows[0];
+
+    const salesResult = await q(
+      `
+      SELECT
+        ets.*,
+        u.username AS created_by_name
+      FROM extra_ticket_sales ets
+      LEFT JOIN users u
+        ON u.id = ets.created_by
+      WHERE ets.student_id = $1
+      ORDER BY ets.created_at DESC
+      `,
+      [studentId]
+    );
+
+    const totalsResult = await q(
+      `
+      SELECT
+        COALESCE(SUM(quantity), 0)::int AS total_tickets,
+        COALESCE(SUM(total_amount), 0)::numeric AS total_amount
+      FROM extra_ticket_sales
+      WHERE student_id = $1
+        AND payment_status = 'PAID'
+      `,
+      [studentId]
+    );
+
+    const totals = {
+      total_tickets:
+        Number(totalsResult.rows[0]?.total_tickets || 0),
+
+      total_amount:
+        Number(totalsResult.rows[0]?.total_amount || 0)
+    };
+
+    const body = await new Promise((resolve, reject) => {
+
+      res.render(
+        "student_extra_tickets",
+        {
+          student,
+          sales: salesResult.rows,
+          totals
+        },
+        (err, html) => {
+          if (err) return reject(err);
+          resolve(html);
+        }
+      );
+
+    });
+
+    render(
+      req,
+      res,
+      "layout",
+      {
+        title: "Boletos extra",
+        active: "students",
+        body
+      }
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Error al cargar boletos extra:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al cargar boletos extra"
+    );
+  }
+});
 app.post("/students/:id/refund", requireAuth, requireRole("ADMIN"), async (req, res) => {
   try {
 
