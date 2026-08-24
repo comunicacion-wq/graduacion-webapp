@@ -309,6 +309,14 @@
     ↩ Generar devolución
   </a>
 <% } %>
+<% if (user && user.role === "ADMIN" && s.billing_active) { %>
+  <a
+    class="btn btn-sm btn-outline-success"
+    href="/students/<%= s.id %>/extra-tickets"
+  >
+    🎟️ Boletos extra
+  </a>
+<% } %>
     <button
       type="submit"
       formaction="/students/<%= s.id %>/toggle-billing"
