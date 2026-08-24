@@ -1112,14 +1112,25 @@ const groups = await q(`
     LEFT JOIN graduation_periods gp ON gp.id = s.period_id
     LEFT JOIN graduation_years gy ON gy.id = s.year_id
     LEFT JOIN packages p ON p.id = s.package_id
-    LEFT JOIN (
-      SELECT student_id, COALESCE(SUM(amount),0) as total_paid
-      FROM payments WHERE status='CONFIRMED'
-      GROUP BY student_id
-    ) pay ON pay.student_id = s.id
-    ${where}
-    ORDER BY s.created_at DESC
-    LIMIT 500
+    
+LEFT JOIN (
+  SELECT student_id, COALESCE(SUM(amount),0) as total_paid
+  FROM payments WHERE status='CONFIRMED'
+  GROUP BY student_id
+) pay ON pay.student_id = s.id
+
+LEFT JOIN (
+  SELECT
+    student_id,
+    COALESCE(SUM(amount), 0) AS total_refunded
+  FROM graduation_refunds
+  GROUP BY student_id
+) refunds
+  ON refunds.student_id = s.id
+
+${where}
+ORDER BY s.created_at DESC
+LIMIT 500
     `,
     params
   );
