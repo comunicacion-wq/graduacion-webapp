@@ -4457,6 +4457,47 @@ app.get("/setup-expenses", requireAuth, async (req, res) => {
     res.status(500).send("Error al crear tablas de gastos");
   }
 });
+app.get("/setup-extra-ticket-sales", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+
+    await q(`
+      CREATE TABLE IF NOT EXISTS extra_ticket_sales (
+        id SERIAL PRIMARY KEY,
+
+        student_id INTEGER NOT NULL REFERENCES students(id),
+
+        quantity INTEGER NOT NULL DEFAULT 1,
+
+        unit_price NUMERIC(12,2) NOT NULL DEFAULT 200,
+
+        total_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+
+        payment_status VARCHAR(30) NOT NULL DEFAULT 'PAID',
+
+        notes TEXT,
+
+        created_by INTEGER REFERENCES users(id),
+
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    res.send(`
+      Tabla de ventas de boletos extra creada correctamente
+    `);
+
+  } catch (err) {
+
+    console.error(
+      "Error al crear tabla de boletos extra:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al crear tabla de boletos extra"
+    );
+  }
+});
 app.get("/setup-refunds", requireAuth, requireRole("ADMIN"), async (req, res) => {
   try {
 
