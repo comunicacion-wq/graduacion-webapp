@@ -6718,149 +6718,153 @@ app.get("/portal/tickets/:ticketId/download",
         );
 
 
-      // ==========================================
-      // CEREMONIA
-      // ==========================================
+     // ==========================================
+// CEREMONIA
+// ==========================================
 
-      doc
-        .fillColor("#17003E")
-        .font("Helvetica")
-        .fontSize(10)
-        .text(
-          eventInfo.event_name,
-          118,
-          372,
-          {
-            width: 150
-          }
-        );
-
-
-      // ==========================================
-      // CAMPUS
-      // ==========================================
-
-      doc
-        .fillColor("#17003E")
-        .font("Helvetica")
-        .fontSize(10)
-        .text(
-          eventInfo.campus_label,
-          118,
-          438,
-          {
-            width: 150
-          }
-        );
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(9)
+  .text(
+    eventInfo.event_name,
+    88,
+    389,
+    {
+      width: 175,
+      align: "left"
+    }
+  );
 
 
-      // ==========================================
-      // FECHA
-      // ==========================================
+// ==========================================
+// CAMPUS
+// ==========================================
 
-      doc
-        .fillColor("#17003E")
-        .font("Helvetica")
-        .fontSize(10)
-        .text(
-          eventInfo.event_date_text,
-          118,
-          503,
-          {
-            width: 150
-          }
-        );
-
-
-      // ==========================================
-      // HORA
-      // ==========================================
-
-      doc
-        .fillColor("#17003E")
-        .font("Helvetica-Bold")
-        .fontSize(11)
-        .text(
-          eventInfo.event_time_text,
-          118,
-          568,
-          {
-            width: 150
-          }
-        );
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(9)
+  .text(
+    eventInfo.campus_label,
+    88,
+    455,
+    {
+      width: 175,
+      align: "left"
+    }
+  );
 
 
-      // ==========================================
-      // SEDE
-      // ==========================================
+// ==========================================
+// FECHA
+// ==========================================
 
-      doc
-        .fillColor("#17003E")
-        .font("Helvetica")
-        .fontSize(9)
-        .text(
-          eventInfo.venue,
-          118,
-          633,
-          {
-            width: 150
-          }
-        );
-
-
-      // ==========================================
-      // DIRECCIÓN
-      // ==========================================
-
-      doc
-        .fillColor("#17003E")
-        .font("Helvetica")
-        .fontSize(8)
-        .text(
-          eventInfo.address_line,
-          118,
-          694,
-          {
-            width: 150,
-            lineGap: 1
-          }
-        );
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(9)
+  .text(
+    eventInfo.event_date_text,
+    88,
+    520,
+    {
+      width: 175,
+      align: "left"
+    }
+  );
 
 
-      // ==========================================
-      // CÓDIGO QR REAL
-      // ==========================================
+// ==========================================
+// HORA
+// ==========================================
 
-      doc.image(
-        qrImageBuffer,
-        335,
-        385,
-        {
-          width: 135,
-          height: 135
-        }
-      );
-
-
-      // ==========================================
-      // FOLIO REAL
-      // ==========================================
-
-      doc
-        .fillColor("#17003E")
-        .font("Helvetica-Bold")
-        .fontSize(10)
-        .text(
-          ticket.folio || "",
-          320,
-          607,
-          {
-            width: 155,
-            align: "center"
-          }
-        );
+doc
+  .fillColor("#17003E")
+  .font("Helvetica-Bold")
+  .fontSize(10)
+  .text(
+    eventInfo.event_time_text,
+    88,
+    585,
+    {
+      width: 175,
+      align: "left"
+    }
+  );
 
 
+// ==========================================
+// SEDE
+// ==========================================
+
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(8)
+  .text(
+    eventInfo.venue,
+    88,
+    650,
+    {
+      width: 175,
+      align: "left"
+    }
+  );
+
+
+// ==========================================
+// DIRECCIÓN
+// ==========================================
+
+doc
+  .fillColor("#17003E")
+  .font("Helvetica")
+  .fontSize(7)
+  .text(
+    eventInfo.address_line,
+    88,
+    710,
+    {
+      width: 175,
+      align: "left",
+      lineGap: 1
+    }
+  );
+
+
+// ==========================================
+// CÓDIGO QR REAL
+// ==========================================
+
+doc.image(
+  qrImageBuffer,
+  337,
+  410,
+  {
+    width: 145,
+    height: 145
+  }
+);
+
+
+// ==========================================
+// FOLIO REAL
+// ==========================================
+
+doc
+  .fillColor("#17003E")
+  .font("Helvetica-Bold")
+  .fontSize(9)
+  .text(
+    ticket.folio || "",
+    320,
+    635,
+    {
+      width: 180,
+      align: "center"
+    }
+  );
       // ==========================================
       // FINALIZAR PDF
       // ==========================================
