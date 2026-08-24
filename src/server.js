@@ -1092,11 +1092,19 @@ const groups = await q(`
   const s = await q(
     `
     SELECT s.*,
-      c.name as campus_name,
-      sh.name as shift_name,
-      gp.name as period_name,
-      gy.year as grad_year,
-      p.name as package_name,
+  c.name as campus_name,
+  sh.name as shift_name,
+  gp.name as period_name,
+  gy.year as grad_year,
+  p.name as package_name,
+
+  COALESCE(refunds.total_refunded, 0)::numeric AS total_refunded,
+
+  CASE
+    WHEN COALESCE(refunds.total_refunded, 0) > 0
+    THEN true
+    ELSE false
+  END AS has_refund,
       (GREATEST(0, p.cost - COALESCE(s.discount_amount,0)) - COALESCE(pay.total_paid,0))::numeric as balance
     FROM students s
     LEFT JOIN campuses c ON c.id = s.campus_id
@@ -1704,12 +1712,14 @@ app.get("/students/graduation-groups/pdf", requireAuth, async (req,res) => {
     LEFT JOIN graduation_years gy ON gy.id = s.year_id
     LEFT JOIN careers ca ON ca.id = s.career_id
     LEFT JOIN packages pk ON pk.id = s.package_id
-    LEFT JOIN (
-      SELECT student_id, COALESCE(SUM(amount),0) AS total_paid
-      FROM payments
-      WHERE status='CONFIRMED'
-      GROUP BY student_id
-    ) pay ON pay.student_id = s.id
+LEFT JOIN (
+  SELECT
+    student_id,
+    COALESCE(SUM(amount), 0) AS total_refunded
+  FROM graduation_refunds
+  GROUP BY student_id
+) refunds
+  ON refunds.student_id = s.id
     WHERE
       c.name = $1
       AND sh.name = $2
