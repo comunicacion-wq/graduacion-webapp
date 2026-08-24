@@ -1071,6 +1071,7 @@ const filters = {
   group: req.query.group || "",
   package_id: req.query.package_id || "",
   status: req.query.status || "",
+  refund_status: req.query.refund_status || "",
   q: req.query.q || ""
 };
   const cats = await catalogs();
@@ -1088,7 +1089,33 @@ const groups = await q(`
   ORDER BY "group"
 `);
   const { where, params } = studentQueryWhere(filters, req.session.user);
+const queryParams = [...params];
 
+let refundCondition = "";
+
+if (filters.refund_status === "WITH_REFUND") {
+
+  refundCondition = `
+    AND EXISTS (
+      SELECT 1
+      FROM graduation_refunds gr
+      WHERE gr.student_id = s.id
+    )
+  `;
+
+}
+
+if (filters.refund_status === "WITHOUT_REFUND") {
+
+  refundCondition = `
+    AND NOT EXISTS (
+      SELECT 1
+      FROM graduation_refunds gr
+      WHERE gr.student_id = s.id
+    )
+  `;
+
+}
   const s = await q(
     `
     SELECT s.*,
@@ -1129,6 +1156,7 @@ LEFT JOIN (
   ON refunds.student_id = s.id
 
 ${where}
+${refundCondition}
 ORDER BY s.created_at DESC
 LIMIT 500
     `,
@@ -1149,9 +1177,11 @@ const summaryResult = await q(
   LEFT JOIN graduation_periods gp ON gp.id = s.period_id
   LEFT JOIN graduation_years gy ON gy.id = s.year_id
   LEFT JOIN packages p ON p.id = s.package_id
+
   ${where}
+  ${refundCondition}
   `,
-  params
+  queryParams
 );
 
 const totalFiltered =
@@ -1166,17 +1196,23 @@ const packageResult = await q(
   SELECT
     s.package_id,
     COUNT(*)::int AS total
+
   FROM students s
+
   LEFT JOIN campuses c ON c.id = s.campus_id
   LEFT JOIN shifts sh ON sh.id = s.shift_id
   LEFT JOIN graduation_periods gp ON gp.id = s.period_id
   LEFT JOIN graduation_years gy ON gy.id = s.year_id
   LEFT JOIN packages p ON p.id = s.package_id
+
   ${where}
+  ${refundCondition}
+
   AND COALESCE(s.billing_active, false) = true
+
   GROUP BY s.package_id
   `,
-  params
+  queryParams
 );
 
 const packageSummary = cats.packages.map(pkg => {
