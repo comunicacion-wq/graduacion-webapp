@@ -257,7 +257,14 @@
         📄 Historial
       </a>
     <% } %>
-
+<% if (user && user.role === "ADMIN" && s.billing_active) { %>
+  <a
+    class="btn btn-sm btn-outline-danger"
+    href="/students/<%= s.id %>/refund"
+  >
+    ↩ Generar devolución
+  </a>
+<% } %>
     <button
       type="submit"
       formaction="/students/<%= s.id %>/toggle-billing"
