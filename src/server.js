@@ -6820,15 +6820,16 @@ doc
 doc
   .fillColor("#17003E")
   .font("Helvetica")
-  .fontSize(7)
+  .fontSize(6.5)
   .text(
     eventInfo.address_line,
     88,
-    710,
+    690,
     {
       width: 175,
+      height: 24,
       align: "left",
-      lineGap: 1
+      lineGap: 0
     }
   );
 
