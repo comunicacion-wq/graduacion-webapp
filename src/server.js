@@ -6688,6 +6688,7 @@ doc.end();
     );
 }
 });
+
 app.get("/tickets/verify/:token", requireTicketOperator, async (req, res) => {
   try {
     const token = String(req.params.token || "").trim();
