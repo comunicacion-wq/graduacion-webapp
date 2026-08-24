@@ -1992,6 +1992,117 @@ app.get("/students/:id", requireAuth, async (req,res) => {
   });
   render(req,res,"layout", { title:"Alumno", active:"students", body });
 });
+app.get("/students/:id/refund", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+
+    const studentId = Number(req.params.id);
+
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).send("Alumno no válido");
+    }
+
+    const studentResult = await q(
+      `
+      SELECT
+        s.id,
+        s.full_name,
+        s.phone_e164,
+        s.graduation_status,
+        c.name AS campus_name,
+        p.name AS package_name,
+        COALESCE(p.cost, 0)::numeric AS package_cost,
+        COALESCE(s.discount_amount, 0)::numeric AS discount_amount,
+        COALESCE(pay.total_paid, 0)::numeric AS total_paid
+
+      FROM students s
+
+      LEFT JOIN campuses c
+        ON c.id = s.campus_id
+
+      LEFT JOIN packages p
+        ON p.id = s.package_id
+
+      LEFT JOIN (
+        SELECT
+          student_id,
+          COALESCE(SUM(amount), 0) AS total_paid
+        FROM payments
+        WHERE status = 'CONFIRMED'
+        GROUP BY student_id
+      ) pay
+        ON pay.student_id = s.id
+
+      WHERE s.id = $1
+      LIMIT 1
+      `,
+      [studentId]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).send("Alumno no encontrado");
+    }
+
+    const student = studentResult.rows[0];
+
+    const refundsResult = await q(
+      `
+      SELECT
+        COALESCE(SUM(amount), 0)::numeric AS total_refunded
+      FROM graduation_refunds
+      WHERE student_id = $1
+      `,
+      [studentId]
+    );
+
+    const totalRefunded =
+      Number(refundsResult.rows[0]?.total_refunded || 0);
+
+    const totalPaid =
+      Number(student.total_paid || 0);
+
+    const refundableAmount =
+      Math.max(0, totalPaid - totalRefunded);
+
+    const body = await new Promise((resolve, reject) => {
+
+      res.render(
+        "student_refund",
+        {
+          student,
+          totalRefunded,
+          refundableAmount
+        },
+        (err, html) => {
+          if (err) return reject(err);
+          resolve(html);
+        }
+      );
+
+    });
+
+    render(
+      req,
+      res,
+      "layout",
+      {
+        title: "Generar devolución",
+        active: "students",
+        body
+      }
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Error al cargar devolución:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al cargar devolución"
+    );
+  }
+});
 app.post("/students/:id/toggle-billing", requireAuth, async (req, res) => {
   const studentId = Number(req.params.id);
 
