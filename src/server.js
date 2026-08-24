@@ -6519,131 +6519,6 @@ const tickets = await Promise.all(
 
 });
 
-app.get("/portal/tickets/:ticketId/download", requireStudentPortal, async (req, res) => {
-  try {
-    const studentId = req.session.studentUser.student_id;
-
-    if (!canUseDevelopmentModules(studentId)) {
-      return res.status(403).send("Módulo de boletos no disponible.");
-    }
-
-    const ticketId = Number(req.params.ticketId);
-
-    if (!Number.isInteger(ticketId) || ticketId <= 0) {
-      return res.status(400).send("Boleto no válido");
-    }
-
-    const ticketResult = await q(
-      `
-      SELECT
-        gt.id,
-        gt.folio,
-        gt.secure_token,
-        gt.ticket_type,
-        gt.status,
-        gt.used_at,
-        gt.created_at,
-        s.full_name AS student_name,
-        s.phone_e164,
-        c.name AS campus_name,
-        p.name AS package_name
-      FROM graduation_tickets gt
-      LEFT JOIN students s ON s.id = gt.student_id
-      LEFT JOIN campuses c ON c.id = s.campus_id
-      LEFT JOIN packages p ON p.id = s.package_id
-      WHERE gt.id = $1
-        AND gt.student_id = $2
-      LIMIT 1
-      `,
-      [ticketId, studentId]
-    );
-
-    if (ticketResult.rows.length === 0) {
-      return res.status(404).send("Boleto no encontrado");
-    }
-
-    const ticket = ticketResult.rows[0];
-
-    const verifyUrl =
-      `${req.protocol}://${req.get("host")}/tickets/verify/${ticket.secure_token}`;
-
-    const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
-      width: 500,
-      margin: 1
-    });
-
-    const qrImageBuffer = Buffer.from(
-      qrDataUrl.replace(/^data:image\/png;base64,/, ""),
-      "base64"
-    );
-
-    const eventInfo =
-      getGraduationEventInfo(ticket.campus_name);
-
-    const safeFileName =
-      `boleto-${ticket.folio}`
-        .replace(/[^a-zA-Z0-9-_]/g, "-");
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${safeFileName}.pdf"`
-    );
-
-    const doc = new PDFDocument({
-  size: [543, 724],
-  margin: 0
-});
-
-doc.pipe(res);
-
-
-// ==========================================
-// PLANTILLA GRÁFICA DEL BOLETO
-// ==========================================
-
-const ticketTemplatePath = path.join(
-  __dirname,
-  "public",
-  "images",
-  "boleto-graduacion-base.jpg"
-);
-
-
-// Colocar la plantilla completa como fondo
-doc.image(
-  ticketTemplatePath,
-  0,
-  0,
-  {
-    width: 543,
-    height: 724
-  }
-);
-
-
-// ==========================================
-// TIPO DE BOLETO
-// INCLUIDO / EXTRA
-// ==========================================
-
-doc
-  .fillColor("#17003E")
-  .font("Helvetica-Bold")
-  .fontSize(13)
-  .text(
-    ticket.ticket_type === "EXTRA"
-      ? "EXTRA"
-      : "INCLUIDO",
-    373,
-    78,
-    {
-      width: 126,
-      align: "center"
-    }
-  );
-
-
 // ==========================================
 // CEREMONIA
 // ==========================================
@@ -6654,10 +6529,11 @@ doc
   .fontSize(10)
   .text(
     eventInfo.event_name,
-    88,
-    361,
+    118,
+    372,
     {
-      width: 170
+      width: 150,
+      align: "left"
     }
   );
 
@@ -6668,14 +6544,15 @@ doc
 
 doc
   .fillColor("#17003E")
-  .font("Helvetica-Bold")
+  .font("Helvetica")
   .fontSize(10)
   .text(
     eventInfo.campus_label,
-    88,
-    427,
+    118,
+    438,
     {
-      width: 170
+      width: 150,
+      align: "left"
     }
   );
 
@@ -6690,10 +6567,11 @@ doc
   .fontSize(10)
   .text(
     eventInfo.event_date_text,
-    88,
-    491,
+    118,
+    503,
     {
-      width: 170
+      width: 150,
+      align: "left"
     }
   );
 
@@ -6708,10 +6586,11 @@ doc
   .fontSize(11)
   .text(
     eventInfo.event_time_text,
-    88,
-    556,
+    118,
+    568,
     {
-      width: 170
+      width: 150,
+      align: "left"
     }
   );
 
@@ -6726,10 +6605,11 @@ doc
   .fontSize(9)
   .text(
     eventInfo.venue,
-    88,
-    620,
+    118,
+    633,
     {
-      width: 170
+      width: 150,
+      align: "left"
     }
   );
 
@@ -6744,11 +6624,12 @@ doc
   .fontSize(8)
   .text(
     eventInfo.address_line,
-    88,
-    682,
+    118,
+    694,
     {
-      width: 170,
-      lineGap: 2
+      width: 150,
+      align: "left",
+      lineGap: 1
     }
   );
 
@@ -6759,11 +6640,11 @@ doc
 
 doc.image(
   qrImageBuffer,
-  320,
-  374,
+  335,
+  385,
   {
-    width: 150,
-    height: 150
+    width: 135,
+    height: 135
   }
 );
 
@@ -6778,10 +6659,10 @@ doc
   .fontSize(10)
   .text(
     ticket.folio || "",
-    307,
-    596,
+    320,
+    607,
     {
-      width: 178,
+      width: 155,
       align: "center"
     }
   );
