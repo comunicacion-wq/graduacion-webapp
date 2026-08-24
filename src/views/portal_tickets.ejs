@@ -109,8 +109,8 @@ body{font-family:Arial,Helvetica,sans-serif;color:var(--white);background:linear
 </section>
 
 <section class="preview-section">
-<h2>Vista previa</h2>
-<p>Así se mostrarán los boletos cuando estén habilitados.</p>
+<h2>Tus boletos</h2>
+<p>Descarga cada boleto con su diseño completo y presenta el código QR al ingresar.</p>
 <% if (Array.isArray(tickets) && tickets.length > 0) { %>
 
   <% tickets.forEach(function(ticket, index) { %>
@@ -167,7 +167,25 @@ body{font-family:Arial,Helvetica,sans-serif;color:var(--white);background:linear
   >
     Presenta este código QR al ingresar
   </div>
-
+<div style="margin-top:14px; text-align:center;">
+  <a
+    href="/portal/tickets/<%= ticket.id %>/download"
+    style="
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 18px;
+      background:#FFC400;
+      color:#17003E;
+      text-decoration:none;
+      border-radius:14px;
+      font-size:13px;
+      font-weight:800;
+    "
+  >
+    ⬇ Descargar boleto
+  </a>
+</div>
 </div>
       <span class="ticket-preview-status">
         <%= ticket.status === "AVAILABLE"
