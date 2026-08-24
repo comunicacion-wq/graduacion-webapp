@@ -2103,6 +2103,235 @@ app.get("/students/:id/refund", requireAuth, requireRole("ADMIN"), async (req, r
     );
   }
 });
+app.post("/students/:id/refund", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+
+    const studentId = Number(req.params.id);
+
+    const amount =
+      Number(req.body.amount || 0);
+
+    const reason =
+      String(req.body.reason || "").trim();
+
+    const notes =
+      String(req.body.notes || "").trim();
+
+    const cancelGraduation =
+      req.body.cancel_graduation === "1";
+
+
+    // ==========================================
+    // VALIDACIONES BÁSICAS
+    // ==========================================
+
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).send(
+        "Alumno no válido"
+      );
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).send(
+        "El monto de devolución no es válido"
+      );
+    }
+
+    if (!reason) {
+      return res.status(400).send(
+        "Debes indicar el motivo de la devolución"
+      );
+    }
+
+
+    // ==========================================
+    // VERIFICAR ALUMNO
+    // ==========================================
+
+    const studentResult = await q(
+      `
+      SELECT
+        id,
+        full_name,
+        graduation_status
+      FROM students
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [studentId]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).send(
+        "Alumno no encontrado"
+      );
+    }
+
+
+    // ==========================================
+    // TOTAL PAGADO
+    // ==========================================
+
+    const paymentsResult = await q(
+      `
+      SELECT
+        COALESCE(SUM(amount), 0)::numeric
+          AS total_paid
+      FROM payments
+      WHERE student_id = $1
+        AND status = 'CONFIRMED'
+      `,
+      [studentId]
+    );
+
+    const totalPaid =
+      Number(
+        paymentsResult.rows[0]?.total_paid || 0
+      );
+
+
+    // ==========================================
+    // DEVOLUCIONES ANTERIORES
+    // ==========================================
+
+    const refundsResult = await q(
+      `
+      SELECT
+        COALESCE(SUM(amount), 0)::numeric
+          AS total_refunded
+      FROM graduation_refunds
+      WHERE student_id = $1
+      `,
+      [studentId]
+    );
+
+    const totalRefunded =
+      Number(
+        refundsResult.rows[0]?.total_refunded || 0
+      );
+
+    const refundableAmount =
+      Math.max(
+        0,
+        totalPaid - totalRefunded
+      );
+
+
+    // ==========================================
+    // EVITAR DEVOLVER MÁS DE LO PAGADO
+    // ==========================================
+
+    if (amount > refundableAmount) {
+
+      return res.status(400).send(`
+        No es posible realizar esta devolución.
+        <br><br>
+        Total pagado: $${totalPaid.toFixed(2)}
+        <br>
+        Ya devuelto: $${totalRefunded.toFixed(2)}
+        <br>
+        Disponible para devolver:
+        $${refundableAmount.toFixed(2)}
+      `);
+
+    }
+
+
+    // ==========================================
+    // REGISTRAR DEVOLUCIÓN
+    // ==========================================
+
+    await q(
+      `
+      INSERT INTO graduation_refunds
+      (
+        student_id,
+        amount,
+        reason,
+        notes,
+        refund_date,
+        created_by
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        CURRENT_DATE,
+        $5
+      )
+      `,
+      [
+        studentId,
+        amount,
+        reason,
+        notes || null,
+        req.session.user?.id || null
+      ]
+    );
+
+
+    // ==========================================
+    // SI CANCELA GRADUACIÓN
+    // ==========================================
+
+    if (cancelGraduation) {
+
+      await q(
+        `
+        UPDATE students
+        SET
+          graduation_status = 'REFUNDED',
+          billing_active = false
+        WHERE id = $1
+        `,
+        [studentId]
+      );
+
+    }
+
+
+    // ==========================================
+    // AUDITORÍA
+    // ==========================================
+
+    await audit(
+      req,
+      "CREATE_REFUND",
+      "student",
+      studentId,
+      {
+        amount,
+        reason,
+        notes,
+        cancel_graduation:
+          cancelGraduation
+      }
+    );
+
+
+    // ==========================================
+    // REGRESAR A CONTROL ESCOLAR
+    // ==========================================
+
+    return res.redirect(
+      `/students?refund_success=1`
+    );
+
+
+  } catch (err) {
+
+    console.error(
+      "Error al registrar devolución:",
+      err
+    );
+
+    res.status(500).send(
+      "Error al registrar la devolución"
+    );
+  }
+});
 app.post("/students/:id/toggle-billing", requireAuth, async (req, res) => {
   const studentId = Number(req.params.id);
 
