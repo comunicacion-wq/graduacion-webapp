@@ -740,7 +740,7 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
       "layout",
       {
         title: "Reporte de paquetes",
-        active: "reports",
+       active: "report_packages",
         body
       }
     );
