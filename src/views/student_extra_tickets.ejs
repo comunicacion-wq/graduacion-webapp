@@ -1,0 +1,316 @@
+<h3 class="mb-2">
+  🎟️ Boletos extra
+</h3>
+
+<p class="text-muted mb-4">
+  Registro independiente de venta de boletos adicionales.
+</p>
+
+<div class="card mb-3">
+  <div class="card-body">
+
+    <h5 class="mb-3">
+      <%= student.full_name %>
+    </h5>
+
+    <div class="row g-3">
+
+      <div class="col-12 col-md-4">
+        <div class="text-muted small">Campus</div>
+        <strong><%= student.campus_name || "-" %></strong>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="text-muted small">Paquete</div>
+        <strong><%= student.package_name || "-" %></strong>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="text-muted small">Teléfono</div>
+        <strong><%= student.phone_e164 || "-" %></strong>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="row g-3 mb-4">
+
+  <div class="col-12 col-md-6">
+    <div class="card">
+      <div class="card-body">
+
+        <div class="text-muted small">
+          Boletos extra pagados
+        </div>
+
+        <div class="fs-3 fw-bold">
+          <%= totals.total_tickets %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card">
+      <div class="card-body">
+
+        <div class="text-muted small">
+          Total cobrado por boletos extra
+        </div>
+
+        <div class="fs-3 fw-bold">
+          $<%= Number(totals.total_amount || 0).toLocaleString("es-MX", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }) %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<div class="card mb-4">
+  <div class="card-body">
+
+    <h5 class="mb-3">
+      Registrar boletos extra
+    </h5>
+
+    <form
+      method="POST"
+      action="/students/<%= student.id %>/extra-tickets"
+      id="extraTicketsForm"
+    >
+
+      <div class="row g-3">
+
+        <div class="col-12 col-md-4">
+
+          <label class="form-label">
+            Cantidad de boletos
+          </label>
+
+          <input
+            class="form-control"
+            type="number"
+            id="quantity"
+            name="quantity"
+            value="1"
+            min="1"
+            step="1"
+            required
+          >
+
+        </div>
+
+
+        <div class="col-12 col-md-4">
+
+          <label class="form-label">
+            Precio por boleto
+          </label>
+
+          <input
+            class="form-control"
+            type="number"
+            id="unit_price"
+            name="unit_price"
+            value="200"
+            min="0"
+            step="0.01"
+            required
+          >
+
+          <div class="form-text">
+            Actualmente $200. Puedes modificarlo para registrar ventas anteriores.
+          </div>
+
+        </div>
+
+
+        <div class="col-12 col-md-4">
+
+          <label class="form-label">
+            Total
+          </label>
+
+          <input
+            class="form-control fw-bold"
+            type="text"
+            id="totalPreview"
+            value="$200.00"
+            readonly
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="mt-3">
+
+        <label class="form-label">
+          Observaciones
+        </label>
+
+        <textarea
+          class="form-control"
+          name="notes"
+          rows="2"
+          placeholder="Opcional"
+        ></textarea>
+
+      </div>
+
+
+      <div class="mt-4 d-flex gap-2">
+
+        <button
+          class="btn btn-success"
+          type="submit"
+          onclick="return confirm('¿Confirmas el registro y pago de estos boletos extra?');"
+        >
+          🎟️ Registrar boletos extra
+        </button>
+
+        <a
+          class="btn btn-outline-secondary"
+          href="/students"
+        >
+          Regresar
+        </a>
+
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+
+<% if (sales.length > 0) { %>
+
+<div class="card">
+  <div class="card-body">
+
+    <h5 class="mb-3">
+      Historial de boletos extra
+    </h5>
+
+    <div class="table-responsive">
+
+      <table class="table table-sm align-middle">
+
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Registró</th>
+            <th>Observaciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <% sales.forEach(sale => { %>
+
+            <tr>
+
+              <td>
+                <%= dayjs(sale.created_at).format("DD/MM/YYYY HH:mm") %>
+              </td>
+
+              <td>
+                <strong><%= sale.quantity %></strong>
+              </td>
+
+              <td>
+                $<%= Number(sale.unit_price || 0).toFixed(2) %>
+              </td>
+
+              <td>
+                <strong>
+                  $<%= Number(sale.total_amount || 0).toFixed(2) %>
+                </strong>
+              </td>
+
+              <td>
+                <span class="badge bg-success">
+                  PAGADO
+                </span>
+              </td>
+
+              <td>
+                <%= sale.created_by_name || "-" %>
+              </td>
+
+              <td>
+                <%= sale.notes || "-" %>
+              </td>
+
+            </tr>
+
+          <% }) %>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+</div>
+
+<% } %>
+
+
+<script>
+
+  const quantity =
+    document.getElementById("quantity");
+
+  const unitPrice =
+    document.getElementById("unit_price");
+
+  const totalPreview =
+    document.getElementById("totalPreview");
+
+
+  function updateTotal(){
+
+    const qty =
+      Number(quantity.value || 0);
+
+    const price =
+      Number(unitPrice.value || 0);
+
+    const total =
+      qty * price;
+
+    totalPreview.value =
+      "$" + total.toFixed(2);
+
+  }
+
+
+  quantity.addEventListener(
+    "input",
+    updateTotal
+  );
+
+  unitPrice.addEventListener(
+    "input",
+    updateTotal
+  );
+
+</script>
