@@ -6674,10 +6674,19 @@ doc
 
 doc.end();
 
-  } catch (err) {
-    console.error("Error al descargar boleto:", err);
-    res.status(500).send("Error al descargar boleto");
-  }
+} catch (err) {
+
+  console.error(
+    "Error al descargar boleto:",
+    err
+  );
+
+  res
+    .status(500)
+    .send(
+      "Error al descargar boleto"
+    );
+}
 });
 app.get("/tickets/verify/:token", requireTicketOperator, async (req, res) => {
   try {
