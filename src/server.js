@@ -5999,7 +5999,281 @@ app.post("/cashbox/open", requireAuth, requireRole("ADMIN"), async (req,res) => 
 app.get("/portal/login", (req,res) => {
   res.render("portal_login", { error: null });
 });
+app.get(
+  "/admin/backfill-extra-tickets",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res) => {
+    try {
 
+      // ==========================================
+      // VENTAS PAGADAS DE BOLETOS EXTRA
+      // ==========================================
+
+      const salesResult = await q(`
+        SELECT
+          student_id,
+          COALESCE(SUM(quantity), 0)::int AS paid_extra_tickets
+        FROM extra_ticket_sales
+        WHERE payment_status = 'PAID'
+        GROUP BY student_id
+        ORDER BY student_id ASC
+      `);
+
+      let totalCreated = 0;
+      const details = [];
+
+
+      // ==========================================
+      // REVISAR ALUMNO POR ALUMNO
+      // ==========================================
+
+      for (const sale of salesResult.rows) {
+
+        const studentId =
+          Number(sale.student_id);
+
+        const paidExtraTickets =
+          Number(sale.paid_extra_tickets || 0);
+
+
+        // Cuántos EXTRA ya tiene realmente
+
+        const existingResult = await q(
+          `
+          SELECT COUNT(*)::int AS total
+          FROM graduation_tickets
+          WHERE student_id = $1
+            AND ticket_type = 'EXTRA'
+          `,
+          [studentId]
+        );
+
+        const existingExtraTickets =
+          Number(existingResult.rows[0]?.total || 0);
+
+        const missingTickets =
+          Math.max(
+            0,
+            paidExtraTickets - existingExtraTickets
+          );
+
+
+        // ==========================================
+        // SI YA LOS TIENE, NO CREAR NADA
+        // ==========================================
+
+        if (missingTickets <= 0) {
+
+          details.push({
+            studentId,
+            paid: paidExtraTickets,
+            existing: existingExtraTickets,
+            created: 0
+          });
+
+          continue;
+        }
+
+
+        // ==========================================
+        // OBTENER ÚLTIMO NÚMERO DE FOLIO
+        // ==========================================
+
+        const lastNumberResult = await q(
+          `
+          SELECT
+            COALESCE(
+              MAX(
+                CASE
+                  WHEN folio ~ '[0-9]{3}$'
+                  THEN RIGHT(folio, 3)::int
+                  ELSE 0
+                END
+              ),
+              0
+            )::int AS last_number
+          FROM graduation_tickets
+          WHERE student_id = $1
+          `,
+          [studentId]
+        );
+
+        let lastNumber =
+          Number(
+            lastNumberResult.rows[0]?.last_number || 0
+          );
+
+        const currentYear =
+          new Date().getFullYear();
+
+
+        // ==========================================
+        // CREAR SOLO LOS QUE FALTAN
+        // ==========================================
+
+        for (
+          let index = 1;
+          index <= missingTickets;
+          index += 1
+        ) {
+
+          lastNumber += 1;
+
+          const folio =
+            `ITCC-${currentYear}-${studentId}-${String(lastNumber).padStart(3, "0")}`;
+
+          const secureToken =
+            crypto.randomUUID();
+
+          await q(
+            `
+            INSERT INTO graduation_tickets (
+              student_id,
+              folio,
+              secure_token,
+              ticket_type,
+              status
+            )
+            VALUES (
+              $1,
+              $2,
+              $3,
+              'EXTRA',
+              'AVAILABLE'
+            )
+            `,
+            [
+              studentId,
+              folio,
+              secureToken
+            ]
+          );
+
+          totalCreated += 1;
+        }
+
+
+        details.push({
+          studentId,
+          paid: paidExtraTickets,
+          existing: existingExtraTickets,
+          created: missingTickets
+        });
+      }
+
+
+      // ==========================================
+      // RESULTADO
+      // ==========================================
+
+      const rowsHtml = details
+        .map(item => `
+          <tr>
+            <td>${item.studentId}</td>
+            <td>${item.paid}</td>
+            <td>${item.existing}</td>
+            <td>${item.created}</td>
+          </tr>
+        `)
+        .join("");
+
+      res.send(`
+        <!doctype html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+          >
+
+          <title>Corrección boletos extra</title>
+
+          <style>
+            body{
+              font-family:Arial,sans-serif;
+              padding:30px;
+              background:#f6f6f8;
+            }
+
+            .card{
+              max-width:800px;
+              margin:auto;
+              padding:25px;
+              background:#fff;
+              border-radius:18px;
+              box-shadow:0 4px 20px rgba(0,0,0,.08);
+            }
+
+            table{
+              width:100%;
+              border-collapse:collapse;
+              margin-top:20px;
+            }
+
+            th,td{
+              padding:10px;
+              border-bottom:1px solid #ddd;
+              text-align:left;
+            }
+
+            .ok{
+              color:#198754;
+              font-weight:700;
+            }
+          </style>
+        </head>
+
+        <body>
+
+          <div class="card">
+
+            <h2>
+              Corrección de boletos extra
+            </h2>
+
+            <p class="ok">
+              Boletos EXTRA creados: ${totalCreated}
+            </p>
+
+            <table>
+
+              <thead>
+                <tr>
+                  <th>Alumno ID</th>
+                  <th>Pagados</th>
+                  <th>Ya existentes</th>
+                  <th>Creados ahora</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </body>
+        </html>
+      `);
+
+    } catch (err) {
+
+      console.error(
+        "Error corrigiendo boletos extra:",
+        err
+      );
+
+      res.status(500).send(
+        "Error al corregir boletos extra"
+      );
+    }
+  }
+);
 app.post("/portal/login", async (req,res) => {
   const { username, password } = req.body;
 
