@@ -2230,13 +2230,14 @@ app.get("/students/:id/extra-tickets", requireAuth, requireRole("ADMIN"), async 
 
     const body = await new Promise((resolve, reject) => {
 
-      res.render(
-        "student_extra_tickets",
-        {
-          student,
-          sales: salesResult.rows,
-          totals
-        },
+     res.render(
+  "student_extra_tickets",
+  {
+    student,
+    sales: salesResult.rows,
+    totals,
+    dayjs
+  },
         (err, html) => {
           if (err) return reject(err);
           resolve(html);
