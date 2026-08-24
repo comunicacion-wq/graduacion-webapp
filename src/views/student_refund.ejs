@@ -1,0 +1,154 @@
+<h3 class="mb-3">
+  Generar devolución
+</h3>
+
+<p class="text-muted">
+  Registra una devolución de pago de graduación.
+</p>
+
+<div class="card mb-4">
+
+  <div class="card-body">
+
+    <h5 class="mb-3">
+      <%= student.full_name %>
+    </h5>
+
+    <div class="row g-3">
+
+      <div class="col-12 col-md-6">
+        <strong>Campus:</strong><br>
+        <%= student.campus_name || "-" %>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <strong>Paquete:</strong><br>
+        <%= student.package_name || "-" %>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <strong>Total pagado:</strong><br>
+        $<%= Number(student.total_paid || 0).toLocaleString("es-MX", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }) %>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <strong>Ya devuelto:</strong><br>
+        $<%= Number(totalRefunded || 0).toLocaleString("es-MX", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }) %>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <strong>Disponible para devolver:</strong><br>
+        $<%= Number(refundableAmount || 0).toLocaleString("es-MX", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }) %>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="card">
+
+  <div class="card-body">
+
+    <form
+      method="POST"
+      action="/students/<%= student.id %>/refund"
+    >
+
+      <div class="mb-3">
+
+        <label class="form-label">
+          Monto a devolver
+        </label>
+
+        <input
+          class="form-control"
+          type="number"
+          name="amount"
+          min="0.01"
+          max="<%= refundableAmount %>"
+          step="0.01"
+          required
+        >
+
+      </div>
+
+      <div class="mb-3">
+
+        <label class="form-label">
+          Motivo
+        </label>
+
+        <input
+          class="form-control"
+          type="text"
+          name="reason"
+          maxlength="250"
+          required
+        >
+
+      </div>
+
+      <div class="mb-3">
+
+        <label class="form-label">
+          Observaciones
+        </label>
+
+        <textarea
+          class="form-control"
+          name="notes"
+          rows="3"
+        ></textarea>
+
+      </div>
+
+      <div class="form-check mb-4">
+
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="cancel_graduation"
+          value="1"
+          id="cancel_graduation"
+        >
+
+        <label
+          class="form-check-label"
+          for="cancel_graduation"
+        >
+          Esta devolución cancela su participación en la graduación
+        </label>
+
+      </div>
+
+      <button
+        class="btn btn-danger"
+        type="submit"
+        onclick="return confirm('¿Confirmas que deseas registrar esta devolución?');"
+      >
+        Generar devolución
+      </button>
+
+      <a
+        class="btn btn-outline-secondary"
+        href="/students"
+      >
+        Cancelar
+      </a>
+
+    </form>
+
+  </div>
+
+</div>
