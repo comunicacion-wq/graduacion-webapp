@@ -5184,29 +5184,40 @@ app.get("/setup-tickets", requireAuth, async (req, res) => {
       ON graduation_tickets(status);
     `);
 
-    await q(`
-      CREATE TABLE IF NOT EXISTS graduation_ticket_logs (
-        id SERIAL PRIMARY KEY,
+await q(`
+  CREATE TABLE IF NOT EXISTS graduation_ticket_logs (
+    id SERIAL PRIMARY KEY,
 
-        ticket_id INTEGER REFERENCES graduation_tickets(id) ON DELETE CASCADE,
+    ticket_id INTEGER REFERENCES graduation_tickets(id) ON DELETE CASCADE,
 
-        action VARCHAR(50) NOT NULL,
+    action VARCHAR(50) NOT NULL,
 
-        previous_status VARCHAR(30),
-        new_status VARCHAR(30),
+    previous_status VARCHAR(30),
+    new_status VARCHAR(30),
 
-        scanned_token VARCHAR(180),
+    scanned_token VARCHAR(180),
 
-        performed_by INTEGER REFERENCES users(id),
+    performed_by INTEGER REFERENCES users(id),
 
-        ip_address VARCHAR(100),
-        user_agent TEXT,
+    ip_address VARCHAR(100),
+    user_agent TEXT,
 
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+`);
 
-    res.send("Tablas de boletos creadas correctamente");
+await q(`
+  ALTER TABLE students
+  ADD COLUMN IF NOT EXISTS graduation_active BOOLEAN NOT NULL DEFAULT true;
+`);
+
+await q(`
+  UPDATE students
+  SET graduation_active = true
+  WHERE graduation_active IS NULL;
+`);
+
+res.send("Tablas de boletos creadas correctamente");
 
   } catch (err) {
     console.error(err);
