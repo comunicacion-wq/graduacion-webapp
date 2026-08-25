@@ -2332,6 +2332,236 @@ app.get("/students/:id/extra-tickets", requireAuth, requireRole("ADMIN"), async 
     );
   }
 });
+// ==========================================
+// CANCELAR ÚLTIMA OPERACIÓN DE BOLETOS EXTRA
+// ==========================================
+
+app.post(
+  "/students/:studentId/extra-tickets/:saleId/cancel",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res) => {
+    try {
+
+      const studentId =
+        Number(req.params.studentId);
+
+      const saleId =
+        Number(req.params.saleId);
+
+      if (
+        !Number.isInteger(studentId) ||
+        studentId <= 0 ||
+        !Number.isInteger(saleId) ||
+        saleId <= 0
+      ) {
+        return res
+          .status(400)
+          .send("Operación no válida");
+      }
+
+
+      // ==========================================
+      // OBTENER LA VENTA
+      // ==========================================
+
+      const saleResult = await q(
+        `
+        SELECT
+          id,
+          student_id,
+          quantity,
+          unit_price,
+          total_amount,
+          payment_status,
+          created_at
+        FROM extra_ticket_sales
+        WHERE id = $1
+          AND student_id = $2
+        LIMIT 1
+        `,
+        [
+          saleId,
+          studentId
+        ]
+      );
+
+
+      if (saleResult.rows.length === 0) {
+        return res
+          .status(404)
+          .send("Venta no encontrada");
+      }
+
+
+      const sale =
+        saleResult.rows[0];
+
+
+      if (sale.payment_status !== "PAID") {
+        return res
+          .status(400)
+          .send(
+            "Esta operación ya no está activa"
+          );
+      }
+
+
+      // ==========================================
+      // SOLO PERMITIR CANCELAR LA ÚLTIMA VENTA
+      // ==========================================
+
+      const latestPaidResult = await q(
+        `
+        SELECT id
+        FROM extra_ticket_sales
+        WHERE student_id = $1
+          AND payment_status = 'PAID'
+        ORDER BY created_at DESC, id DESC
+        LIMIT 1
+        `,
+        [studentId]
+      );
+
+
+      const latestPaidId =
+        Number(
+          latestPaidResult.rows[0]?.id || 0
+        );
+
+
+      if (latestPaidId !== saleId) {
+        return res
+          .status(400)
+          .send(
+            "Por seguridad solo se puede cancelar la última operación de boletos extra."
+          );
+      }
+
+
+      const quantity =
+        Number(sale.quantity || 0);
+
+
+      // ==========================================
+      // OBTENER LOS ÚLTIMOS BOLETOS EXTRA
+      // DISPONIBLES DEL ALUMNO
+      // ==========================================
+
+      const extraTicketsResult = await q(
+        `
+        SELECT id
+        FROM graduation_tickets
+        WHERE student_id = $1
+          AND ticket_type = 'EXTRA'
+          AND status = 'AVAILABLE'
+        ORDER BY id DESC
+        LIMIT $2
+        `,
+        [
+          studentId,
+          quantity
+        ]
+      );
+
+
+      if (
+        extraTicketsResult.rows.length !== quantity
+      ) {
+        return res
+          .status(400)
+          .send(
+            "No es posible cancelar esta operación porque alguno de sus boletos ya fue utilizado o no está disponible."
+          );
+      }
+
+
+      const ticketIds =
+        extraTicketsResult.rows.map(
+          ticket => Number(ticket.id)
+        );
+
+
+      // ==========================================
+      // CANCELAR LOS BOLETOS
+      // ==========================================
+
+      await q(
+        `
+        UPDATE graduation_tickets
+        SET
+          status = 'CANCELLED',
+          updated_at = NOW()
+        WHERE id = ANY($1::int[])
+        `,
+        [ticketIds]
+      );
+
+
+      // ==========================================
+      // CANCELAR LA VENTA
+      // ==========================================
+
+      await q(
+        `
+        UPDATE extra_ticket_sales
+        SET
+          payment_status = 'CANCELLED',
+          notes = CONCAT(
+            COALESCE(notes, ''),
+            CASE
+              WHEN COALESCE(notes, '') = ''
+              THEN ''
+              ELSE ' | '
+            END,
+            'Operación cancelada por administrador'
+          )
+        WHERE id = $1
+        `,
+        [saleId]
+      );
+
+
+      // ==========================================
+      // AUDITORÍA
+      // ==========================================
+
+      await audit(
+        req,
+        "CANCEL_EXTRA_TICKET_SALE",
+        "student",
+        studentId,
+        {
+          sale_id: saleId,
+          quantity,
+          total_amount:
+            Number(sale.total_amount || 0),
+          ticket_ids:
+            ticketIds
+        }
+      );
+
+
+      return res.redirect(
+        `/students/${studentId}/extra-tickets?cancelled=1`
+      );
+
+
+    } catch (err) {
+
+      console.error(
+        "Error al cancelar boletos extra:",
+        err
+      );
+
+      res
+        .status(500)
+        .send(
+          "Error al cancelar operación de boletos extra"
+        );
+    }
+  }
+);
 app.post("/students/:id/extra-tickets", requireAuth, requireRole("ADMIN"), async (req, res) => {
   try {
 
@@ -6585,9 +6815,10 @@ if (includedToCreate > 0) {
       status,
       used_at,
       created_at
-    FROM graduation_tickets
-    WHERE student_id = $1
-    ORDER BY id ASC
+FROM graduation_tickets
+WHERE student_id = $1
+  AND status <> 'CANCELLED'
+ORDER BY id ASC
     `,
     [studentId]
   );
