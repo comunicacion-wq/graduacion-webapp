@@ -214,10 +214,12 @@
             <th>Cantidad</th>
             <th>Precio</th>
             <th>Total</th>
-            <th>Estado</th>
-            <th>Registró</th>
-            <th>Observaciones</th>
-          </tr>
+           <th>Estado</th>
+<th>Registró</th>
+<th>Observaciones</th>
+<th>Acciones</th>
+
+</tr>
         </thead>
 
         <tbody>
@@ -244,23 +246,71 @@
                 </strong>
               </td>
 
-              <td>
-                <span class="badge bg-success">
-                  PAGADO
-                </span>
-              </td>
+             <td>
 
-              <td>
-                <%= sale.created_by_name || "-" %>
-              </td>
+  <% if (sale.payment_status === "PAID") { %>
 
-              <td>
-                <%= sale.notes || "-" %>
-              </td>
+    <span class="badge bg-success">
+      PAGADO
+    </span>
 
-            </tr>
+  <% } else if (sale.payment_status === "CANCELLED") { %>
 
-          <% }) %>
+    <span class="badge bg-secondary">
+      CANCELADA
+    </span>
+
+  <% } else { %>
+
+    <span class="badge bg-warning text-dark">
+      <%= sale.payment_status %>
+    </span>
+
+  <% } %>
+
+</td>
+
+             <td>
+  <%= sale.created_by_name || "-" %>
+</td>
+
+<td>
+  <%= sale.notes || "-" %>
+</td>
+
+<td>
+
+  <% if (sale.payment_status === "PAID") { %>
+
+    <form
+      method="POST"
+      action="/students/<%= student.id %>/extra-tickets/<%= sale.id %>/cancel"
+      onsubmit="return confirm('¿Seguro que deseas cancelar esta operación? Se cancelarán también los boletos extra generados en esta venta.');"
+      style="margin:0;"
+    >
+
+      <button
+        type="submit"
+        class="btn btn-sm btn-danger"
+      >
+        ❌ Cancelar operación
+      </button>
+
+    </form>
+
+  <% } else { %>
+
+    <span class="badge bg-secondary">
+      CANCELADA
+    </span>
+
+  <% } %>
+
+</td>
+
+</tr>
+
+<% }) %>
 
         </tbody>
 
