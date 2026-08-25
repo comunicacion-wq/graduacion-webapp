@@ -69,15 +69,24 @@ body{font-family:Arial,Helvetica,sans-serif;color:var(--white);background:linear
 <div class="section-title"><h2>Resumen de boletos</h2></div>
 <section class="ticket-summary">
 <%
-  const includedCount = 5;
+  const hasPendingBalance =
+    Number(totals.balance || 0) > 0;
 
-  const extraCount = Array.isArray(tickets)
-    ? tickets.filter(ticket => ticket.ticket_type === "EXTRA").length
-    : 0;
+  const includedCount =
+    hasPendingBalance ? 0 : 5;
 
-  const totalCount = includedCount + extraCount;
+  const extraCount =
+    hasPendingBalance
+      ? 0
+      : Array.isArray(tickets)
+      ? tickets.filter(
+          ticket => ticket.ticket_type === "EXTRA"
+        ).length
+      : 0;
+
+  const totalCount =
+    includedCount + extraCount;
 %>
-
 <div class="ticket-summary-card">
   <span>Incluidos</span>
   <strong><%= includedCount %></strong>
@@ -100,13 +109,42 @@ body{font-family:Arial,Helvetica,sans-serif;color:var(--white);background:linear
 <div class="ticket-condition"><div class="ticket-condition-icon">💳</div><div><strong>Condición de pago</strong><span>El saldo del paquete debe ser de $0.00 para liberar los boletos.</span></div></div>
 <div class="ticket-condition"><div class="ticket-condition-icon">📅</div><div><strong>Fecha de liberación</strong><span>Los accesos se mostrarán durante los días previos definidos para la ceremonia.</span></div></div>
 <% if (Number(totals.balance || 0) > 0) { %>
+
 <div class="payment-warning">
-<strong>Tu paquete todavía tiene saldo pendiente</strong>
-<span>Saldo actual: $<%= Number(totals.balance || 0).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2}) %></span>
-<a href="/portal/payments">Ir a Mis pagos</a>
+
+  <strong>
+    ⚠ AVISO IMPORTANTE
+  </strong>
+
+  <span style="font-size:14px; font-weight:700; margin-top:8px;">
+    Es necesario que liquides tu paquete de graduación para poder obtener tus boletos.
+  </span>
+
+  <span>
+    Saldo pendiente:
+    $<%= Number(totals.balance || 0).toLocaleString(
+      "es-MX",
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    ) %>
+  </span>
+
+  <span>
+    Una vez liquidado tu paquete, tus boletos estarán disponibles automáticamente en este apartado.
+  </span>
+
+  <a href="/portal/payments">
+    Ir a Mis pagos
+  </a>
+
 </div>
+
 <% } %>
 </section>
+
+<% if (Number(totals.balance || 0) <= 0) { %>
 
 <section class="preview-section">
 <h2>Tus boletos</h2>
@@ -208,7 +246,7 @@ body{font-family:Arial,Helvetica,sans-serif;color:var(--white);background:linear
 <% } %>
 <div class="preview-note">Los folios, códigos QR y estados individuales se generarán en la siguiente etapa.</div>
 </section>
-
+<% } %>
 <nav class="bottom-nav">
 <a href="/portal"><div class="nav-icon">🏠</div><span>Inicio</span></a>
 <a href="/portal/payments"><div class="nav-icon">💳</div><span>Mis pagos</span></a>
