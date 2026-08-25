@@ -6472,7 +6472,21 @@ app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
   if (!info) {
     return res.status(404).send("Alumno no encontrado");
   }
+// ==========================================
+// BLOQUEAR BOLETOS SI EXISTE SALDO PENDIENTE
+// ==========================================
 
+const hasPendingBalance =
+  Number(info.totals.balance || 0) > 0;
+
+if (hasPendingBalance) {
+  return res.render("portal_tickets", {
+    student: info.student,
+    totals: info.totals,
+    tickets: [],
+    developmentMode: canUseDevelopmentModules(studentId)
+  });
+}
   const ticketResult = await q(
     `
     SELECT
@@ -6531,14 +6545,36 @@ app.get("/portal/tickets/:ticketId/download",
       const studentId =
         req.session.studentUser.student_id;
 
-      if (!canUseDevelopmentModules(studentId)) {
-        return res
-          .status(403)
-          .send("Módulo de boletos no disponible.");
-      }
+    if (!canUseDevelopmentModules(studentId)) {
+  return res
+    .status(403)
+    .send("Módulo de boletos no disponible.");
+}
 
-      const ticketId =
-        Number(req.params.ticketId);
+
+// ==========================================
+// BLOQUEAR DESCARGA SI EXISTE ADEUDO
+// ==========================================
+
+const paymentInfo =
+  await getStudentTotals(studentId);
+
+if (!paymentInfo) {
+  return res
+    .status(404)
+    .send("Alumno no encontrado");
+}
+
+const hasPendingBalance =
+  Number(paymentInfo.totals.balance || 0) > 0;
+
+if (hasPendingBalance) {
+  return res.redirect("/portal/tickets");
+}
+
+
+const ticketId =
+  Number(req.params.ticketId);
 
       if (!Number.isInteger(ticketId) || ticketId <= 0) {
         return res
