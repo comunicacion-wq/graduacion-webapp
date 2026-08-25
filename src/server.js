@@ -6460,13 +6460,7 @@ app.get("/portal/payments", requireStudentPortal, async (req, res) => {
   });
 });
 app.get("/portal/tickets", requireStudentPortal, async (req, res) => {
-
   const studentId = req.session.studentUser.student_id;
-
-  if (!canUseDevelopmentModules(studentId)) {
-    return res.status(403).send("Módulo de boletos no disponible.");
-  }
-
   const info = await getStudentTotals(studentId);
 
   if (!info) {
@@ -6486,6 +6480,100 @@ if (hasPendingBalance) {
     tickets: [],
     developmentMode: canUseDevelopmentModules(studentId)
   });
+}
+  // ==========================================
+// GENERAR 5 BOLETOS INCLUIDOS AL LIQUIDAR
+// ==========================================
+
+const existingIncludedResult = await q(
+  `
+  SELECT COUNT(*)::int AS total
+  FROM graduation_tickets
+  WHERE student_id = $1
+    AND ticket_type = 'INCLUDED'
+  `,
+  [studentId]
+);
+
+const existingIncluded =
+  Number(
+    existingIncludedResult.rows[0]?.total || 0
+  );
+
+const includedToCreate =
+  Math.max(
+    0,
+    5 - existingIncluded
+  );
+
+if (includedToCreate > 0) {
+
+  const lastNumberResult = await q(
+    `
+    SELECT
+      COALESCE(
+        MAX(
+          CASE
+            WHEN folio ~ '[0-9]{3}$'
+            THEN RIGHT(folio, 3)::int
+            ELSE 0
+          END
+        ),
+        0
+      )::int AS last_number
+    FROM graduation_tickets
+    WHERE student_id = $1
+    `,
+    [studentId]
+  );
+
+  let lastNumber =
+    Number(
+      lastNumberResult.rows[0]?.last_number || 0
+    );
+
+  const currentYear =
+    new Date().getFullYear();
+
+  for (
+    let index = 1;
+    index <= includedToCreate;
+    index += 1
+  ) {
+
+    lastNumber += 1;
+
+    const folio =
+      `ITCC-${currentYear}-${studentId}-${String(lastNumber).padStart(3, "0")}`;
+
+    const secureToken =
+      crypto.randomUUID();
+
+    await q(
+      `
+      INSERT INTO graduation_tickets (
+        student_id,
+        folio,
+        secure_token,
+        ticket_type,
+        status
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        'INCLUDED',
+        'AVAILABLE'
+      )
+      ON CONFLICT (folio) DO NOTHING
+      `,
+      [
+        studentId,
+        folio,
+        secureToken
+      ]
+    );
+  }
 }
   const ticketResult = await q(
     `
@@ -6544,14 +6632,7 @@ app.get("/portal/tickets/:ticketId/download",
 
       const studentId =
         req.session.studentUser.student_id;
-
-    if (!canUseDevelopmentModules(studentId)) {
-  return res
-    .status(403)
-    .send("Módulo de boletos no disponible.");
-}
-
-
+      
 // ==========================================
 // BLOQUEAR DESCARGA SI EXISTE ADEUDO
 // ==========================================
