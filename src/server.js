@@ -1232,7 +1232,19 @@ const summaryResult = await q(
 
     COUNT(*) FILTER (
       WHERE COALESCE(s.billing_active, false) = true
-    )::int AS total_billing_active
+    )::int AS total_billing_active,
+
+    COUNT(*) FILTER (
+      WHERE COALESCE(s.billing_active, false) = true
+        AND COALESCE(s.graduation_active, true) = true
+        AND NULLIF(TRIM(COALESCE(s.phone_e164, '')), '') IS NOT NULL
+    )::int AS total_portal_ready,
+
+    COUNT(*) FILTER (
+      WHERE COALESCE(s.billing_active, false) = true
+        AND COALESCE(s.graduation_active, true) = true
+        AND NULLIF(TRIM(COALESCE(s.phone_e164, '')), '') IS NULL
+    )::int AS total_missing_portal
 
   FROM students s
   LEFT JOIN campuses c ON c.id = s.campus_id
@@ -1252,7 +1264,11 @@ const totalFiltered =
 
 const totalBillingActive =
   summaryResult.rows[0]?.total_billing_active || 0;
+const totalPortalReady =
+  summaryResult.rows[0]?.total_portal_ready || 0;
 
+const totalMissingPortal =
+  summaryResult.rows[0]?.total_missing_portal || 0;
 
 const packageResult = await q(
   `
@@ -1300,6 +1316,8 @@ res.render("students_list", {
   groups: groups.rows,
   totalFiltered,
   totalBillingActive,
+  totalPortalReady,
+  totalMissingPortal,
   packageSummary
 }, (err, html) => err ? reject(err) : resolve(html));
   });
