@@ -162,16 +162,34 @@
     </div>
   </div>
 
-  <div class="col-12 col-md-3">
-    <div class="card">
-      <div class="card-body py-2">
-        <div class="text-muted small">Cobranza activa</div>
-        <h4 class="mb-0"><%= totalBillingActive || 0 %></h4>
-      </div>
+<div class="col-12 col-md-3">
+  <div class="card">
+    <div class="card-body py-2">
+      <div class="text-muted small">Cobranza activa</div>
+      <h4 class="mb-0"><%= totalBillingActive || 0 %></h4>
     </div>
   </div>
+</div>
 
-  <% packageSummary.forEach(pkg => { %>
+<div class="col-12 col-md-3">
+  <div class="card">
+    <div class="card-body py-2">
+      <div class="text-muted small">Portal listo</div>
+      <h4 class="mb-0"><%= totalPortalReady || 0 %></h4>
+    </div>
+  </div>
+</div>
+
+<div class="col-12 col-md-3">
+  <div class="card">
+    <div class="card-body py-2">
+      <div class="text-muted small">Falta acceso</div>
+      <h4 class="mb-0"><%= totalMissingPortal || 0 %></h4>
+    </div>
+  </div>
+</div>
+
+<% packageSummary.forEach(pkg => { %>
     <div class="col-12 col-md-3">
       <div class="card">
         <div class="card-body py-2">
