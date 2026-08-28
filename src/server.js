@@ -1123,6 +1123,9 @@ app.get("/reports/packages.xlsx", requireAuth, async (req, res) => {
     );
   }
 });
+
+app.get("/students", requireAuth, async (req,res) => {
+
 const filters = {
   campus_id: req.query.campus_id || "",
   shift_id: req.query.shift_id || "",
@@ -4357,7 +4360,7 @@ app.post("/settings/periods/:id/toggle", requireAuth, requireRole("ADMIN"), asyn
      WHERE id = $1`,
     [id]
 
-
+  );
   await audit(req, "TOGGLE_PERIOD", "PERIOD", id, {});
   flash(req,"success","Estatus de periodo actualizado.");
   res.redirect("/settings/periods");
