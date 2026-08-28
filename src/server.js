@@ -4356,7 +4356,7 @@ app.post("/settings/periods/:id/toggle", requireAuth, requireRole("ADMIN"), asyn
      SET active = NOT active
      WHERE id = $1`,
     [id]
-  );
+
 
   await audit(req, "TOGGLE_PERIOD", "PERIOD", id, {});
   flash(req,"success","Estatus de periodo actualizado.");
