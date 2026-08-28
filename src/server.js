@@ -1123,7 +1123,6 @@ app.get("/reports/packages.xlsx", requireAuth, async (req, res) => {
     );
   }
 });
-app.get("/students", requireAuth, async (req,res) => {
 const filters = {
   campus_id: req.query.campus_id || "",
   shift_id: req.query.shift_id || "",
@@ -1135,6 +1134,7 @@ const filters = {
   package_id: req.query.package_id || "",
   status: req.query.status || "",
   refund_status: req.query.refund_status || "",
+  portal_status: req.query.portal_status || "",
   q: req.query.q || ""
 };
   const cats = await catalogs();
@@ -1179,7 +1179,30 @@ if (filters.refund_status === "WITHOUT_REFUND") {
   `;
 
 }
-  const s = await q(
+
+let portalCondition = "";
+
+if (filters.portal_status === "MISSING") {
+
+  portalCondition = `
+    AND COALESCE(s.billing_active, false) = true
+    AND COALESCE(s.graduation_active, true) = true
+    AND NULLIF(TRIM(COALESCE(s.phone_e164, '')), '') IS NULL
+  `;
+
+}
+
+if (filters.portal_status === "READY") {
+
+  portalCondition = `
+    AND COALESCE(s.billing_active, false) = true
+    AND COALESCE(s.graduation_active, true) = true
+    AND NULLIF(TRIM(COALESCE(s.phone_e164, '')), '') IS NOT NULL
+  `;
+
+}
+
+const s = await q(
     `
     SELECT s.*,
   c.name as campus_name,
@@ -1220,6 +1243,7 @@ LEFT JOIN (
 
 ${where}
 ${refundCondition}
+${portalCondition}
 ORDER BY s.created_at DESC
 LIMIT 500
     `,
@@ -1253,9 +1277,10 @@ const summaryResult = await q(
   LEFT JOIN graduation_years gy ON gy.id = s.year_id
   LEFT JOIN packages p ON p.id = s.package_id
 
-  ${where}
-  ${refundCondition}
-  `,
+${where}
+${refundCondition}
+${portalCondition}
+`,
   queryParams
 );
 
@@ -1284,10 +1309,11 @@ const packageResult = await q(
   LEFT JOIN graduation_years gy ON gy.id = s.year_id
   LEFT JOIN packages p ON p.id = s.package_id
 
-  ${where}
-  ${refundCondition}
+${where}
+${refundCondition}
+${portalCondition}
 
-  AND COALESCE(s.billing_active, false) = true
+AND COALESCE(s.billing_active, false) = true
 
   GROUP BY s.package_id
   `,
