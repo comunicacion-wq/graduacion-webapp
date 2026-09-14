@@ -4508,40 +4508,42 @@ app.post("/settings/users/:id/edit", requireAuth, requireRole("ADMIN"), async (r
   const id = Number(req.params.id);
 
   const {
-    username,
-    password,
-    role,
-    active,
-    campus_ids,
-    view_students,
-    create_students,
-    view_arrears,
-    create_payments,
-    send_collection,
-    cancel_payments,
-    view_reports,
-    manage_users,
-    view_settings,
-    view_audit
-  } = req.body;
+  username,
+  password,
+  role,
+  active,
+  campus_ids,
+  view_students,
+  create_students,
+  view_arrears,
+  create_payments,
+  send_collection,
+  cancel_payments,
+  view_reports,
+  view_expenses,
+  manage_users,
+  view_settings,
+  view_audit
+} = req.body;
 
   if (!username || !username.trim() || !role || !role.trim()) {
     flash(req, "danger", "Usuario y rol son obligatorios.");
     return res.redirect(`/settings/users/${id}/edit`);
   }
 
-  const permissions = {
-    view_students: !!view_students,
-    create_students: !!create_students,
-    view_arrears: !!view_arrears,
-    create_payments: !!create_payments,
-    send_collection: !!send_collection,
-    cancel_payments: !!cancel_payments,
-    view_reports: !!view_reports,
-    manage_users: !!manage_users,
-    view_settings: !!view_settings,
-    view_audit: !!view_audit
-  };
+const permissions = {
+  view_students: !!view_students,
+  create_students: !!create_students,
+  view_arrears: !!view_arrears,
+  create_payments: !!create_payments,
+  send_collection: !!send_collection,
+  cancel_payments: !!cancel_payments,
+  view_reports: !!view_reports,
+  view_expenses: !!view_expenses,
+  manage_users: !!manage_users,
+  view_settings: !!view_settings,
+  view_audit: !!view_audit
+};
 
   const selectedCampusIds = Array.isArray(campus_ids)
     ? campus_ids.map(x => Number(x))
@@ -4616,6 +4618,22 @@ app.get("/reports", requireAuth, async (req,res) => {
   render(req,res,"layout", { title:"Reportes", active:"reports", body });
 });
 app.get("/expenses", requireAuth, async (req, res) => {
+
+  const user = req.session.user;
+
+  const canViewExpenses =
+    user?.role === "ADMIN" ||
+    user?.permissions?.view_expenses === true;
+
+  if (!canViewExpenses) {
+    return res
+      .status(403)
+      .send("No tienes permiso para consultar gastos.");
+  }
+
+  const canManageExpenses =
+    user?.role === "ADMIN";
+
   const expenses = await q(`
     SELECT
       e.id,
@@ -4643,11 +4661,30 @@ app.get("/expenses", requireAuth, async (req, res) => {
     <td>${g.year_name || ""}</td>
     <td>$${g.amount || 0}</td>
     <td>${g.notes || ""}</td>
-    <td>
-      <form method="POST" action="/expenses/${g.id}/delete" onsubmit="return confirm('¿Eliminar este gasto?')">
-        <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
-      </form>
-    </td>
+   <td>
+  ${
+    canManageExpenses
+      ? `
+        <form
+          method="POST"
+          action="/expenses/${g.id}/delete"
+          onsubmit="return confirm('¿Eliminar este gasto?')"
+        >
+          <button
+            class="btn btn-sm btn-outline-danger"
+            type="submit"
+          >
+            Eliminar
+          </button>
+        </form>
+      `
+      : `
+        <span class="text-muted">
+          Solo consulta
+        </span>
+      `
+  }
+</td>
   </tr>
 `).join("");
  const tableRows = rows || '<tr><td colspan="9" class="text-center text-muted">No hay gastos registrados</td></tr>';
@@ -4655,10 +4692,29 @@ app.get("/expenses", requireAuth, async (req, res) => {
   const body = `
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0">Gastos</h3>
-      <div class="d-flex gap-2">
-        <a class="btn btn-outline-secondary" href="/expenses/export">Extraer reporte</a>
-        <a class="btn btn-primary" href="/expenses/new">Nuevo gasto</a>
-      </div>
+     <div class="d-flex gap-2">
+
+  <a
+    class="btn btn-outline-secondary"
+    href="/expenses/export"
+  >
+    Extraer reporte
+  </a>
+
+  ${
+    canManageExpenses
+      ? `
+        <a
+          class="btn btn-primary"
+          href="/expenses/new"
+        >
+          Nuevo gasto
+        </a>
+      `
+      : ""
+  }
+
+</div>
     </div>
 
     <div class="card">
@@ -4779,6 +4835,19 @@ const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY fu
 });
 
 app.get("/expenses/export", requireAuth, async (req, res) => {
+
+  const user = req.session.user;
+
+  const canViewExpenses =
+    user?.role === "ADMIN" ||
+    user?.permissions?.view_expenses === true;
+
+  if (!canViewExpenses) {
+    return res
+      .status(403)
+      .send("No tienes permiso para consultar gastos.");
+  }
+
   const contacts = await q(`SELECT id, full_name FROM expense_contacts ORDER BY full_name ASC`);
   const periods = await q(`SELECT id, name FROM graduation_periods WHERE active = true ORDER BY id ASC`);
   const years = await q(`SELECT id, year FROM graduation_years ORDER BY id ASC`);
@@ -5002,6 +5071,19 @@ FROM expenses WHERE id = $1`, [id]);
 
 
 app.get("/expenses/export/download", requireAuth, async (req, res) => {
+
+  const user = req.session.user;
+
+  const canViewExpenses =
+    user?.role === "ADMIN" ||
+    user?.permissions?.view_expenses === true;
+
+  if (!canViewExpenses) {
+    return res
+      .status(403)
+      .send("No tienes permiso para consultar gastos.");
+  }
+
   const { contact_id, period_id, year_id, date_from, date_to } = req.query;
 
   const conditions = [];
