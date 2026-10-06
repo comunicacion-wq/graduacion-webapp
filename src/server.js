@@ -6442,6 +6442,9 @@ app.post("/cashbox/open", requireAuth, requireRole("ADMIN"), async (req,res) => 
 app.get("/portal/login", (req,res) => {
   res.render("portal_login", { error: null });
 });
+app.get("/estudiantes", (req,res) => {
+  res.render("portal_login", { error: null });
+});
 app.get(
   "/admin/backfill-extra-tickets",
   requireAuth,
