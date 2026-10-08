@@ -395,9 +395,10 @@ app.get("/reports/packages", requireAuth, async (req, res) => {
 
     const params = [];
 
-    const conditions = [
-      `COALESCE(s.billing_active, false) = true`
-    ];
+const conditions = [
+  `COALESCE(s.billing_active, false) = true`,
+  `COALESCE(s.status, 'ACTIVE') = 'ACTIVE'`
+]
 
     if (filters.campus_id) {
       params.push(filters.campus_id);
