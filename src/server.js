@@ -4058,6 +4058,63 @@ app.get("/settings", requireAuth, requireRole("ADMIN"), async (req,res) => {
   });
   render(req,res,"layout", { title:"Ajustes", active:"settings", body });
 });
+// ==========================================
+// AJUSTES - PAQUETES DE GRADUACION
+// ==========================================
+
+app.get("/settings/packages", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+    const result = await q(`
+      SELECT id, name, cost, active
+      FROM packages
+      ORDER BY id ASC
+    `);
+
+    const rows = result.rows.map(p => `
+      <tr>
+        <td>${p.name}</td>
+        <td>$${Number(p.cost || 0).toLocaleString("es-MX", {
+          minimumFractionDigits: 2
+        })}</td>
+        <td>${p.active ? "Activo" : "Inactivo"}</td>
+      </tr>
+    `).join("");
+
+    const body = `
+      <h3>Paquetes de graduación</h3>
+      <p class="text-muted">
+        Administración de paquetes y costos de graduación.
+      </p>
+
+      <div class="card">
+        <div class="card-body">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Paquete</th>
+                <th>Precio</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || '<tr><td colspan="3">No hay paquetes registrados.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    render(req, res, "layout", {
+      title: "Paquetes de graduación",
+      active: "settings",
+      body
+    });
+
+  } catch (err) {
+    console.error("Error al consultar paquetes:", err);
+    res.status(500).send("Error al consultar paquetes.");
+  }
+});
 // Careers settings
 app.get("/settings/careers", requireAuth, requireRole("ADMIN"), async (req,res) => {
   const r = await q(`SELECT * FROM careers ORDER BY active DESC, name ASC`);
