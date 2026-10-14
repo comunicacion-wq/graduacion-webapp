@@ -6273,6 +6273,33 @@ app.get("/setup-student-billing", requireAuth, requireRole("ADMIN"), async (req,
     res.status(500).send("Error al agregar columna billing_active en students");
   }
 });
+// ==========================================
+// PROTECCION DE PRECIOS HISTORICOS
+// ==========================================
+
+app.get("/setup-package-prices", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+
+    await q(`
+      ALTER TABLE students
+      ADD COLUMN IF NOT EXISTS contracted_package_price NUMERIC(12,2)
+    `);
+
+    await q(`
+      UPDATE students s
+      SET contracted_package_price = p.cost
+      FROM packages p
+      WHERE s.package_id = p.id
+        AND s.contracted_package_price IS NULL
+    `);
+
+    res.send("Precios históricos de paquetes preparados correctamente.");
+
+  } catch (err) {
+    console.error("Error preparando precios históricos:", err);
+    res.status(500).send("Error al preparar precios históricos.");
+  }
+});
 app.get("/setup-payment-history-folios",
   requireAuth,
   requireRole("ADMIN"),
